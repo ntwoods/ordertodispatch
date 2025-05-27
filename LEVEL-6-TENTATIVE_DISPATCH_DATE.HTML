@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Order Countdown App</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          animation: {
+            pulseSlow: 'pulse 3s infinite',
+          },
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-gray-100 min-h-screen p-6">
+  <div class="text-center text-2xl font-bold text-gray-800 mb-6">Pending Orders</div>
+
+  <div id="loader" class="flex justify-center items-center h-64">
+    <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-500 border-opacity-75"></div>
+  </div>
+
+  <div id="ordersContainer" class="grid gap-6 md:grid-cols-2 lg:grid-cols-3 hidden"></div>
+
+<script>
+  const API_URL = "https://script.google.com/macros/s/AKfycbxkduAfhEpEtxKXA_HuIm-lZQj62ZPZwXeZ_Fol-v6VrzfhoXY2lffR64pjPahKV2o/exec";
+  const POST_URL = API_URL; // Same endpoint for now
+
+  let globalOrders = [];
+
+  async function fetchOrders() {
+    try {
+      const response = await fetch(API_URL);
+      const result = await response.json();
+
+      if (result.status === "success") {
+        document.getElementById("loader").classList.add("hidden");
+        document.getElementById("ordersContainer").classList.remove("hidden");
+        globalOrders = result.data;
+        renderOrders(globalOrders);
+      } else {
+        throw new Error("Invalid response");
+      }
+    } catch (error) {
+      document.getElementById("loader").innerHTML = "<p class='text-red-500 text-lg'>Failed to load orders.</p>";
+      console.error("Fetch error:", error);
+    }
+  }
+
+  function renderOrders(orders) {
+    const container = document.getElementById("ordersContainer");
+    container.innerHTML = "";
+
+    orders.forEach((order, index) => {
+      const deadline = new Date(order.timestamp);
+      deadline.setHours(18, 0, 0, 0); // 6:00 PM
+
+      const card = document.createElement("div");
+      card.className = "bg-white shadow-xl rounded-2xl p-6 transition-transform hover:scale-105 relative";
+
+      card.innerHTML = `
+        <div class="absolute top-2 right-2 text-sm px-2 py-1 rounded-full ${new Date() > deadline ? 'bg-red-200 text-red-800' : 'bg-green-200 text-green-800'}">
+          ${new Date() > deadline ? 'Overdue' : 'Active'}
+        </div>
+        <div class="text-xl font-semibold mb-2">${order.dealerName}</div>
+        <p><span class="font-medium">Marketing Person:</span> ${order.marketingPersonName}</p>
+        <p><span class="font-medium">Location:</span> ${order.location}</p>
+        <p><span class="font-medium">CRM:</span> ${order.crmName}</p>
+        <p><span class="font-medium">Deadline:</span> ${deadline.toLocaleString()}</p>
+        <p><span class="font-medium">Time Left:</span> <span id="countdown-${index}" class="font-mono text-blue-600"></span></p>
+        <div class="mt-4">
+          <label class="block text-sm font-medium mb-1">Tentative Dispatch Date:</label>
+          <input type="date" id="dispatch-${index}" class="w-full border rounded px-3 py-2" />
+        </div>
+        <button onclick="submitOrder(${index})"
+          class="mt-4 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
+          Submit
+        </button>
+      `;
+
+      container.appendChild(card);
+      startCountdown(deadline, index);
+    });
+  }
+
+  function startCountdown(deadline, index) {
+    const countdownEl = document.getElementById(`countdown-${index}`);
+    function updateCountdown() {
+      const now = new Date();
+      const diff = deadline - now;
+
+      if (diff <= 0) {
+        countdownEl.innerText = "00:00:00";
+        countdownEl.classList.add("text-red-500");
+        return;
+      }
+
+      const hours = String(Math.floor(diff / (1000 * 60 * 60))).padStart(2, '0');
+      const minutes = String(Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))).padStart(2, '0');
+      const seconds = String(Math.floor((diff % (1000 * 60)) / 1000)).padStart(2, '0');
+
+      countdownEl.innerText = `${hours}:${minutes}:${seconds}`;
+    }
+
+    updateCountdown();
+    setInterval(updateCountdown, 1000);
+  }
+
+  async function submitOrder(index) {
+    const dispatchDate = document.getElementById(`dispatch-${index}`).value;
+    if (!dispatchDate) {
+      alert("Please select a tentative dispatch date.");
+      return;
+    }
+
+    const order = globalOrders[index];
+
+    const payload = {
+      timestamp: order.timestamp,
+      dispatchDate: dispatchDate
+    };
+
+    try {
+      const res = await fetch(POST_URL, {
+        method: "POST",
+        mode: "no-cors",
+        body: JSON.stringify(payload),
+        headers: {
+          "Content-Type": "application/json"
+        }
+      });
+
+      const result = await res.json();
+      if (result.status === "success") {
+        alert("Submitted successfully.");
+      } else {
+        alert("Failed: " + result.message);
+      }
+    } catch (err) {
+      alert("Submission failed.");
+      console.error(err);
+    }
+  }
+
+  fetchOrders();
+</script>
+</body>
+</html>

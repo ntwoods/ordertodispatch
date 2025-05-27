@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Order Level Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen p-6">
+  <h1 class="text-3xl font-bold text-center mb-10 text-blue-800">Live Order Dashboard</h1>
+
+  <div id="dashboard" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 text-white"></div>
+
+  <script>
+    const levels = [
+      { level: "Level 2 - Sales Coordinator", api: "https://script.google.com/macros/s/AKfycbwWKHlGOSpQ5Jcof9bqCDQp-Tnl8J4lCZZT7DnGIEg75DjXYjVrvRbbjefyjdKDDPpi/exec", url: "https://yourdomain.com/step-2" },
+      { level: "Level 3/4 - CRM Checking", api: "https://script.google.com/macros/s/AKfycby7o8IwfJ1vgI-_2Ad-epHZHmOdVqTbNVWnncuv4BnDIiIcWNmuzrEspA9jIvgy9G84eQ/exec", url: "https://yourdomain.com/step-3" },
+      { level: "Level 5 - CRM Call & Order Sent", api: "https://script.google.com/macros/s/AKfycbwuVRnAkiEKnTNy6yPBiPxA6BHIim4OlHjx1B3duF0Qt81itDZzgESH_g6pGWDkKhTs/exec", url: "https://yourdomain.com/step-4" },
+      { level: "Level 6 - Tentative Dispatch Date", api: "https://script.google.com/macros/s/AKfycbxkduAfhEpEtxKXA_HuIm-lZQj62ZPZwXeZ_Fol-v6VrzfhoXY2lffR64pjPahKV2o/exec", url: "https://yourdomain.com/step-5" },
+      { level: "Level 7 - Reminder to Dispatch", api: "https://script.google.com/macros/s/AKfycbxMxIzOQmHv3LPTh6ca6i5uuguyH615cnjA5emEGNT0rmWpJlnrcg-KWNVP1DORkkcX/exec", url: "https://yourdomain.com/step-6" },
+      { level: "Level 8 - Dealer Informed", api: "https://script.google.com/macros/s/AKfycbwUr0UhENK6RGtdvYMC6-V0Khwb3kibKP4SLXC4nzL6Hm4idr6P-Olx4XTWvgZ_e2xk-Q/exec", url: "https://yourdomain.com/step-7" }
+    ];
+
+    const dashboard = document.getElementById("dashboard");
+
+    function createCard(levelName, count, link) {
+      const card = document.createElement("a");
+      card.href = link; // Clickable URL
+      card.target = "_blank"; // Open in new tab (optional)
+      card.className = "block bg-blue-600 p-6 rounded-xl shadow-lg hover:shadow-xl transition hover:bg-blue-700";
+      card.innerHTML = `
+        <h2 class="text-xl font-bold mb-2">${levelName}</h2>
+        <p class="text-4xl font-semibold">${count}</p>
+        <p class="text-sm text-blue-100 mt-1">Pending Orders</p>
+      `;
+      dashboard.appendChild(card);
+    }
+
+    async function loadData() {
+      for (const item of levels) {
+        try {
+          const res = await fetch(item.api);
+          const data = await res.json();
+          const count = Array.isArray(data.data) ? data.data.length : 0;
+          createCard(item.level, count, item.url);
+        } catch (err) {
+          console.error(`Error loading ${item.level}:`, err);
+          createCard(item.level, "Error", item.url);
+        }
+      }
+    }
+
+    loadData();
+  </script>
+</body>
+</html>
