@@ -115,42 +115,36 @@
     setInterval(updateCountdown, 1000);
   }
 
-  async function submitOrder(index) {
-    const dispatchDate = document.getElementById(`dispatch-${index}`).value;
-    if (!dispatchDate) {
-      alert("Please select a tentative dispatch date.");
-      return;
-    }
-
-    const order = globalOrders[index];
-
-    const payload = {
-      timestamp: order.timestamp,
-      dispatchDate: dispatchDate
-    };
-
-    try {
-      const res = await fetch(POST_URL, {
-        method: "POST",
-        mode: "no-cors",
-        body: JSON.stringify(payload),
-        headers: {
-          "Content-Type": "application/json"
-        }
-      });
-
-      const result = await res.json();
-      if (result.status === "success") {
-        alert("Submitted successfully.");
-      } else {
-        alert("Submitted successfully.");
-      }
-    } catch (err) {
-      alert("Submitted successfully");
-      console.error(err);
-    }
+async function submitOrder(index) {
+  const dispatchDate = document.getElementById(`dispatch-${index}`).value;
+  if (!dispatchDate) {
+    alert("Please select a tentative dispatch date.");
+    return;
   }
 
+  const order = globalOrders[index];
+
+  const payload = {
+    timestamp: order.timestamp,
+    dispatchDate: dispatchDate
+  };
+
+  try {
+    await fetch(POST_URL, {
+      method: "POST",
+      mode: "no-cors",
+      body: JSON.stringify(payload),
+      headers: {
+        "Content-Type": "application/json"
+      }
+    });
+
+    alert("Request sent. We'll process your submission shortly.");
+  } catch (err) {
+    alert("There was an error while submitting.");
+    console.error(err);
+  }
+}
   fetchOrders();
 </script>
 </body>
