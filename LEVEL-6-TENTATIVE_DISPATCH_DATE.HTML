@@ -34,9 +34,14 @@
 
   async function fetchOrders() {
     try {
-      const response = await fetch(API_URL);
-      const result = await response.json();
-
+        const urlParams = new URLSearchParams(window.location.search);
+        const crmName = urlParams.get('crm');
+        if (!crmName) {
+            throw new Error('CRM name is missing in URL');
+        }
+        // Append crmName to the API URL
+        const response = await fetch(`${API_URL}?crm=${encodeURIComponent(crmName)}`);
+        const result = await response.json();
       if (result.status === "success") {
         document.getElementById("loader").classList.add("hidden");
         document.getElementById("ordersContainer").classList.remove("hidden");
