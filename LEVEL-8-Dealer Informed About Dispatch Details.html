@@ -84,7 +84,7 @@
               <span class="ml-2 text-sm">Dispatch Details Sent To Dealer</span>
             </label>
           </div>
-          <button onclick="submitConfirmation(${index})"
+          <button id="submit-${index}" onclick="submitConfirmation(${index})"
             class="mt-4 w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
             Submit
           </button>
@@ -120,7 +120,7 @@
         alert("Please confirm that the Dispatch Department is informed.");
         return;
       }
-
+    const button = document.getElementById(`submit-${index}`);
  // Show loading state
   const originalText = button.textContent;
   button.textContent = "Submitting...";
