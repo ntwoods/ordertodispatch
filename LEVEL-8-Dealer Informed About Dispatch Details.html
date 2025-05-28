@@ -121,10 +121,15 @@
         return;
       }
 
-      const payload = {
+ // Show loading state
+  const originalText = button.textContent;
+  button.textContent = "Submitting...";
+  button.disabled = true;
+
+ 
+     const payload = {
         timestampForMap: globalOrders[index].timestampForMap
       };
-
       try {
         const res = await fetch(API_URL, {
           method: "POST",
@@ -133,17 +138,22 @@
           headers: { "Content-Type": "application/json" }
         });
 
-        const result = await res.json();
-        if (result.status === "success") {
-          alert("Submitted successfully.");
-        } else {
-          alert("Submitted successfully.");
-        }
-      } catch (err) {
-        alert("Submitted successfully.");
-        console.error(err);
-      }
-    }
+    setTimeout(() => {
+      alert("Submitted successfully!");
+      button.textContent = "Submitted ✓";
+      button.style.backgroundColor = "#10B981"; // Green color
+      
+      // Optional: Remove the card or disable further submissions
+      // button.disabled = true;
+    }, 1000);
+
+  } catch (err) {
+    console.error('Submit error:', err);
+    button.textContent = originalText;
+    button.disabled = false;
+    alert("Submission failed. Please try again.");
+  }
+}
 
     fetchOrders();
   </script>
