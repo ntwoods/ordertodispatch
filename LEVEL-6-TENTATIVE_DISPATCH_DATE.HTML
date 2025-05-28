@@ -123,14 +123,22 @@ async function submitOrder(index) {
   }
 
   const order = globalOrders[index];
+  const button = document.querySelector(`button[onclick="submitOrder(${index})"]`);
+  
+  // Show loading state
+  const originalText = button.textContent;
+  button.textContent = "Submitting...";
+  button.disabled = true;
 
   const payload = {
     timestamp: order.timestamp,
     dispatchDate: dispatchDate
   };
 
+  console.log('Submitting payload:', payload); // For debugging
+
   try {
-    await fetch(POST_URL, {
+    const response = await fetch(POST_URL, {
       method: "POST",
       mode: "no-cors",
       headers: {
@@ -139,10 +147,22 @@ async function submitOrder(index) {
       body: JSON.stringify(payload)
     });
 
-    alert("Submitted successfully.");
+    // With no-cors, we can't read the response, so we assume success
+    // You might want to add a delay to simulate processing
+    setTimeout(() => {
+      alert("Submitted successfully!");
+      button.textContent = "Submitted ✓";
+      button.style.backgroundColor = "#10B981"; // Green color
+      
+      // Optional: Remove the card or disable further submissions
+      // button.disabled = true;
+    }, 1000);
+
   } catch (err) {
-    alert("Submitted successfully.");
-    console.error(err);
+    console.error('Submit error:', err);
+    button.textContent = originalText;
+    button.disabled = false;
+    alert("Submission failed. Please try again.");
   }
 }
 
