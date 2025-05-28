@@ -18,11 +18,9 @@
       try {
         const urlParams = new URLSearchParams(window.location.search);
         const crmName = urlParams.get('crm');
-
         if (!crmName) {
             throw new Error('CRM name is missing in URL');
         }
-
         // Append crmName to the API URL
         const response = await fetch(`${API_URL}?crm=${encodeURIComponent(crmName)}`);
         const result = await response.json();
