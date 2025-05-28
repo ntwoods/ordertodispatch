@@ -1,55 +1,436 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Order Level Dashboard</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-gray-100 min-h-screen p-6">
-  <h1 class="text-3xl font-bold text-center mb-10 text-blue-800">Live Order Dashboard</h1>
-
-  <div id="dashboard" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 text-white"></div>
-
-  <script>
-    const levels = [
-      { level: "Level 2 - Sales Coordinator", api: "https://script.google.com/macros/s/AKfycbwWKHlGOSpQ5Jcof9bqCDQp-Tnl8J4lCZZT7DnGIEg75DjXYjVrvRbbjefyjdKDDPpi/exec", url: "https://ntwoods.github.io/ordertodispatch/LEVEL-2-FINAL_SALES_COORDINATOR.html" },
-      { level: "Level 3/4 - CRM Checking", api: "https://script.google.com/macros/s/AKfycby7o8IwfJ1vgI-_2Ad-epHZHmOdVqTbNVWnncuv4BnDIiIcWNmuzrEspA9jIvgy9G84eQ/exec", url: "https://ntwoods.github.io/ordertodispatch/LEVEL-3&4 CRM Checking Credit Status & Stock Status - Approve or Hold.html" },
-      { level: "Level 5 - CRM Call & Order Sent", api: "https://script.google.com/macros/s/AKfycbwuVRnAkiEKnTNy6yPBiPxA6BHIim4OlHjx1B3duF0Qt81itDZzgESH_g6pGWDkKhTs/exec", url: "https://ntwoods.github.io/ordertodispatch/LEVEL-5-CRM Call to Dealer + Updated Order File + Sent Order to Owners (WhatsApp and Call).html" },
-      { level: "Level 6 - Tentative Dispatch Date", api: "https://script.google.com/macros/s/AKfycbxkduAfhEpEtxKXA_HuIm-lZQj62ZPZwXeZ_Fol-v6VrzfhoXY2lffR64pjPahKV2o/exec", url: "https://ntwoods.github.io/ordertodispatch/LEVEL-6-TENTATIVE_DISPATCH_DATE.HTML" },
-      { level: "Level 7 - Reminder to Dispatch", api: "https://script.google.com/macros/s/AKfycbxMxIzOQmHv3LPTh6ca6i5uuguyH615cnjA5emEGNT0rmWpJlnrcg-KWNVP1DORkkcX/exec", url: "https://ntwoods.github.io/ordertodispatch/LEVEL-7-Reminder To Dispatch Department.html" },
-      { level: "Level 8 - Dealer Informed", api: "https://script.google.com/macros/s/AKfycbwUr0UhENK6RGtdvYMC6-V0Khwb3kibKP4SLXC4nzL6Hm4idr6P-Olx4XTWvgZ_e2xk-Q/exec", url: "https://ntwoods.github.io/ordertodispatch/LEVEL-8-Dealer Informed About Dispatch Details.html" }
-    ];
-
-    const dashboard = document.getElementById("dashboard");
-
-    function createCard(levelName, count, link) {
-      const card = document.createElement("a");
-      card.href = link; // Clickable URL
-      card.target = "_blank"; // Open in new tab (optional)
-      card.className = "block bg-blue-600 p-6 rounded-xl shadow-lg hover:shadow-xl transition hover:bg-blue-700";
-      card.innerHTML = `
-        <h2 class="text-xl font-bold mb-2">${levelName}</h2>
-        <p class="text-4xl font-semibold">${count}</p>
-        <p class="text-sm text-blue-100 mt-1">Pending Orders</p>
-      `;
-      dashboard.appendChild(card);
-    }
-
-    async function loadData() {
-      for (const item of levels) {
-        try {
-          const res = await fetch(item.api);
-          const data = await res.json();
-          const count = Array.isArray(data.data) ? data.data.length : 0;
-          createCard(item.level, count, item.url);
-        } catch (err) {
-          console.error(`Error loading ${item.level}:`, err);
-          createCard(item.level, "Error", item.url);
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRM Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-      }
-    }
 
-    loadData();
-  </script>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        .dashboard-container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            animation: slideDown 0.8s ease-out;
+        }
+
+        .header h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #ffffff 0%, #e0e7ff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+            text-shadow: 0 4px 20px rgba(255, 255, 255, 0.3);
+        }
+
+        .header p {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 1.2rem;
+            font-weight: 300;
+        }
+
+        .workflow-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+            width: 100%;
+        }
+
+        .workflow-card {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 20px;
+            padding: 30px;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            animation: fadeInUp 0.8s ease-out forwards;
+            opacity: 0;
+            transform: translateY(30px);
+            min-height: 280px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .workflow-card:nth-child(1) { animation-delay: 0.1s; }
+        .workflow-card:nth-child(2) { animation-delay: 0.3s; }
+        .workflow-card:nth-child(3) { animation-delay: 0.5s; }
+        .workflow-card:nth-child(4) { animation-delay: 0.7s; }
+        .workflow-card:nth-child(5) { animation-delay: 0.9s; }
+
+        .workflow-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transition: left 0.6s;
+        }
+
+        .workflow-card:hover::before {
+            left: 100%;
+        }
+
+        .workflow-card:hover {
+            transform: translateY(-10px) scale(1.02);
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.3);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2), 0 0 30px rgba(255, 255, 255, 0.1);
+        }
+
+        .card-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 20px rgba(255, 107, 107, 0.3);
+        }
+
+        .workflow-card:nth-child(2) .card-icon {
+            background: linear-gradient(135deg, #4834d4, #686de0);
+            box-shadow: 0 8px 20px rgba(72, 52, 212, 0.3);
+        }
+
+        .workflow-card:nth-child(3) .card-icon {
+            background: linear-gradient(135deg, #00d2d3, #54a0ff);
+            box-shadow: 0 8px 20px rgba(0, 210, 211, 0.3);
+        }
+
+        .workflow-card:nth-child(4) .card-icon {
+            background: linear-gradient(135deg, #ff9ff3, #f368e0);
+            box-shadow: 0 8px 20px rgba(255, 159, 243, 0.3);
+        }
+
+        .workflow-card:nth-child(5) .card-icon {
+            background: linear-gradient(135deg, #3742fa, #2f3542);
+            box-shadow: 0 8px 20px rgba(55, 66, 250, 0.3);
+        }
+
+        .workflow-card:hover .card-icon {
+            transform: rotate(10deg) scale(1.1);
+        }
+
+        .card-icon svg {
+            width: 30px;
+            height: 30px;
+            color: white;
+        }
+
+        .card-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 10px;
+            line-height: 1.3;
+        }
+
+        .card-description {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.95rem;
+            line-height: 1.5;
+            margin-bottom: 20px;
+        }
+
+        .card-level {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+
+        .card-arrow {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .workflow-card:hover .card-arrow {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateX(5px);
+        }
+
+        .card-arrow svg {
+            width: 20px;
+            height: 20px;
+            color: white;
+        }
+
+        .pulse-animation {
+            animation: pulse 2s infinite, fadeInUp 0.8s ease-out forwards;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(255, 255, 255, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); }
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .floating-elements {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .floating-circle {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.05);
+            animation: float 6s ease-in-out infinite;
+        }
+
+        .floating-circle:nth-child(1) {
+            width: 80px;
+            height: 80px;
+            top: 20%;
+            left: 10%;
+            animation-delay: 0s;
+        }
+
+        .floating-circle:nth-child(2) {
+            width: 120px;
+            height: 120px;
+            top: 60%;
+            right: 15%;
+            animation-delay: 2s;
+        }
+
+        .floating-circle:nth-child(3) {
+            width: 60px;
+            height: 60px;
+            bottom: 20%;
+            left: 20%;
+            animation-delay: 4s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(180deg); }
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2.5rem;
+            }
+            
+            .workflow-container {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .workflow-card {
+                padding: 25px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-elements">
+        <div class="floating-circle"></div>
+        <div class="floating-circle"></div>
+        <div class="floating-circle"></div>
+    </div>
+
+    <div class="dashboard-container">
+        <div class="header">
+            <h1>CRM Dashboard</h1>
+            <p>Streamlined Order to Dispatch Workflow Management</p>
+        </div>
+
+        <div class="workflow-container">
+            <div class="workflow-card pulse-animation" onclick="navigateTo('https://ntwoods.github.io/ordertodispatch/LEVEL-3&4%20CRM%20Checking%20Credit%20Status%20&%20Stock%20Status%20-%20Approve%20or%20Hold.html?crm=Parakh%20Sir')">
+                <div class="card-level">LEVEL 3-4</div>
+                <div class="card-icon">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+                <h3 class="card-title">Approve or Hold</h3>
+                <p class="card-description">Credit Check + Stock Check Status Verification</p>
+                <div class="card-arrow">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M13.025 1l-2.847 2.828 6.176 6.176h-16.354v3.992h16.354l-6.176 6.176 2.847 2.828 10.975-11z"/>
+                    </svg>
+                </div>
+            </div>
+
+            <div class="workflow-card" onclick="navigateTo('https://ntwoods.github.io/ordertodispatch/LEVEL-5-CRM%20Call%20to%20Dealer%20+%20Updated%20Order%20File%20+%20Sent%20Order%20to%20Owners%20(WhatsApp%20and%20Call).html?crm=Parakh%20Sir')">
+                <div class="card-level">LEVEL 5</div>
+                <div class="card-icon">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+                    </svg>
+                </div>
+                <h3 class="card-title">Update Owners After Call with Dealer</h3>
+                <p class="card-description">Call to Dealer + Updated Order File + Sent Order to Owners (WhatsApp and Call)</p>
+                <div class="card-arrow">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M13.025 1l-2.847 2.828 6.176 6.176h-16.354v3.992h16.354l-6.176 6.176 2.847 2.828 10.975-11z"/>
+                    </svg>
+                </div>
+            </div>
+
+            <div class="workflow-card" onclick="navigateTo('https://ntwoods.github.io/ordertodispatch/LEVEL-6-TENTATIVE_DISPATCH_DATE.HTML?crm=Parakh%20Sir')">
+                <div class="card-level">LEVEL 6</div>
+                <div class="card-icon">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M8 7V3a1 1 0 012 0v4h4V3a1 1 0 012 0v4h2a2 2 0 012 2v10a2 2 0 01-2 2H6a2 2 0 01-2-2V9a2 2 0 012-2h2zM6 9v10h12V9H6zm7 3a1 1 0 10-2 0v2a1 1 0 102 0v-2z"/>
+                    </svg>
+                </div>
+                <h3 class="card-title">Get Tentative Dispatch Date from Dispatch Department</h3>
+                <p class="card-description">Coordinate with Dispatch Department to Get Tentative Timeline</p>
+                <div class="card-arrow">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M13.025 1l-2.847 2.828 6.176 6.176h-16.354v3.992h16.354l-6.176 6.176 2.847 2.828 10.975-11z"/>
+                    </svg>
+                </div>
+            </div>
+
+            <div class="workflow-card" onclick="navigateTo('https://ntwoods.github.io/ordertodispatch/LEVEL-7-Reminder%20To%20Dispatch%20Department.html?crm=Parakh%20Sir')">
+                <div class="card-level">LEVEL 7</div>
+                <div class="card-icon">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/>
+                    </svg>
+                </div>
+                <h3 class="card-title">Remind Dispatch Department 1 Day Before Dispatch</h3>
+                <p class="card-description">Send Reminder to Dispatch Department One Day Before Scheduled Dispatch</p>
+                <div class="card-arrow">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M13.025 1l-2.847 2.828 6.176 6.176h-16.354v3.992h16.354l-6.176 6.176 2.847 2.828 10.975-11z"/>
+                    </svg>
+                </div>
+            </div>
+
+            <div class="workflow-card" onclick="navigateTo('https://ntwoods.github.io/ordertodispatch/LEVEL-8-Dealer%20Informed%20About%20Dispatch%20Details.html?crm=Parakh%20Sir')">
+                <div class="card-level">LEVEL 8</div>  
+                <div class="card-icon">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M19 7h-3V6a4 4 0 0 0-8 0v1H5a1 1 0 0 0-1 1v11a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3V8a1 1 0 0 0-1-1zM10 6a2 2 0 0 1 4 0v1h-4V6zm8 13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V9h2v1a1 1 0 0 0 2 0V9h4v1a1 1 0 0 0 2 0V9h2v10z"/>
+                    </svg>
+                </div>
+                <h3 class="card-title">Share Dispatch Details with Dealer on Dispatch Day</h3>
+                <p class="card-description">Final Communication - Inform Dealer About Complete Dispatch Details</p>
+                <div class="card-arrow">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M13.025 1l-2.847 2.828 6.176 6.176h-16.354v3.992h16.354l-6.176 6.176 2.847 2.828 10.975-11z"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function navigateTo(url) {
+            // Add a subtle animation before navigation
+            const clickedCard = event.currentTarget;
+            clickedCard.style.transform = 'scale(0.95)';
+            
+            setTimeout(() => {
+                window.open(url, '_blank');
+                clickedCard.style.transform = '';
+            }, 150);
+        }
+
+        // Add some interactive sparkle effects on hover
+        document.querySelectorAll('.workflow-card').forEach(card => {
+            card.addEventListener('mouseenter', function(e) {
+                createSparkle(e.target);
+            });
+        });
+
+        function createSparkle(element) {
+            const sparkle = document.createElement('div');
+            sparkle.style.position = 'absolute';
+            sparkle.style.width = '4px';
+            sparkle.style.height = '4px';
+            sparkle.style.background = 'white';
+            sparkle.style.borderRadius = '50%';
+            sparkle.style.pointerEvents = 'none';
+            sparkle.style.animation = 'sparkle 0.6s ease-out forwards';
+            
+            const rect = element.getBoundingClientRect();
+            sparkle.style.left = Math.random() * rect.width + 'px';
+            sparkle.style.top = Math.random() * rect.height + 'px';
+            
+            element.appendChild(sparkle);
+            
+            setTimeout(() => {
+                sparkle.remove();
+            }, 600);
+        }
+
+        // Add sparkle animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes sparkle {
+                0% { opacity: 0; transform: scale(0) rotate(0deg); }
+                50% { opacity: 1; transform: scale(1) rotate(180deg); }
+                100% { opacity: 0; transform: scale(0) rotate(360deg); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
 </body>
 </html>
