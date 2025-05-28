@@ -101,6 +101,13 @@
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2), 0 0 30px rgba(255, 255, 255, 0.1);
         }
 
+        .card-count {
+            font-size: 1rem;
+            color: #fff;
+            margin-top: auto;
+            font-weight: bold;
+        }
+
         .card-icon {
             width: 60px;
             height: 60px;
@@ -308,6 +315,7 @@
                 </div>
                 <h3 class="card-title">Approve or Hold</h3>
                 <p class="card-description">Credit Check + Stock Check Status Verification</p>
+                <div class="card-count" id="level34-count">Pending: ...</div>
                 <div class="card-arrow">
                     <svg viewBox="0 0 24 24" fill="currentColor">
                         <path d="M13.025 1l-2.847 2.828 6.176 6.176h-16.354v3.992h16.354l-6.176 6.176 2.847 2.828 10.975-11z"/>
@@ -324,6 +332,7 @@
                 </div>
                 <h3 class="card-title">Update Owners After Call with Dealer</h3>
                 <p class="card-description">Call to Dealer + Updated Order File + Sent Order to Owners (WhatsApp and Call)</p>
+                <div class="card-count" id="level5-count">Pending: ...</div>
                 <div class="card-arrow">
                     <svg viewBox="0 0 24 24" fill="currentColor">
                         <path d="M13.025 1l-2.847 2.828 6.176 6.176h-16.354v3.992h16.354l-6.176 6.176 2.847 2.828 10.975-11z"/>
@@ -340,6 +349,7 @@
                 </div>
                 <h3 class="card-title">Get Tentative Dispatch Date from Dispatch Department</h3>
                 <p class="card-description">Coordinate with Dispatch Department to Get Tentative Timeline</p>
+                <div class="card-count" id="level6-count">Pending: ...</div>
                 <div class="card-arrow">
                     <svg viewBox="0 0 24 24" fill="currentColor">
                         <path d="M13.025 1l-2.847 2.828 6.176 6.176h-16.354v3.992h16.354l-6.176 6.176 2.847 2.828 10.975-11z"/>
@@ -356,6 +366,7 @@
                 </div>
                 <h3 class="card-title">Remind Dispatch Department 1 Day Before Dispatch</h3>
                 <p class="card-description">Send Reminder to Dispatch Department One Day Before Scheduled Dispatch</p>
+                <div class="card-count" id="level7-count">Pending: ...</div>
                 <div class="card-arrow">
                     <svg viewBox="0 0 24 24" fill="currentColor">
                         <path d="M13.025 1l-2.847 2.828 6.176 6.176h-16.354v3.992h16.354l-6.176 6.176 2.847 2.828 10.975-11z"/>
@@ -372,6 +383,7 @@
                 </div>
                 <h3 class="card-title">Share Dispatch Details with Dealer on Dispatch Day</h3>
                 <p class="card-description">Final Communication - Inform Dealer About Complete Dispatch Details</p>
+                <div class="card-count" id="level8-count">Pending: ...</div>
                 <div class="card-arrow">
                     <svg viewBox="0 0 24 24" fill="currentColor">
                         <path d="M13.025 1l-2.847 2.828 6.176 6.176h-16.354v3.992h16.354l-6.176 6.176 2.847 2.828 10.975-11z"/>
@@ -382,6 +394,13 @@
     </div>
 
     <script>
+
+        
+        
+        
+        
+        
+        
         function navigateTo(url) {
             // Add a subtle animation before navigation
             const clickedCard = event.currentTarget;
