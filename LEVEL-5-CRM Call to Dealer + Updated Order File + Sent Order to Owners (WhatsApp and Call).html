@@ -1,1019 +1,645 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Order Management Dashboard</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-  <style>
-    :root {
-      --primary: #667eea;
-      --primary-dark: #5a67d8;
-      --secondary: #764ba2;
-      --accent: #f093fb;
-      --success: #48bb78;
-      --success-dark: #38a169;
-      --warning: #ed8936;
-      --error: #f56565;
-      --dark: #2d3748;
-      --light: #f7fafc;
-      --glass: rgba(255, 255, 255, 0.1);
-      --glass-border: rgba(255, 255, 255, 0.2);
-      --shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
-      --shadow-hover: 0 15px 35px rgba(31, 38, 135, 0.4);
-      --gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      --gradient-light: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
-    }
-
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    body {
-      font-family: 'Inter', sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      min-height: 100vh;
-      position: relative;
-      overflow-x: hidden;
-    }
-
-    body::before {
-      content: '';
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: 
-        radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
-        radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
-        radial-gradient(circle at 40% 40%, rgba(240, 147, 251, 0.2) 0%, transparent 50%);
-      pointer-events: none;
-      z-index: -1;
-    }
-
-    .container {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 2rem;
-    }
-
-    .header {
-      text-align: center;
-      margin-bottom: 3rem;
-      animation: fadeInDown 0.8s ease-out;
-    }
-
-    .header h1 {
-      font-size: 3rem;
-      font-weight: 700;
-      color: white;
-      text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-      margin-bottom: 0.5rem;
-      background: linear-gradient(135deg, #ffffff 0%, #f0f0f0 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-
-    .header p {
-      color: rgba(255, 255, 255, 0.8);
-      font-size: 1.1rem;
-      font-weight: 300;
-    }
-
-    .stats-bar {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 1.5rem;
-      margin-bottom: 2rem;
-      animation: fadeInUp 0.8s ease-out 0.2s both;
-    }
-
-    .stat-card {
-      background: var(--glass);
-      backdrop-filter: blur(20px);
-      border: 1px solid var(--glass-border);
-      border-radius: 16px;
-      padding: 1.5rem;
-      text-align: center;
-      color: white;
-      transition: all 0.3s ease;
-    }
-
-    .stat-card:hover {
-      transform: translateY(-5px);
-      box-shadow: var(--shadow-hover);
-    }
-
-    .stat-card i {
-      font-size: 2rem;
-      margin-bottom: 0.5rem;
-      opacity: 0.8;
-    }
-
-    .stat-number {
-      font-size: 2rem;
-      font-weight: 700;
-      margin-bottom: 0.25rem;
-    }
-
-    .stat-label {
-      font-size: 0.9rem;
-      opacity: 0.8;
-      font-weight: 300;
-    }
-
-    .loading-container {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 200px;
-      color: white;
-    }
-
-    .loader {
-      width: 50px;
-      height: 50px;
-      border: 3px solid rgba(255, 255, 255, 0.3);
-      border-top: 3px solid white;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-      margin-right: 1rem;
-    }
-
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-
-    .orders-grid {
-      display: grid;
-      gap: 1.5rem;
-      animation: fadeInUp 0.8s ease-out 0.4s both;
-    }
-
-    .order-card {
-      background: var(--glass);
-      backdrop-filter: blur(20px);
-      border: 1px solid var(--glass-border);
-      border-radius: 20px;
-      padding: 2rem;
-      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-      position: relative;
-      overflow: hidden;
-    }
-
-    .order-card::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 4px;
-      background: var(--gradient);
-      transform: scaleX(0);
-      transition: transform 0.3s ease;
-    }
-
-    .order-card:hover::before {
-      transform: scaleX(1);
-    }
-
-    .order-card:hover {
-      transform: translateY(-8px);
-      box-shadow: var(--shadow-hover);
-      border-color: rgba(255, 255, 255, 0.3);
-    }
-
-    .order-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      margin-bottom: 1.5rem;
-    }
-
-    .dealer-name {
-      font-size: 1.5rem;
-      font-weight: 600;
-      color: white;
-      margin-bottom: 0.5rem;
-    }
-
-    .order-status {
-      background: var(--gradient);
-      color: white;
-      padding: 0.5rem 1rem;
-      border-radius: 20px;
-      font-size: 0.8rem;
-      font-weight: 500;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    .order-info {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 1rem;
-      margin-bottom: 2rem;
-    }
-
-    .info-item {
-      display: flex;
-      align-items: center;
-      color: rgba(255, 255, 255, 0.9);
-      font-size: 0.9rem;
-    }
-
-    .info-item i {
-      margin-right: 0.75rem;
-      width: 16px;
-      color: var(--accent);
-    }
-
-    .info-label {
-      font-weight: 500;
-      margin-right: 0.5rem;
-    }
-
-    .download-link {
-      display: inline-flex;
-      align-items: center;
-      color: var(--accent);
-      text-decoration: none;
-      font-weight: 500;
-      transition: all 0.3s ease;
-      margin-bottom: 1.5rem;
-    }
-
-    .download-link:hover {
-      color: white;
-      transform: translateX(5px);
-    }
-
-    .download-link i {
-      margin-right: 0.5rem;
-    }
-
-    .upload-section {
-      background: rgba(255, 255, 255, 0.05);
-      border: 2px dashed rgba(255, 255, 255, 0.3);
-      border-radius: 12px;
-      padding: 2rem;
-      margin-bottom: 1.5rem;
-      text-align: center;
-      transition: all 0.3s ease;
-      position: relative;
-    }
-
-    .upload-section:hover {
-      border-color: var(--accent);
-      background: rgba(255, 255, 255, 0.08);
-    }
-
-    .upload-section.dragover {
-      border-color: var(--success);
-      background: rgba(72, 187, 120, 0.1);
-      transform: scale(1.02);
-    }
-
-    .file-input-wrapper {
-      position: relative;
-      overflow: hidden;
-      display: inline-block;
-    }
-
-    .file-input {
-      position: absolute;
-      left: -9999px;
-      opacity: 0;
-    }
-
-    .file-input-label {
-      display: inline-flex;
-      align-items: center;
-      padding: 1rem 2rem;
-      background: var(--gradient);
-      color: white;
-      border-radius: 50px;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      font-weight: 500;
-    }
-
-    .file-input-label:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
-    }
-
-    .file-input-label i {
-      margin-right: 0.5rem;
-    }
-
-    .file-selected {
-      margin-top: 1rem;
-      color: var(--success);
-      font-weight: 500;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .file-selected i {
-      margin-right: 0.5rem;
-    }
-
-    .checkbox-wrapper {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 1.5rem;
-    }
-
-    .checkbox-container {
-      position: relative;
-      display: flex;
-      align-items: center;
-      cursor: pointer;
-      user-select: none;
-    }
-
-    .checkbox-input {
-      position: absolute;
-      opacity: 0;
-      cursor: pointer;
-    }
-
-    .checkbox-custom {
-      width: 24px;
-      height: 24px;
-      background: rgba(255, 255, 255, 0.1);
-      border: 2px solid rgba(255, 255, 255, 0.3);
-      border-radius: 6px;
-      margin-right: 1rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.3s ease;
-    }
-
-    .checkbox-input:checked + .checkbox-custom {
-      background: var(--success);
-      border-color: var(--success);
-      transform: scale(1.1);
-    }
-
-    .checkbox-custom::after {
-      content: '\f00c';
-      font-family: 'Font Awesome 6 Free';
-      font-weight: 900;
-      color: white;
-      font-size: 12px;
-      opacity: 0;
-      transform: scale(0);
-      transition: all 0.2s ease;
-    }
-
-    .checkbox-input:checked + .checkbox-custom::after {
-      opacity: 1;
-      transform: scale(1);
-    }
-
-    .checkbox-label {
-      color: rgba(255, 255, 255, 0.9);
-      font-weight: 500;
-    }
-
-    .action-button {
-      width: 100%;
-      padding: 1rem 2rem;
-      background: var(--gradient);
-      color: white;
-      border: none;
-      border-radius: 50px;
-      font-size: 1rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .action-button::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: -100%;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-      transition: left 0.5s;
-    }
-
-    .action-button:hover::before {
-      left: 100%;
-    }
-
-    .action-button:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
-    }
-
-    .action-button:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-      transform: none;
-    }
-
-    .action-button.processing {
-      background: var(--warning);
-    }
-
-    .action-button.success {
-      background: var(--success);
-    }
-
-    @keyframes fadeInDown {
-      from {
-        opacity: 0;
-        transform: translateY(-30px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    @keyframes fadeInUp {
-      from {
-        opacity: 0;
-        transform: translateY(30px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    @keyframes pulse {
-      0%, 100% {
-        transform: scale(1);
-      }
-      50% {
-        transform: scale(1.05);
-      }
-    }
-
-    .notification {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      background: var(--glass);
-      backdrop-filter: blur(20px);
-      border: 1px solid var(--glass-border);
-      border-radius: 12px;
-      padding: 1rem 1.5rem;
-      color: white;
-      font-weight: 500;
-      z-index: 1000;
-      transform: translateX(100%);
-      transition: transform 0.3s ease;
-      max-width: 400px;
-    }
-
-    .notification.show {
-      transform: translateX(0);
-    }
-
-    .notification.success {
-      border-left: 4px solid var(--success);
-    }
-
-    .notification.error {
-      border-left: 4px solid var(--error);
-    }
-
-    .empty-state {
-      text-align: center;
-      color: rgba(255, 255, 255, 0.7);
-      padding: 4rem 2rem;
-    }
-
-    .empty-state i {
-      font-size: 4rem;
-      margin-bottom: 1rem;
-      opacity: 0.5;
-    }
-
-    .empty-state h3 {
-      font-size: 1.5rem;
-      margin-bottom: 0.5rem;
-      color: white;
-    }
-
-    .debug-info {
-      background: rgba(0, 0, 0, 0.3);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      border-radius: 8px;
-      padding: 1rem;
-      margin-top: 1rem;
-      font-family: monospace;
-      font-size: 0.8rem;
-      color: rgba(255, 255, 255, 0.8);
-      white-space: pre-wrap;
-      max-height: 200px;
-      overflow-y: auto;
-    }
-
-    @media (max-width: 768px) {
-      .container {
-        padding: 1rem;
-      }
-
-      .header h1 {
-        font-size: 2rem;
-      }
-
-      .order-info {
-        grid-template-columns: 1fr;
-      }
-
-      .order-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 1rem;
-      }
-
-      .upload-section {
-        padding: 1.5rem;
-      }
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sales Orders Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+        
+        .loading {
+            text-align: center;
+            font-size: 18px;
+            color: #666;
+        }
+        
+        .error {
+            background-color: #ffebee;
+            color: #c62828;
+            padding: 15px;
+            border-radius: 5px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .orders-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+        }
+        
+        .order-card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 20px;
+            transition: transform 0.2s;
+        }
+        
+        .order-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        }
+        
+        .order-header {
+            border-bottom: 2px solid #e0e0e0;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .dealer-name {
+            font-size: 20px;
+            font-weight: bold;
+            color: #1976d2;
+            margin-bottom: 5px;
+        }
+        
+        .timestamp {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .order-details {
+            margin-bottom: 15px;
+        }
+        
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            padding: 5px 0;
+        }
+        
+        .detail-label {
+            font-weight: bold;
+            color: #555;
+            flex: 1;
+        }
+        
+        .detail-value {
+            color: #333;
+            flex: 2;
+            text-align: right;
+        }
+        
+        .file-link {
+            color: #1976d2;
+            text-decoration: none;
+        }
+        
+        .file-link:hover {
+            text-decoration: underline;
+        }
+        
+        .countdown-section {
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            padding: 15px;
+            text-align: center;
+        }
+        
+        .countdown-label {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        
+        .countdown-timer {
+            font-size: 24px;
+            font-weight: bold;
+            font-family: monospace;
+        }
+        
+        .countdown-urgent {
+            color: #d32f2f;
+            animation: pulse 1s infinite;
+        }
+        
+        .countdown-warning {
+            color: #f57c00;
+        }
+        
+        .countdown-normal {
+            color: #388e3c;
+        }
+        
+        .countdown-expired {
+            color: #d32f2f;
+            background-color: #ffebee;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        .refresh-btn {
+            background-color: #1976d2;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+        
+        .refresh-btn:hover {
+            background-color: #1565c0;
+        }
+        
+        .action-section {
+            border-top: 2px solid #e0e0e0;
+            padding-top: 15px;
+            margin-top: 15px;
+        }
+        
+        .file-upload-section {
+            margin-bottom: 15px;
+        }
+        
+        .file-upload-label {
+            display: block;
+            font-weight: bold;
+            color: #555;
+            margin-bottom: 8px;
+        }
+        
+        .file-input {
+            width: 100%;
+            padding: 8px;
+            border: 2px dashed #ddd;
+            border-radius: 5px;
+            background-color: #fafafa;
+            cursor: pointer;
+            transition: border-color 0.3s;
+        }
+        
+        .file-input:hover {
+            border-color: #1976d2;
+        }
+        
+        .file-selected {
+            color: #388e3c;
+            font-size: 14px;
+            margin-top: 5px;
+            display: none;
+        }
+        
+        .radio-section {
+            margin-bottom: 15px;
+        }
+        
+        .radio-label {
+            font-weight: bold;
+            color: #555;
+            margin-bottom: 8px;
+            display: block;
+        }
+        
+        .radio-group {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .radio-option {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .radio-option input[type="radio"] {
+            margin: 0;
+        }
+        
+        .radio-option label {
+            color: #333;
+            cursor: pointer;
+            font-weight: normal;
+        }
+        
+        .submit-btn {
+            background-color: #388e3c;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            width: 100%;
+            transition: background-color 0.3s;
+        }
+        
+        .submit-btn:hover {
+            background-color: #2e7d32;
+        }
+        
+        .submit-btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .success-message {
+            background-color: #e8f5e8;
+            color: #2e7d32;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+            display: none;
+        }
+        
+        .error-message {
+            background-color: #ffebee;
+            color: #c62828;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+            display: none;
+        }
+    </style>
 </head>
 <body>
-  <div class="container">
-    <header class="header">
-      <h1><i class="fas fa-clipboard-list"></i> Order Management Dashboard</h1>
-      <p>Streamline your dealer order confirmations with style</p>
-    </header>
-
-    <div class="stats-bar">
-      <div class="stat-card">
-        <i class="fas fa-shopping-cart"></i>
-        <div class="stat-number" id="total-orders">0</div>
-        <div class="stat-label">Total Orders</div>
-      </div>
-      <div class="stat-card">
-        <i class="fas fa-clock"></i>
-        <div class="stat-number" id="pending-orders">0</div>
-        <div class="stat-label">Pending</div>
-      </div>
-      <div class="stat-card">
-        <i class="fas fa-check-circle"></i>
-        <div class="stat-number" id="completed-orders">0</div>
-        <div class="stat-label">Completed</div>
-      </div>
+    <div class="container">
+        <h1>Sales Orders Dashboard</h1>
+        <button class="refresh-btn" onclick="fetchOrders()">Refresh Orders</button>
+        <div id="content">
+            <div class="loading">Loading orders...</div>
+        </div>
     </div>
 
-    <div id="loading" class="loading-container">
-      <div class="loader"></div>
-      <span>Loading orders...</span>
-    </div>
+    <script>
+        let orders = [];
+        let countdownInterval;
 
-    <div id="orders" class="orders-grid" style="display: none;"></div>
+        // Your API endpoint URL - replace with your actual Google Apps Script Web App URL
+        const API_URL = 'https://script.google.com/macros/s/AKfycbwuVRnAkiEKnTNy6yPBiPxA6BHIim4OlHjx1B3duF0Qt81itDZzgESH_g6pGWDkKhTs/exec';
 
-    <div id="empty-state" class="empty-state" style="display: none;">
-      <i class="fas fa-inbox"></i>
-      <h3>No Orders Found</h3>
-      <p>There are currently no orders to display.</p>
-    </div>
-  </div>
-
-  <script>
-const API_URL = "https://script.google.com/macros/s/AKfycbwuVRnAkiEKnTNy6yPBiPxA6BHIim4OlHjx1B3duF0Qt81itDZzgESH_g6pGWDkKhTs/exec";
-const POST_URL = "https://script.google.com/macros/s/AKfycbwuVRnAkiEKnTNy6yPBiPxA6BHIim4OlHjx1B3duF0Qt81itDZzgESH_g6pGWDkKhTs/exec";
-
-let ordersData = [];
-let debugMode = true;
-
-// Enhanced notification system
-function showNotification(message, type = 'success', duration = 5000) {
-  const notification = document.createElement('div');
-  notification.className = `notification ${type}`;
-  notification.innerHTML = `
-    <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i>
-    ${message}
-  `;
-  document.body.appendChild(notification);
-  
-  setTimeout(() => notification.classList.add('show'), 100);
-  setTimeout(() => {
-    notification.classList.remove('show');
-    setTimeout(() => {
-      if (document.body.contains(notification)) {
-        document.body.removeChild(notification);
-      }
-    }, 300);
-  }, duration);
-}
-
-// Debug logging function
-function debugLog(message, data = null) {
-  if (debugMode) {
-    console.log(`[DEBUG] ${message}`, data || '');
-    
-    if (message.includes('Response') || message.includes('Error')) {
-      const debugDiv = document.createElement('div');
-      debugDiv.className = 'debug-info';
-      debugDiv.textContent = `${message}\n${data ? JSON.stringify(data, null, 2) : ''}`;
-      
-      const firstCard = document.querySelector('.order-card');
-      if (firstCard) {
-        const existingDebug = firstCard.querySelector('.debug-info');
-        if (existingDebug) {
-          existingDebug.remove();
+        // Function to fetch orders from the API
+        async function fetchOrders() {
+            try {
+                document.getElementById('content').innerHTML = '<div class="loading">Loading orders...</div>';
+                
+                const response = await fetch(API_URL);
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    orders = result.data;
+                    displayOrders();
+                    startCountdown();
+                } else {
+                    throw new Error('Failed to fetch orders');
+                }
+            } catch (error) {
+                console.error('Error fetching orders:', error);
+                document.getElementById('content').innerHTML = 
+                    '<div class="error">Error loading orders. Please check your API URL and try again.</div>';
+            }
         }
-        firstCard.appendChild(debugDiv);
-      }
-    }
-  }
-}
 
-// Convert file to base64
-function fileToBase64(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = () => {
-      // Remove the data URL prefix (e.g., "data:application/pdf;base64,")
-      const base64 = reader.result.split(',')[1];
-      resolve(base64);
-    };
-    reader.onerror = error => reject(error);
-  });
-}
+        // Function to display orders in cards
+        function displayOrders() {
+            const content = document.getElementById('content');
+            
+            if (orders.length === 0) {
+                content.innerHTML = '<div class="loading">No orders found.</div>';
+                return;
+            }
 
-// Update statistics
-function updateStats() {
-  document.getElementById('total-orders').textContent = ordersData.length;
-  document.getElementById('pending-orders').textContent = ordersData.length;
-  document.getElementById('completed-orders').textContent = '0';
-}
+            const ordersHTML = orders.map((order, index) => `
+                <div class="order-card" id="order-${index}">
+                    <div class="order-header">
+                        <div class="dealer-name">${order.dealerName}</div>
+                        <div class="timestamp">Order Time: ${formatDateTime(order.timestamp)}</div>
+                    </div>
+                    
+                    <div class="order-details">
+                        <div class="detail-row">
+                            <span class="detail-label">Marketing Person:</span>
+                            <span class="detail-value">${order.marketingPersonName}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Location:</span>
+                            <span class="detail-value">${order.location}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">CRM Name:</span>
+                            <span class="detail-value">${order.crmName}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">File:</span>
+                            <span class="detail-value">
+                                <a href="${order.fileUploadLink}" target="_blank" class="file-link">View File</a>
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div class="countdown-section">
+                        <div class="countdown-label">Time Remaining:</div>
+                        <div class="countdown-timer" id="countdown-${index}">Calculating...</div>
+                    </div>
+                    
+                    <div class="action-section">
+                        <div class="file-upload-section">
+                            <label class="file-upload-label">Attach Final Order Here:</label>
+                            <input type="file" class="file-input" id="file-${index}" onchange="handleFileSelect(${index})">
+                            <div class="file-selected" id="file-selected-${index}">✓ File selected</div>
+                        </div>
+                        
+                        <div class="radio-section">
+                            <label class="radio-label">Status:</label>
+                            <div class="radio-group">
+                                <div class="radio-option">
+                                    <input type="radio" id="owners-informed-yes-${index}" name="owners-informed-${index}" value="yes">
+                                    <label for="owners-informed-yes-${index}">Owners Informed</label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <button class="submit-btn" onclick="submitOrder(${index})">Submit</button>
+                        <div class="success-message" id="success-${index}">Order submitted successfully!</div>
+                        <div class="error-message" id="error-${index}">Error submitting order. Please try again.</div>
+                    </div>
+                </div>
+            `).join('');
 
-// Format date
-function formatDate(dateString) {
-  return new Date(dateString).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  });
-}
+            content.innerHTML = `<div class="orders-grid">${ordersHTML}</div>`;
+        }
 
-// Handle file selection
-function handleFileSelect(input, index) {
-  const file = input.files[0];
-  const selectedDiv = document.getElementById(`file-selected-${index}`);
-  
-  if (file) {
-    selectedDiv.innerHTML = `
-      <i class="fas fa-check-circle"></i>
-      ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)
-    `;
-    selectedDiv.style.display = 'flex';
-    debugLog(`File selected for order ${index}:`, {
-      name: file.name,
-      size: file.size,
-      type: file.type
-    });
-  } else {
-    selectedDiv.style.display = 'none';
-  }
-}
+        // Function to calculate deadline based on business rules
+        function calculateDeadline(timestamp) {
+            const orderTime = new Date(timestamp);
+            const hour = orderTime.getHours();
+            
+            let deadline;
+            
+            if (hour >= 17) {
+                // After 5 PM, deadline is next business day at 10 AM
+                deadline = getNextBusinessDay(orderTime);
+                deadline.setHours(10, 0, 0, 0);
+            } else {
+                // Before 5 PM, deadline is same day + 1 hour
+                deadline = new Date(orderTime.getTime() + (60 * 60 * 1000));
+            }
+            
+            return deadline;
+        }
 
-// Handle drag and drop
-function setupDragAndDrop(uploadSection, fileInput, index) {
-  ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-    uploadSection.addEventListener(eventName, preventDefaults, false);
-  });
+        // Function to get next business day (skipping weekends)
+        function getNextBusinessDay(date) {
+            const nextDay = new Date(date);
+            nextDay.setDate(nextDay.getDate() + 1);
+            
+            // If it's Saturday (6) or Sunday (0), move to Monday
+            while (nextDay.getDay() === 0 || nextDay.getDay() === 6) {
+                nextDay.setDate(nextDay.getDate() + 1);
+            }
+            
+            return nextDay;
+        }
 
-  function preventDefaults(e) {
-    e.preventDefault();
-    e.stopPropagation();
-  }
+        // Function to format date and time
+        function formatDateTime(timestamp) {
+            const date = new Date(timestamp);
+            return date.toLocaleString();
+        }
 
-  ['dragenter', 'dragover'].forEach(eventName => {
-    uploadSection.addEventListener(eventName, () => {
-      uploadSection.classList.add('dragover');
-    }, false);
-  });
+        // Function to format countdown display
+        function formatCountdown(milliseconds) {
+            if (milliseconds <= 0) {
+                return 'EXPIRED';
+            }
+            
+            const totalSeconds = Math.floor(milliseconds / 1000);
+            const hours = Math.floor(totalSeconds / 3600);
+            const minutes = Math.floor((totalSeconds % 3600) / 60);
+            const seconds = totalSeconds % 60;
+            
+            return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
 
-  ['dragleave', 'drop'].forEach(eventName => {
-    uploadSection.addEventListener(eventName, () => {
-      uploadSection.classList.remove('dragover');
-    }, false);
-  });
+        // Function to update countdown timers
+        function updateCountdowns() {
+            const now = new Date();
+            
+            orders.forEach((order, index) => {
+                const deadline = calculateDeadline(order.timestamp);
+                const timeRemaining = deadline.getTime() - now.getTime();
+                const countdownElement = document.getElementById(`countdown-${index}`);
+                
+                if (countdownElement) {
+                    const formattedTime = formatCountdown(timeRemaining);
+                    countdownElement.textContent = formattedTime;
+                    
+                    // Apply styling based on time remaining
+                    countdownElement.className = 'countdown-timer';
+                    
+                    if (timeRemaining <= 0) {
+                        countdownElement.classList.add('countdown-expired');
+                    } else if (timeRemaining <= 30 * 60 * 1000) { // 30 minutes
+                        countdownElement.classList.add('countdown-urgent');
+                    } else if (timeRemaining <= 60 * 60 * 1000) { // 1 hour
+                        countdownElement.classList.add('countdown-warning');
+                    } else {
+                        countdownElement.classList.add('countdown-normal');
+                    }
+                }
+            });
+        }
 
-  uploadSection.addEventListener('drop', (e) => {
-    const dt = e.dataTransfer;
-    const files = dt.files;
-    fileInput.files = files;
-    handleFileSelect(fileInput, index);
-  }, false);
-}
+        // Function to start countdown timer
+        function startCountdown() {
+            // Clear existing interval
+            if (countdownInterval) {
+                clearInterval(countdownInterval);
+            }
+            
+            // Update immediately
+            updateCountdowns();
+            
+            // Update every second
+            countdownInterval = setInterval(updateCountdowns, 1000);
+        }
 
-// Enhanced markDone function with base64 upload
-async function markDone(index, orderTimestamp) {
-  debugLog(`markDone called for order ${index} with timestamp: ${orderTimestamp}`);
-  
-  const fileInput = document.getElementById(`file-${index}`);
-  const checkbox = document.getElementById(`informed-${index}`);
-  const button = document.getElementById(`button-${index}`);
+        // Function to convert file to base64
+        function fileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => {
+                    // Remove the data:*/*;base64, prefix
+                    const base64 = reader.result.split(',')[1];
+                    resolve(base64);
+                };
+                reader.onerror = error => reject(error);
+            });
+        }
 
-  // Validation
-  if (!checkbox || !checkbox.checked) {
-    const message = "Please confirm Owner's Informed checkbox.";
-    showNotification(message, 'error');
-    debugLog('Validation failed: Checkbox not checked');
-    return;
-  }
+        // Function to handle file selection
+        function handleFileSelect(orderIndex) {
+            const fileInput = document.getElementById(`file-${orderIndex}`);
+            const fileSelectedDiv = document.getElementById(`file-selected-${orderIndex}`);
+            
+            if (fileInput.files.length > 0) {
+                const file = fileInput.files[0];
+                fileSelectedDiv.style.display = 'block';
+                fileSelectedDiv.textContent = `✓ ${file.name} selected (${(file.size / 1024).toFixed(1)} KB)`;
+            } else {
+                fileSelectedDiv.style.display = 'none';
+            }
+        }
 
-  if (!fileInput || fileInput.files.length === 0) {
-    const message = "Please upload the final order file.";
-    showNotification(message, 'error');
-    debugLog('Validation failed: No file selected');
-    return;
-  }
+        // Function to submit order data
+        async function submitOrder(orderIndex) {
+            const fileInput = document.getElementById(`file-${orderIndex}`);
+            const ownersInformedRadio = document.querySelector(`input[name="owners-informed-${orderIndex}"]:checked`);
+            const submitBtn = document.querySelector(`#order-${orderIndex} .submit-btn`);
+            const successMessage = document.getElementById(`success-${orderIndex}`);
+            const errorMessage = document.getElementById(`error-${orderIndex}`);
+            
+            // Hide previous messages
+            successMessage.style.display = 'none';
+            errorMessage.style.display = 'none';
+            
+            // Validation
+            if (!fileInput.files.length) {
+                alert('Please attach a file before submitting.');
+                return;
+            }
+            
+            if (!ownersInformedRadio) {
+                alert('Please select the owners informed status.');
+                return;
+            }
+            
+            // Disable submit button during processing
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Converting & Submitting...';
+            
+            try {
+                const file = fileInput.files[0];
+                
+                // Convert file to base64
+                const fileBase64 = await fileToBase64(file);
+                
+                // Prepare data object with base64 encoded file
+                const submitData = {
+                    action: 'submit', // Add action parameter for POST requests
+                    orderIndex: orderIndex,
+                    dealerName: orders[orderIndex].dealerName,
+                    timestamp: orders[orderIndex].timestamp,
+                    marketingPersonName: orders[orderIndex].marketingPersonName,
+                    location: orders[orderIndex].location,
+                    crmName: orders[orderIndex].crmName,
+                    ownersInformed: ownersInformedRadio.value,
+                    file: {
+                        name: file.name,
+                        type: file.type,
+                        size: file.size,
+                        base64: fileBase64
+                    }
+                };
+                
+                console.log('Submitting order data:', {
+                    ...submitData,
+                    file: {
+                        ...submitData.file,
+                        base64: submitData.file.base64.substring(0, 50) + '...' // Log only first 50 chars of base64
+                    }
+                });
+                
+                // Make the actual POST request
+                const result = await postData(submitData);
+                
+                if (result.status === 'success') {
+                    // Show success message
+                    successMessage.style.display = 'block';
+                    setTimeout(() => {
+                        successMessage.style.display = 'none';
+                    }, 5000);
+                    
+                    // Reset form
+                    fileInput.value = '';
+                    document.getElementById(`file-selected-${orderIndex}`).style.display = 'none';
+                    if (ownersInformedRadio) {
+                        ownersInformedRadio.checked = false;
+                    }
+                } else {
+                    throw new Error(result.message || 'Unknown error occurred');
+                }
+                
+            } catch (error) {
+                console.error('Error submitting order:', error);
+                errorMessage.textContent = `Error: ${error.message}`;
+                errorMessage.style.display = 'block';
+                setTimeout(() => {
+                    errorMessage.style.display = 'none';
+                }, 5000);
+            } finally {
+                // Re-enable submit button
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Submit';
+            }
+        }
 
-  const file = fileInput.files[0];
-  debugLog('Preparing to upload file:', {
-    name: file.name,
-    size: file.size,
-    type: file.type,
-    timestamp: orderTimestamp
-  });
+        // Function to post data
+        async function postData(data) {
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`Submitted Successfully!`);
+                }
+                
+                const result = await response.json();
+                return result;
+            } catch (error) {
+                console.error(`Submitted Successfully!`);
+                throw error;
+            }
+        }
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            fetchOrders();
+            
+            // Auto-refresh every 30 seconds
+            setInterval(fetchOrders, 30 * 1000);
+        });
 
-  // Update button state
-  button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
-  button.classList.add('processing');
-  button.disabled = true;
-
-  try {
-    // Convert file to base64
-    showNotification("Converting file...", 'warning', 2000);
-    const base64Data = await fileToBase64(file);
-    
-    debugLog('File converted to base64, length:', base64Data.length);
-
-    // Prepare payload for base64 upload
-    const payload = {
-      action: "markDone",
-      timestamp: orderTimestamp,
-      fileName: file.name,
-      fileType: file.type,
-      fileData: base64Data
-    };
-
-    debugLog('Payload prepared, making request to:', POST_URL);
-    
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 sec timeout for larger files
-
-    const response = await fetch(POST_URL, {
-      method: "POST",
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(payload),
-      signal: controller.signal
-    });
-
-    clearTimeout(timeoutId);
-
-    debugLog('Upload response received:', {
-      status: response.status,
-      statusText: response.statusText
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const result = await response.json();
-    debugLog('Upload result:', result);
-
-    if (result.status === 'success') {
-      button.innerHTML = '<i class="fas fa-check"></i> Completed';
-      button.classList.remove('processing');
-      button.classList.add('success');
-
-      let message = "Order marked as completed successfully!";
-      if (result.fileUrl) {
-        message += ` File uploaded: ${result.fileName}`;
-      }
-      
-      showNotification(message, 'success');
-      
-      // Optional: Display file URL for reference
-      if (result.fileUrl) {
-        debugLog('File URL:', result.fileUrl);
-      }
-    } else {
-      throw new Error(result.message || 'Unknown error occurred');
-    }
-
-  } catch (err) {
-    clearTimeout(timeoutId);
-
-    debugLog('Upload failed with error:', {
-      name: err.name,
-      message: err.message,
-      stack: err.stack
-    });
-
-    button.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Try Again';
-    button.classList.remove('processing');
-    button.disabled = false;
-
-    let errorMessage = "Upload failed: " + err.message;
-    if (err.name === 'AbortError') {
-      errorMessage = "Request timed out. Please try again.";
-    }
-
-    showNotification(errorMessage, 'error', 8000);
-  }
-}
-
-// Load orders with better error handling
-async function loadOrders() {
-  debugLog('Loading orders from API:', API_URL);
-  
-  try {
-    const response = await fetch(API_URL);
-    debugLog('Orders API response:', {
-      status: response.status,
-      statusText: response.statusText,
-      headers: Object.fromEntries(response.headers.entries())
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const contentType = response.headers.get("content-type");
-    let data;
-
-    if (contentType && contentType.includes("application/json")) {
-      data = await response.json();
-    } else {
-      const text = await response.text();
-      debugLog("Unexpected response format:", text.substring(0, 200));
-      
-      try {
-        data = JSON.parse(text);
-      } catch (parseError) {
-        throw new Error("Invalid response from API - not valid JSON");
-      }
-    }
-
-    debugLog('Parsed orders data:', data);
-
-    const orders = data.data;
-    if (!Array.isArray(orders)) {
-      debugLog("Expected array in data.data, got:", data);
-      throw new Error("Invalid data format received");
-    }
-
-    ordersData = orders;
-    updateStats();
-
-    const container = document.getElementById('orders');
-    const loading = document.getElementById('loading');
-    const emptyState = document.getElementById('empty-state');
-
-    loading.style.display = 'none';
-
-    if (orders.length === 0) {
-      emptyState.style.display = 'block';
-      debugLog('No orders found');
-      return;
-    }
-
-    container.style.display = 'grid';
-    debugLog(`Displaying ${orders.length} orders`);
-
-    orders.forEach((item, index) => {
-      const card = document.createElement('div');
-      card.className = 'order-card';
-      card.innerHTML = `
-        <div class="order-header">
-          <div>
-            <div class="dealer-name">
-              <i class="fas fa-store"></i> ${item.dealerName}
-            </div>
-          </div>
-          <div class="order-status">Pending</div>
-        </div>
-
-        <div class="order-info">
-          <div class="info-item">
-            <i class="fas fa-calendar-alt"></i>
-            <span class="info-label">Approved:</span>
-            ${formatDate(item.timestamp)}
-          </div>
-          <div class="info-item">
-            <i class="fas fa-user-tie"></i>
-            <span class="info-label">Marketing:</span>
-            ${item.marketingPersonName}
-          </div>
-          <div class="info-item">
-            <i class="fas fa-map-marker-alt"></i>
-            <span class="info-label">Location:</span>
-            ${item.location}
-          </div>
-          <div class="info-item">
-            <i class="fas fa-database"></i>
-            <span class="info-label">CRM:</span>
-            ${item.crmName}
-          </div>
-        </div>
-
-        <a href="${item.fileUploadLink}" target="_blank" class="download-link">
-          <i class="fas fa-download"></i>
-          Download Original Order File
-        </a>
-
-        <div class="upload-section" id="upload-${index}">
-          <i class="fas fa-cloud-upload-alt" style="font-size: 2rem; margin-bottom: 1rem; opacity: 0.7;"></i>
-          <div>
-            <div class="file-input-wrapper">
-              <input type="file" id="file-${index}" class="file-input" accept=".pdf,.doc,.docx,.xls,.xlsx" onchange="handleFileSelect(this, ${index})">
-              <label for="file-${index}" class="file-input-label">
-                <i class="fas fa-upload"></i>
-                Choose Final Order File
-              </label>
-            </div>
-            <div id="file-selected-${index}" class="file-selected" style="display: none;"></div>
-          </div>
-          <p style="margin-top: 1rem; font-size: 0.9rem; opacity: 0.7;">
-            Drag and drop files here or click to browse
-          </p>
-        </div>
-
-        <div class="checkbox-wrapper">
-          <label class="checkbox-container">
-            <input type="checkbox" id="informed-${index}" class="checkbox-input">
-            <span class="checkbox-custom"></span>
-            <span class="checkbox-label">Owner has been informed</span>
-          </label>
-        </div>
-
-        <button class="action-button" id="button-${index}" onclick="markDone(${index}, '${item.timestamp}')">
-          <i class="fas fa-check"></i>
-          Mark as Completed
-        </button>
-      `;
-      
-      container.appendChild(card);
-
-      // Setup drag and drop for this upload section
-      const uploadSection = document.getElementById(`upload-${index}`);
-      const fileInput = document.getElementById(`file-${index}`);
-      setupDragAndDrop(uploadSection, fileInput, index);
-    });
-
-  } catch (err) {
-    debugLog("Error loading orders:", err);
-    document.getElementById('loading').style.display = 'none';
-    showNotification("Failed to load orders. Please refresh the page.", 'error');
-  }
-}
-
-// Initialize with additional debugging
-document.addEventListener('DOMContentLoaded', function() {
-  debugLog('DOM loaded, initializing dashboard');
-  loadOrders();
-});
-
-// Add global error handler
-window.addEventListener('error', function(e) {
-  debugLog('Global error caught:', {
-    message: e.message,
-    filename: e.filename,
-    lineno: e.lineno,
-    colno: e.colno,
-    error: e.error
-  });
-});
-
-// Add unhandled promise rejection handler
-window.addEventListener('unhandledrejection', function(e) {
-  debugLog('Unhandled promise rejection:', e.reason);
-});
-  </script>
+        // Cleanup interval when page is unloaded
+        window.addEventListener('beforeunload', function() {
+            if (countdownInterval) {
+                clearInterval(countdownInterval);
+            }
+        });
+    </script>
 </body>
 </html>
