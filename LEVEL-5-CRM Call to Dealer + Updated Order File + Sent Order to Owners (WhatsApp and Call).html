@@ -593,386 +593,427 @@
   </div>
 
   <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbwuVRnAkiEKnTNy6yPBiPxA6BHIim4OlHjx1B3duF0Qt81itDZzgESH_g6pGWDkKhTs/exec";
-    const POST_URL = "https://script.google.com/macros/s/AKfycbwuVRnAkiEKnTNy6yPBiPxA6BHIim4OlHjx1B3duF0Qt81itDZzgESH_g6pGWDkKhTs/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbwuVRnAkiEKnTNy6yPBiPxA6BHIim4OlHjx1B3duF0Qt81itDZzgESH_g6pGWDkKhTs/exec";
+const POST_URL = "https://script.google.com/macros/s/AKfycbwuVRnAkiEKnTNy6yPBiPxA6BHIim4OlHjx1B3duF0Qt81itDZzgESH_g6pGWDkKhTs/exec";
 
-    let ordersData = [];
-    let debugMode = true; // Set to false to disable debug logging
+let ordersData = [];
+let debugMode = true;
 
-    // Enhanced notification system
-    function showNotification(message, type = 'success', duration = 5000) {
-      const notification = document.createElement('div');
-      notification.className = `notification ${type}`;
-      notification.innerHTML = `
-        <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i>
-        ${message}
-      `;
-      document.body.appendChild(notification);
-      
-      setTimeout(() => notification.classList.add('show'), 100);
-      setTimeout(() => {
-        notification.classList.remove('show');
-        setTimeout(() => {
-          if (document.body.contains(notification)) {
-            document.body.removeChild(notification);
-          }
-        }, 300);
-      }, duration);
-    }
-
-    // Debug logging function
-    function debugLog(message, data = null) {
-      if (debugMode) {
-        console.log(`[DEBUG] ${message}`, data || '');
-        
-        // Show debug info in notification for critical events
-        if (message.includes('Response') || message.includes('Error')) {
-          const debugDiv = document.createElement('div');
-          debugDiv.className = 'debug-info';
-          debugDiv.textContent = `${message}\n${data ? JSON.stringify(data, null, 2) : ''}`;
-          
-          // Add to first order card if it exists
-          const firstCard = document.querySelector('.order-card');
-          if (firstCard) {
-            const existingDebug = firstCard.querySelector('.debug-info');
-            if (existingDebug) {
-              existingDebug.remove();
-            }
-            firstCard.appendChild(debugDiv);
-          }
-        }
+// Enhanced notification system
+function showNotification(message, type = 'success', duration = 5000) {
+  const notification = document.createElement('div');
+  notification.className = `notification ${type}`;
+  notification.innerHTML = `
+    <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i>
+    ${message}
+  `;
+  document.body.appendChild(notification);
+  
+  setTimeout(() => notification.classList.add('show'), 100);
+  setTimeout(() => {
+    notification.classList.remove('show');
+    setTimeout(() => {
+      if (document.body.contains(notification)) {
+        document.body.removeChild(notification);
       }
-    }
-
-    // Update statistics
-    function updateStats() {
-      document.getElementById('total-orders').textContent = ordersData.length;
-      document.getElementById('pending-orders').textContent = ordersData.length;
-      document.getElementById('completed-orders').textContent = '0';
-    }
-
-    // Format date
-    function formatDate(dateString) {
-      return new Date(dateString).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      });
-    }
-
-    // Handle file selection
-    function handleFileSelect(input, index) {
-      const file = input.files[0];
-      const selectedDiv = document.getElementById(`file-selected-${index}`);
-      
-      if (file) {
-        selectedDiv.innerHTML = `
-          <i class="fas fa-check-circle"></i>
-          ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)
-        `;
-        selectedDiv.style.display = 'flex';
-        debugLog(`File selected for order ${index}:`, {
-          name: file.name,
-          size: file.size,
-          type: file.type
-        });
-      } else {
-        selectedDiv.style.display = 'none';
-      }
-    }
-
-    // Handle drag and drop
-    function setupDragAndDrop(uploadSection, fileInput, index) {
-      ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-        uploadSection.addEventListener(eventName, preventDefaults, false);
-      });
-
-      function preventDefaults(e) {
-        e.preventDefault();
-        e.stopPropagation();
-      }
-
-      ['dragenter', 'dragover'].forEach(eventName => {
-        uploadSection.addEventListener(eventName, () => {
-          uploadSection.classList.add('dragover');
-        }, false);
-      });
-
-      ['dragleave', 'drop'].forEach(eventName => {
-        uploadSection.addEventListener(eventName, () => {
-          uploadSection.classList.remove('dragover');
-        }, false);
-      });
-
-      uploadSection.addEventListener('drop', (e) => {
-        const dt = e.dataTransfer;
-        const files = dt.files;
-        fileInput.files = files;
-        handleFileSelect(fileInput, index);
-      }, false);
-    }
-
-    // Enhanced markDone function with better error handling and debugging
-    async function markDone(index, orderTimestamp) {
-      debugLog(`markDone called for order ${index} with timestamp: ${orderTimestamp}`);
-      
-      const fileInput = document.getElementById(`file-${index}`);
-      const checkbox = document.getElementById(`informed-${index}`);
-      const button = document.getElementById(`button-${index}`);
-
-      // Validation
-      if (!checkbox || !checkbox.checked) {
-        const message = "Please confirm Owner's Informed checkbox.";
-        showNotification(message, 'error');
-        debugLog('Validation failed: Checkbox not checked');
-        return;
-      }
-
-      if (!fileInput || fileInput.files.length === 0) {
-        const message = "Please upload the final order file.";
-        showNotification(message, 'error');
-        debugLog('Validation failed: No file selected');
-        return;
-      }
-
-      const file = fileInput.files[0];
-      debugLog('Preparing to upload file:', {
-        name: file.name,
-        size: file.size,
-        type: file.type,
-        timestamp: orderTimestamp
-      });
-
-      // Update button state
-      button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
-      button.classList.add('processing');
-      button.disabled = true;
-
-      try {
-        // Prepare form data
-        const formData = new FormData();
-        formData.append("file", file);
-        formData.append("timestamp", orderTimestamp);
-        formData.append("action", "markDone"); // Add explicit action parameter
-
-        debugLog('FormData prepared, making request to:', POST_URL);
-        
-const controller = new AbortController();
-const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 sec timeout
-
-try {
-  const response = await fetch(POST_URL, {
-    method: "POST",
-    mode: "no-cors", // ← you’re stuck with this
-    body: formData,
-    signal: controller.signal
-  });
-
-  clearTimeout(timeoutId);
-
-  // 🚫 SKIP: response.status, response.ok, response.text()
-  // ✅ Just assume it was sent
-  debugLog("Request sent (no-cors); cannot confirm status");
-
-  // Assume success
-  button.innerHTML = '<i class="fas fa-check"></i> Completed';
-  button.classList.remove('processing');
-  button.classList.add('success');
-
-  showNotification("Order marked as completed (response not confirmed due to no-cors).");
-
-  // Optional: Start a polling loop to check if server actually processed it
-  // (see Option 1 above)
-
-} catch (err) {
-  clearTimeout(timeoutId);
-
-  debugLog('Upload failed with error:', {
-    name: err.name,
-    message: err.message,
-    stack: err.stack
-  });
-
-  button.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Try Again';
-  button.classList.remove('processing');
-  button.disabled = false;
-
-  let errorMessage = "Upload failed.";
-  if (err.name === 'AbortError') {
-    errorMessage = "Request timed out.";
-  }
-
-  showNotification(errorMessage, 'error', 8000);
+    }, 300);
+  }, duration);
 }
 
-    // Load orders with better error handling
-    async function loadOrders() {
-      debugLog('Loading orders from API:', API_URL);
+// Debug logging function
+function debugLog(message, data = null) {
+  if (debugMode) {
+    console.log(`[DEBUG] ${message}`, data || '');
+    
+    if (message.includes('Response') || message.includes('Error')) {
+      const debugDiv = document.createElement('div');
+      debugDiv.className = 'debug-info';
+      debugDiv.textContent = `${message}\n${data ? JSON.stringify(data, null, 2) : ''}`;
+      
+      const firstCard = document.querySelector('.order-card');
+      if (firstCard) {
+        const existingDebug = firstCard.querySelector('.debug-info');
+        if (existingDebug) {
+          existingDebug.remove();
+        }
+        firstCard.appendChild(debugDiv);
+      }
+    }
+  }
+}
+
+// Convert file to base64
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => {
+      // Remove the data URL prefix (e.g., "data:application/pdf;base64,")
+      const base64 = reader.result.split(',')[1];
+      resolve(base64);
+    };
+    reader.onerror = error => reject(error);
+  });
+}
+
+// Update statistics
+function updateStats() {
+  document.getElementById('total-orders').textContent = ordersData.length;
+  document.getElementById('pending-orders').textContent = ordersData.length;
+  document.getElementById('completed-orders').textContent = '0';
+}
+
+// Format date
+function formatDate(dateString) {
+  return new Date(dateString).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+}
+
+// Handle file selection
+function handleFileSelect(input, index) {
+  const file = input.files[0];
+  const selectedDiv = document.getElementById(`file-selected-${index}`);
+  
+  if (file) {
+    selectedDiv.innerHTML = `
+      <i class="fas fa-check-circle"></i>
+      ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)
+    `;
+    selectedDiv.style.display = 'flex';
+    debugLog(`File selected for order ${index}:`, {
+      name: file.name,
+      size: file.size,
+      type: file.type
+    });
+  } else {
+    selectedDiv.style.display = 'none';
+  }
+}
+
+// Handle drag and drop
+function setupDragAndDrop(uploadSection, fileInput, index) {
+  ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+    uploadSection.addEventListener(eventName, preventDefaults, false);
+  });
+
+  function preventDefaults(e) {
+    e.preventDefault();
+    e.stopPropagation();
+  }
+
+  ['dragenter', 'dragover'].forEach(eventName => {
+    uploadSection.addEventListener(eventName, () => {
+      uploadSection.classList.add('dragover');
+    }, false);
+  });
+
+  ['dragleave', 'drop'].forEach(eventName => {
+    uploadSection.addEventListener(eventName, () => {
+      uploadSection.classList.remove('dragover');
+    }, false);
+  });
+
+  uploadSection.addEventListener('drop', (e) => {
+    const dt = e.dataTransfer;
+    const files = dt.files;
+    fileInput.files = files;
+    handleFileSelect(fileInput, index);
+  }, false);
+}
+
+// Enhanced markDone function with base64 upload
+async function markDone(index, orderTimestamp) {
+  debugLog(`markDone called for order ${index} with timestamp: ${orderTimestamp}`);
+  
+  const fileInput = document.getElementById(`file-${index}`);
+  const checkbox = document.getElementById(`informed-${index}`);
+  const button = document.getElementById(`button-${index}`);
+
+  // Validation
+  if (!checkbox || !checkbox.checked) {
+    const message = "Please confirm Owner's Informed checkbox.";
+    showNotification(message, 'error');
+    debugLog('Validation failed: Checkbox not checked');
+    return;
+  }
+
+  if (!fileInput || fileInput.files.length === 0) {
+    const message = "Please upload the final order file.";
+    showNotification(message, 'error');
+    debugLog('Validation failed: No file selected');
+    return;
+  }
+
+  const file = fileInput.files[0];
+  debugLog('Preparing to upload file:', {
+    name: file.name,
+    size: file.size,
+    type: file.type,
+    timestamp: orderTimestamp
+  });
+
+  // Update button state
+  button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+  button.classList.add('processing');
+  button.disabled = true;
+
+  try {
+    // Convert file to base64
+    showNotification("Converting file...", 'warning', 2000);
+    const base64Data = await fileToBase64(file);
+    
+    debugLog('File converted to base64, length:', base64Data.length);
+
+    // Prepare payload for base64 upload
+    const payload = {
+      action: "markDone",
+      timestamp: orderTimestamp,
+      fileName: file.name,
+      fileType: file.type,
+      fileData: base64Data
+    };
+
+    debugLog('Payload prepared, making request to:', POST_URL);
+    
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 sec timeout for larger files
+
+    const response = await fetch(POST_URL, {
+      method: "POST",
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+      signal: controller.signal
+    });
+
+    clearTimeout(timeoutId);
+
+    debugLog('Upload response received:', {
+      status: response.status,
+      statusText: response.statusText
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const result = await response.json();
+    debugLog('Upload result:', result);
+
+    if (result.status === 'success') {
+      button.innerHTML = '<i class="fas fa-check"></i> Completed';
+      button.classList.remove('processing');
+      button.classList.add('success');
+
+      let message = "Order marked as completed successfully!";
+      if (result.fileUrl) {
+        message += ` File uploaded: ${result.fileName}`;
+      }
+      
+      showNotification(message, 'success');
+      
+      // Optional: Display file URL for reference
+      if (result.fileUrl) {
+        debugLog('File URL:', result.fileUrl);
+      }
+    } else {
+      throw new Error(result.message || 'Unknown error occurred');
+    }
+
+  } catch (err) {
+    clearTimeout(timeoutId);
+
+    debugLog('Upload failed with error:', {
+      name: err.name,
+      message: err.message,
+      stack: err.stack
+    });
+
+    button.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Try Again';
+    button.classList.remove('processing');
+    button.disabled = false;
+
+    let errorMessage = "Upload failed: " + err.message;
+    if (err.name === 'AbortError') {
+      errorMessage = "Request timed out. Please try again.";
+    }
+
+    showNotification(errorMessage, 'error', 8000);
+  }
+}
+
+// Load orders with better error handling
+async function loadOrders() {
+  debugLog('Loading orders from API:', API_URL);
+  
+  try {
+    const response = await fetch(API_URL);
+    debugLog('Orders API response:', {
+      status: response.status,
+      statusText: response.statusText,
+      headers: Object.fromEntries(response.headers.entries())
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const contentType = response.headers.get("content-type");
+    let data;
+
+    if (contentType && contentType.includes("application/json")) {
+      data = await response.json();
+    } else {
+      const text = await response.text();
+      debugLog("Unexpected response format:", text.substring(0, 200));
       
       try {
-        const response = await fetch(API_URL);
-        debugLog('Orders API response:', {
-          status: response.status,
-          statusText: response.statusText,
-          headers: Object.fromEntries(response.headers.entries())
-        });
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const contentType = response.headers.get("content-type");
-        let data;
-
-        if (contentType && contentType.includes("application/json")) {
-          data = await response.json();
-        } else {
-          const text = await response.text();
-          debugLog("Unexpected response format:", text.substring(0, 200));
-          
-          try {
-            data = JSON.parse(text);
-          } catch (parseError) {
-            throw new Error("Invalid response from API - not valid JSON");
-          }
-        }
-
-        debugLog('Parsed orders data:', data);
-
-        const orders = data.data;
-        if (!Array.isArray(orders)) {
-          debugLog("Expected array in data.data, got:", data);
-          throw new Error("Invalid data format received");
-        }
-
-        ordersData = orders;
-        updateStats();
-
-        const container = document.getElementById('orders');
-        const loading = document.getElementById('loading');
-        const emptyState = document.getElementById('empty-state');
-
-        loading.style.display = 'none';
-
-        if (orders.length === 0) {
-          emptyState.style.display = 'block';
-          debugLog('No orders found');
-          return;
-        }
-
-        container.style.display = 'grid';
-        debugLog(`Displaying ${orders.length} orders`);
-
-        orders.forEach((item, index) => {
-          const card = document.createElement('div');
-          card.className = 'order-card';
-          card.innerHTML = `
-            <div class="order-header">
-              <div>
-                <div class="dealer-name">
-                  <i class="fas fa-store"></i> ${item.dealerName}
-                </div>
-              </div>
-              <div class="order-status">Pending</div>
-            </div>
-
-            <div class="order-info">
-              <div class="info-item">
-                <i class="fas fa-calendar-alt"></i>
-                <span class="info-label">Approved:</span>
-                ${formatDate(item.timestamp)}
-              </div>
-              <div class="info-item">
-                <i class="fas fa-user-tie"></i>
-                <span class="info-label">Marketing:</span>
-                ${item.marketingPersonName}
-              </div>
-              <div class="info-item">
-                <i class="fas fa-map-marker-alt"></i>
-                <span class="info-label">Location:</span>
-                ${item.location}
-              </div>
-              <div class="info-item">
-                <i class="fas fa-database"></i>
-                <span class="info-label">CRM:</span>
-                ${item.crmName}
-              </div>
-            </div>
-
-            <a href="${item.fileUploadLink}" target="_blank" class="download-link">
-              <i class="fas fa-download"></i>
-              Download Original Order File
-            </a>
-
-            <div class="upload-section" id="upload-${index}">
-              <i class="fas fa-cloud-upload-alt" style="font-size: 2rem; margin-bottom: 1rem; opacity: 0.7;"></i>
-              <div>
-                <div class="file-input-wrapper">
-                  <input type="file" id="file-${index}" class="file-input" accept=".pdf,.doc,.docx,.xls,.xlsx" onchange="handleFileSelect(this, ${index})">
-                  <label for="file-${index}" class="file-input-label">
-                    <i class="fas fa-upload"></i>
-                    Choose Final Order File
-                  </label>
-                </div>
-                <div id="file-selected-${index}" class="file-selected" style="display: none;"></div>
-              </div>
-              <p style="margin-top: 1rem; font-size: 0.9rem; opacity: 0.7;">
-                Drag and drop files here or click to browse
-              </p>
-            </div>
-
-            <div class="checkbox-wrapper">
-              <label class="checkbox-container">
-                <input type="checkbox" id="informed-${index}" class="checkbox-input">
-                <span class="checkbox-custom"></span>
-                <span class="checkbox-label">Owner has been informed</span>
-              </label>
-            </div>
-
-            <button class="action-button" id="button-${index}" onclick="markDone(${index}, '${item.timestamp}')">
-              <i class="fas fa-check"></i>
-              Mark as Completed
-            </button>
-          `;
-          
-          container.appendChild(card);
-
-          // Setup drag and drop for this upload section
-          const uploadSection = document.getElementById(`upload-${index}`);
-          const fileInput = document.getElementById(`file-${index}`);
-          setupDragAndDrop(uploadSection, fileInput, index);
-        });
-
-      } catch (err) {
-        debugLog("Error loading orders:", err);
-        document.getElementById('loading').style.display = 'none';
-        showNotification("Failed to load orders. Please refresh the page.", 'error');
+        data = JSON.parse(text);
+      } catch (parseError) {
+        throw new Error("Invalid response from API - not valid JSON");
       }
     }
 
-    // Initialize with additional debugging
-    document.addEventListener('DOMContentLoaded', function() {
-      debugLog('DOM loaded, initializing dashboard');
-      loadOrders();
+    debugLog('Parsed orders data:', data);
+
+    const orders = data.data;
+    if (!Array.isArray(orders)) {
+      debugLog("Expected array in data.data, got:", data);
+      throw new Error("Invalid data format received");
+    }
+
+    ordersData = orders;
+    updateStats();
+
+    const container = document.getElementById('orders');
+    const loading = document.getElementById('loading');
+    const emptyState = document.getElementById('empty-state');
+
+    loading.style.display = 'none';
+
+    if (orders.length === 0) {
+      emptyState.style.display = 'block';
+      debugLog('No orders found');
+      return;
+    }
+
+    container.style.display = 'grid';
+    debugLog(`Displaying ${orders.length} orders`);
+
+    orders.forEach((item, index) => {
+      const card = document.createElement('div');
+      card.className = 'order-card';
+      card.innerHTML = `
+        <div class="order-header">
+          <div>
+            <div class="dealer-name">
+              <i class="fas fa-store"></i> ${item.dealerName}
+            </div>
+          </div>
+          <div class="order-status">Pending</div>
+        </div>
+
+        <div class="order-info">
+          <div class="info-item">
+            <i class="fas fa-calendar-alt"></i>
+            <span class="info-label">Approved:</span>
+            ${formatDate(item.timestamp)}
+          </div>
+          <div class="info-item">
+            <i class="fas fa-user-tie"></i>
+            <span class="info-label">Marketing:</span>
+            ${item.marketingPersonName}
+          </div>
+          <div class="info-item">
+            <i class="fas fa-map-marker-alt"></i>
+            <span class="info-label">Location:</span>
+            ${item.location}
+          </div>
+          <div class="info-item">
+            <i class="fas fa-database"></i>
+            <span class="info-label">CRM:</span>
+            ${item.crmName}
+          </div>
+        </div>
+
+        <a href="${item.fileUploadLink}" target="_blank" class="download-link">
+          <i class="fas fa-download"></i>
+          Download Original Order File
+        </a>
+
+        <div class="upload-section" id="upload-${index}">
+          <i class="fas fa-cloud-upload-alt" style="font-size: 2rem; margin-bottom: 1rem; opacity: 0.7;"></i>
+          <div>
+            <div class="file-input-wrapper">
+              <input type="file" id="file-${index}" class="file-input" accept=".pdf,.doc,.docx,.xls,.xlsx" onchange="handleFileSelect(this, ${index})">
+              <label for="file-${index}" class="file-input-label">
+                <i class="fas fa-upload"></i>
+                Choose Final Order File
+              </label>
+            </div>
+            <div id="file-selected-${index}" class="file-selected" style="display: none;"></div>
+          </div>
+          <p style="margin-top: 1rem; font-size: 0.9rem; opacity: 0.7;">
+            Drag and drop files here or click to browse
+          </p>
+        </div>
+
+        <div class="checkbox-wrapper">
+          <label class="checkbox-container">
+            <input type="checkbox" id="informed-${index}" class="checkbox-input">
+            <span class="checkbox-custom"></span>
+            <span class="checkbox-label">Owner has been informed</span>
+          </label>
+        </div>
+
+        <button class="action-button" id="button-${index}" onclick="markDone(${index}, '${item.timestamp}')">
+          <i class="fas fa-check"></i>
+          Mark as Completed
+        </button>
+      `;
+      
+      container.appendChild(card);
+
+      // Setup drag and drop for this upload section
+      const uploadSection = document.getElementById(`upload-${index}`);
+      const fileInput = document.getElementById(`file-${index}`);
+      setupDragAndDrop(uploadSection, fileInput, index);
     });
 
-    // Add global error handler
-    window.addEventListener('error', function(e) {
-      debugLog('Global error caught:', {
-        message: e.message,
-        filename: e.filename,
-        lineno: e.lineno,
-        colno: e.colno,
-        error: e.error
-      });
-    });
+  } catch (err) {
+    debugLog("Error loading orders:", err);
+    document.getElementById('loading').style.display = 'none';
+    showNotification("Failed to load orders. Please refresh the page.", 'error');
+  }
+}
 
-    // Add unhandled promise rejection handler
-    window.addEventListener('unhandledrejection', function(e) {
-      debugLog('Unhandled promise rejection:', e.reason);
-    });
+// Initialize with additional debugging
+document.addEventListener('DOMContentLoaded', function() {
+  debugLog('DOM loaded, initializing dashboard');
+  loadOrders();
+});
+
+// Add global error handler
+window.addEventListener('error', function(e) {
+  debugLog('Global error caught:', {
+    message: e.message,
+    filename: e.filename,
+    lineno: e.lineno,
+    colno: e.colno,
+    error: e.error
+  });
+});
+
+// Add unhandled promise rejection handler
+window.addEventListener('unhandledrejection', function(e) {
+  debugLog('Unhandled promise rejection:', e.reason);
+});
   </script>
 </body>
 </html>
