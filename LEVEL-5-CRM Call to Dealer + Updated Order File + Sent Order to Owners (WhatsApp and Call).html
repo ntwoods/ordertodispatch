@@ -289,42 +289,41 @@
         </div>
     </div>
 
-    <script>
-        let orders = [];
-        let countdownInterval;
+<script>
+    let orders = [];
+    let countdownInterval;
 
-        // Your API endpoint URL - replace with your actual Google Apps Script Web App URL
-        const API_URL = 'https://script.google.com/macros/s/AKfycbwuVRnAkiEKnTNy6yPBiPxA6BHIim4OlHjx1B3duF0Qt81itDZzgESH_g6pGWDkKhTs/exec';
+    // Your API endpoint URL
+    const API_URL = 'https://script.google.com/macros/s/AKfycbwuVRnAkiEKnTNy6yPBiPxA6BHIim4OlHjx1B3duF0Qt81itDZzgESH_g6pGWDkKhTs/exec';
 
-        // Function to fetch orders from the API
-        async function fetchOrders() {
-            try {
-                document.getElementById('content').innerHTML = '<div class="loading">Loading orders...</div>';
-                
-                const urlParams = new URLSearchParams(window.location.search);
-                const crmName = urlParams.get('crm');
+    // Function to fetch orders from the API
+    async function fetchOrders() {
+        try {
+            document.getElementById('content').innerHTML = '<div class="loading">Loading orders...</div>';
 
-                if (!crmName) {
-                    throw new Error('CRM name is missing in URL');
-                }
+            const urlParams = new URLSearchParams(window.location.search);
+            const crmName = urlParams.get('crm');
 
-                // Append crmName to the API URL
-                const response = await fetch(`${API_URL}?crm=${encodeURIComponent(crmName)}`);
-                const data = await response.json();
-                
-                if (result.status === 'success') {
-                    orders = result.data;
-                    displayOrders();
-                    startCountdown();
-                } else {
-                    throw new Error('Failed to fetch orders');
-                }
-            } catch (error) {
-                console.error('Error fetching orders:', error);
-                document.getElementById('content').innerHTML = 
-                    '<div class="error">Error loading orders. Please check your API URL and try again.</div>';
+            if (!crmName) {
+                throw new Error('CRM name is missing in URL');
             }
+
+            const response = await fetch(`${API_URL}?crm=${encodeURIComponent(crmName)}`);
+            const data = await response.json();
+
+            if (data.status === 'success') {
+                orders = data.data;
+                displayOrders();
+                startCountdown();
+            } else {
+                throw new Error('Failed to fetch orders');
+            }
+        } catch (error) {
+            console.error('Error fetching orders:', error);
+            document.getElementById('content').innerHTML = 
+                '<div class="error">Error loading orders. Please check your API URL and try again.</div>';
         }
+    }
 
         // Function to display orders in cards
         function displayOrders() {
