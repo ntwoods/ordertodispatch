@@ -499,46 +499,48 @@
             }
             
             if (confirm(`${actionEmoji} Are you sure you want to ${actionText} this order?\n\nDealer: ${order.dealerName}\nLocation: ${order.location}`)) {
-try {
-    // Make POST request to API
-    const response = await fetch(API_URL, {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            action: action,
-            timestamp: order.timestamp
-        })
-    });
-    
-    // Note: With no-cors mode, we can't read the response body or check status
-    // So we'll proceed with UI updates assuming the request was sent successfully
-    
-    // Update UI immediately
-    const card = document.querySelector(`[data-index="${index}"]`);
-    const countdownContainer = card.querySelector('.countdown-container');
-    countdownContainer.className = `countdown-container ${countdownClass}`;
-    countdownContainer.innerHTML = `<div>${actionEmoji} ORDER ${action.toUpperCase()}</div>`;
-    
-    const buttons = card.querySelectorAll('.btn');
-    buttons.forEach(btn => btn.disabled = true);
-    
-    // Remove from orders array
-    orders.splice(index, 1);
-    
-    // Show success message
-    alert(`${actionEmoji} Order ${action.toLowerCase()} successfully!`);
-    
-    // Refresh display after a short delay
-    setTimeout(() => {
-        displayOrders();
-    }, 2000);
-    
-} catch (error) {
-    alert(`❌ Error ${action.toLowerCase()} order: ${error.message}`);
-    console.error('Error:', error);
+        try {
+            // Make POST request to API
+            const response = await fetch(API_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    action: action,
+                    timestamp: order.timestamp
+                })
+            });
+            
+            // Note: With no-cors mode, we can't read the response body or check status
+            // So we'll proceed with UI updates assuming the request was sent successfully
+            
+            // Update UI immediately
+            const card = document.querySelector(`[data-index="${index}"]`);
+            const countdownContainer = card.querySelector('.countdown-container');
+            countdownContainer.className = `countdown-container ${countdownClass}`;
+            countdownContainer.innerHTML = `<div>${actionEmoji} ORDER ${action.toUpperCase()}</div>`;
+            
+            const buttons = card.querySelectorAll('.btn');
+            buttons.forEach(btn => btn.disabled = true);
+            
+            // Remove from orders array
+            orders.splice(index, 1);
+            
+            // Show success message
+            alert(`${actionEmoji} Order ${action.toLowerCase()} successfully!`);
+            
+            // Refresh display after a short delay
+            setTimeout(() => {
+                displayOrders();
+            }, 2000);
+            
+        } catch (error) {
+            alert(`❌ Error ${action.toLowerCase()} order: ${error.message}`);
+            console.error('Error:', error);
+        }
+    }
 }
         // Initialize dashboard
         document.addEventListener('DOMContentLoaded', function() {
