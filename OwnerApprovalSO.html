@@ -133,6 +133,11 @@
             color: white;
         }
 
+        .countdown-cancelled {
+            background: linear-gradient(45deg, #dc3545, #bd2130);
+            color: white;
+        }
+
         @keyframes pulse {
             0% { transform: scale(1); }
             50% { transform: scale(1.02); }
@@ -174,16 +179,16 @@
 
         .action-buttons {
             display: flex;
-            gap: 10px;
+            gap: 8px;
             margin-top: 20px;
         }
 
         .btn {
             flex: 1;
-            padding: 12px;
+            padding: 12px 8px;
             border: none;
             border-radius: 8px;
-            font-size: 16px;
+            font-size: 14px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
@@ -208,6 +213,16 @@
 
         .btn-hold:hover {
             background: linear-gradient(45deg, #e0a800, #e69500);
+            transform: translateY(-2px);
+        }
+
+        .btn-cancel {
+            background: linear-gradient(45deg, #dc3545, #c82333);
+            color: white;
+        }
+
+        .btn-cancel:hover {
+            background: linear-gradient(45deg, #c82333, #bd2130);
             transform: translateY(-2px);
         }
 
@@ -376,11 +391,14 @@
                     </div>
                     
                     <div class="action-buttons">
-                        <button class="btn btn-approve" onclick="approveOrder(${index})" ${status === 'overdue' ? 'disabled' : ''}>
+                        <button class="btn btn-approve" onclick="performAction('Approved', ${index})">
                             ✅ Approve
                         </button>
-                        <button class="btn btn-hold" onclick="holdOrder(${index})" ${status === 'overdue' ? 'disabled' : ''}>
+                        <button class="btn btn-hold" onclick="performAction('Hold', ${index})">
                             ⏸️ Hold
+                        </button>
+                        <button class="btn btn-cancel" onclick="performAction('Cancelled', ${index})">
+                            ❌ Cancel
                         </button>
                     </div>
                 </div>
@@ -404,11 +422,6 @@
                     // Update countdown container class
                     if (timeRemaining <= 0) {
                         countdownElement.className = 'countdown-container countdown-overdue';
-                        
-                        // Disable buttons when overdue
-                        const card = document.querySelector(`[data-index="${index}"]`);
-                        const buttons = card.querySelectorAll('.btn');
-                        buttons.forEach(btn => btn.disabled = true);
                     } else {
                         countdownElement.className = 'countdown-container countdown-active';
                     }
@@ -458,79 +471,77 @@
             container.style.display = 'grid';
         }
 
-        // Approve order function
-        async function approveOrder(index) {
+        // Generic function to perform any action (Approve, Hold, Cancel)
+        async function performAction(action, index) {
             const order = orders[index];
-            const deadline = calculateDeadline(order.timestamp);
             
-            if (new Date() > deadline) {
-                alert('⚠️ Cannot approve - order is overdue!');
-                return;
+            // Get action emoji and text
+            let actionEmoji = '';
+            let actionText = '';
+            let countdownClass = '';
+            
+            switch(action) {
+                case 'Approved':
+                    actionEmoji = '✅';
+                    actionText = 'APPROVE';
+                    countdownClass = 'countdown-approved';
+                    break;
+                case 'Hold':
+                    actionEmoji = '⏸️';
+                    actionText = 'HOLD';
+                    countdownClass = 'countdown-held';
+                    break;
+                case 'Cancelled':
+                    actionEmoji = '❌';
+                    actionText = 'CANCEL';
+                    countdownClass = 'countdown-cancelled';
+                    break;
             }
             
-            if (confirm(`✅ Are you sure you want to APPROVE this order?\n\nDealer: ${order.dealerName}\nLocation: ${order.location}`)) {
+            if (confirm(`${actionEmoji} Are you sure you want to ${actionText} this order?\n\nDealer: ${order.dealerName}\nLocation: ${order.location}`)) {
                 try {
-                    // Here you would make the API call to update the order status
-                    console.log('Approving order:', order);
+                    // Make POST request to API
+                    const response = await fetch(API_URL, {
+                        method: 'POST',
+                        mode: 'no-cors',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            action: action,
+                            timestamp: order.timestamp
+                        })
+                    });
                     
-                    // Update UI immediately
-                    const card = document.querySelector(`[data-index="${index}"]`);
-                    const countdownContainer = card.querySelector('.countdown-container');
-                    countdownContainer.className = 'countdown-container countdown-approved';
-                    countdownContainer.innerHTML = '<div>✅ ORDER APPROVED</div>';
+                    const result = await response.json();
                     
-                    const buttons = card.querySelectorAll('.btn');
-                    buttons.forEach(btn => btn.disabled = true);
-                    
-                    // Remove from orders array
-                    orders.splice(index, 1);
-                    
-                    // Refresh display after a short delay
-                    setTimeout(() => {
-                        displayOrders();
-                    }, 2000);
+                    if (result.status === 'success') {
+                        // Update UI immediately
+                        const card = document.querySelector(`[data-index="${index}"]`);
+                        const countdownContainer = card.querySelector('.countdown-container');
+                        countdownContainer.className = `countdown-container ${countdownClass}`;
+                        countdownContainer.innerHTML = `<div>${actionEmoji} ORDER ${action.toUpperCase()}</div>`;
+                        
+                        const buttons = card.querySelectorAll('.btn');
+                        buttons.forEach(btn => btn.disabled = true);
+                        
+                        // Remove from orders array
+                        orders.splice(index, 1);
+                        
+                        // Show success message
+                        alert(`${actionEmoji} Order ${action.toLowerCase()} successfully!`);
+                        
+                        // Refresh display after a short delay
+                        setTimeout(() => {
+                            displayOrders();
+                        }, 2000);
+                        
+                    } else {
+                        throw new Error(result.message || 'Unknown error occurred');
+                    }
                     
                 } catch (error) {
-                    alert('❌ Error approving order. Please try again.');
-                    console.error('Error:', error);
-                }
-            }
-        }
-
-        // Hold order function
-        async function holdOrder(index) {
-            const order = orders[index];
-            const deadline = calculateDeadline(order.timestamp);
-            
-            if (new Date() > deadline) {
-                alert('⚠️ Cannot hold - order is overdue!');
-                return;
-            }
-            
-            if (confirm(`⏸️ Are you sure you want to HOLD this order?\n\nDealer: ${order.dealerName}\nLocation: ${order.location}`)) {
-                try {
-                    // Here you would make the API call to update the order status
-                    console.log('Holding order:', order);
-                    
-                    // Update UI immediately
-                    const card = document.querySelector(`[data-index="${index}"]`);
-                    const countdownContainer = card.querySelector('.countdown-container');
-                    countdownContainer.className = 'countdown-container countdown-held';
-                    countdownContainer.innerHTML = '<div>⏸️ ORDER ON HOLD</div>';
-                    
-                    const buttons = card.querySelectorAll('.btn');
-                    buttons.forEach(btn => btn.disabled = true);
-                    
-                    // Remove from orders array
-                    orders.splice(index, 1);
-                    
-                    // Refresh display after a short delay
-                    setTimeout(() => {
-                        displayOrders();
-                    }, 2000);
-                    
-                } catch (error) {
-                    alert('❌ Error holding order. Please try again.');
+                    alert(`❌ Error ${action.toLowerCase()} order: ${error.message}`);
                     console.error('Error:', error);
                 }
             }
