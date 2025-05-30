@@ -409,7 +409,7 @@
 
             let deadline = new Date(ts);
 
-            if (hour >= 16 || (hour === 23 && minute === 59)) {
+            if ((hour > 14 || (hour === 14 && minute >= 30)) &&  (hour < 24)) {
                 do {
                     deadline.setDate(deadline.getDate() + 1);
                 } while (isSunday(deadline));
