@@ -350,6 +350,7 @@
                 </div>
                 <h3 class="card-title">Owner's Will Approve the Order</h3>
                 <p class="card-description">After owner's approval then Only check for dispatch dates.</p>
+                <div class="card-count" id="owner-approval-count">Pending: ...</div>
                 <div class="card-arrow">
                     <svg viewBox="0 0 24 24" fill="currentColor">
                         <path d="M13.025 1l-2.847 2.828 6.176 6.176h-16.354v3.992h16.354l-6.176 6.176 2.847 2.828 10.975-11z"/>
@@ -414,6 +415,7 @@
             const apiEndpoints = {
         level34: 'https://script.google.com/macros/s/AKfycby7o8IwfJ1vgI-_2Ad-epHZHmOdVqTbNVWnncuv4BnDIiIcWNmuzrEspA9jIvgy9G84eQ/exec?crm=Priyam%20Dixit',
         level5: 'https://script.google.com/macros/s/AKfycbwuVRnAkiEKnTNy6yPBiPxA6BHIim4OlHjx1B3duF0Qt81itDZzgESH_g6pGWDkKhTs/exec?crm=Priyam%20Dixit',
+        ownerApproval: 'https://script.google.com/macros/s/AKfycbyKrk1gF6A8SMLaYp5VRABDJpthkpPkQEB2rBDdlJJvJ09bBlcxuwHS9Trra_Uab71KWw/exec?crm=Priyam%20Dixit', // Add this line
         level6: 'https://script.google.com/macros/s/AKfycbxkduAfhEpEtxKXA_HuIm-lZQj62ZPZwXeZ_Fol-v6VrzfhoXY2lffR64pjPahKV2o/exec?crm=Priyam%20Dixit',
         level7: 'https://script.google.com/macros/s/AKfycbxMxIzOQmHv3LPTh6ca6i5uuguyH615cnjA5emEGNT0rmWpJlnrcg-KWNVP1DORkkcX/exec?crm=Priyam%20Dixit',
         level8: 'https://script.google.com/macros/s/AKfycbwUr0UhENK6RGtdvYMC6-V0Khwb3kibKP4SLXC4nzL6Hm4idr6P-Olx4XTWvgZ_e2xk-Q/exec?crm=Priyam%20Dixit'
@@ -436,6 +438,7 @@
     fetchAndUpdateCount('level34', 'level34-count');
     fetchAndUpdateCount('level5', 'level5-count');
     fetchAndUpdateCount('level6', 'level6-count');
+    fetchAndUpdateCount('ownerApproval', 'owner-approval-count'); // Add this line
     fetchAndUpdateCount('level7', 'level7-count');
     fetchAndUpdateCount('level8', 'level8-count');        
         
