@@ -421,17 +421,24 @@
         level8: 'https://script.google.com/macros/s/AKfycbwUr0UhENK6RGtdvYMC6-V0Khwb3kibKP4SLXC4nzL6Hm4idr6P-Olx4XTWvgZ_e2xk-Q/exec?crm=Priyam%20Dixit'
     };
 
-    async function fetchAndUpdateCount(levelKey, elementId) {
-    try {
-        const response = await fetch(apiEndpoints[levelKey]);
-        const data = await response.json();
-        const count = Array.isArray(data.data) ? data.data.length : 0;
-        document.getElementById(elementId).innerText = `Pending: ${count}`;
-    } catch (error) {
-        console.error(`Error fetching ${levelKey}:`, error);
-        document.getElementById(elementId).innerText = `Pending: --`;
-    }
-}
+        async function fetchAndUpdateCount(levelKey, elementId) {
+            console.log(`Fetching data for ${levelKey} from: ${apiEndpoints[levelKey]}`);
+            try {
+                const response = await fetch(apiEndpoints[levelKey]);
+                console.log(`Response status for ${levelKey}:`, response.status);
+                
+                const data = await response.json();
+                console.log(`Data received for ${levelKey}:`, data);
+                
+                const count = Array.isArray(data.data) ? data.data.length : 0;
+                console.log(`Count for ${levelKey}:`, count);
+                
+                document.getElementById(elementId).innerText = `Pending: ${count}`;
+            } catch (error) {
+                console.error(`Error fetching ${levelKey}:`, error);
+                document.getElementById(elementId).innerText = `Pending: --`;
+            }
+        }
 
 
     // Call the function for all levels
