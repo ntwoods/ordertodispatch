@@ -470,8 +470,13 @@
                 100% { opacity: 0; transform: scale(0) rotate(360deg); }
             }
         `;
-        fetchAndUpdateCount();
         document.head.appendChild(style);
+    // Initial call
+    fetchAndUpdateCount();
+
+    // Repeat every 30 seconds (30,000 ms)
+    setInterval(fetchAndUpdateCount, 30000);
+        
     </script>
 </body>
 </html>
