@@ -471,53 +471,82 @@
             container.style.display = 'grid';
         }
 
-        // Generic function to perform any action (Approve, Hold, Cancel)
-async function performAction(action, index) {
-    const order = orders[index];
+// Generic function to perform any action (Approve, Hold, Cancel)
+        async function performAction(action, index) {
+            const order = orders[index];
 
-    let actionEmoji = '';
-    switch(action) {
-        case 'Approved': actionEmoji = '✅'; break;
-        case 'Hold': actionEmoji = '⏸️'; break;
-        case 'Cancelled': actionEmoji = '❌'; break;
-    }
+            let actionEmoji = '';
+            switch(action) {
+                case 'Approved': actionEmoji = '✅'; break;
+                case 'Hold': actionEmoji = '⏸️'; break;
+                case 'Cancelled': actionEmoji = '❌'; break;
+            }
 
-    if (confirm(`${actionEmoji} Are you sure you want to ${action} this order?\n\nDealer: ${order.dealerName}\nLocation: ${order.location}`)) {
-        try {
-            const formData = new FormData();
-            formData.append('action', action);
-            formData.append('timestamp', order.timestamp);
+            if (confirm(`${actionEmoji} Are you sure you want to ${action} this order?\n\nDealer: ${order.dealerName}\nLocation: ${order.location}`)) {
+                try {
+                    // Disable buttons immediately
+                    const card = document.querySelector(`[data-index="${index}"]`);
+                    const buttons = card.querySelectorAll('.btn');
+                    buttons.forEach(btn => {
+                        btn.disabled = true;
+                        btn.textContent = 'Processing...';
+                    });
 
-            await fetch(API_URL, {
-                method: 'POST',
-                mode: 'no-cors',
-                body: formData
-            });
+                    const formData = new FormData();
+                    formData.append('action', action);
+                    formData.append('timestamp', order.timestamp);
 
-            // UI optimism since response can't be read
-            const card = document.querySelector(`[data-index="${index}"]`);
-            const countdownContainer = card.querySelector('.countdown-container');
-            countdownContainer.className = `countdown-container countdown-${action.toLowerCase()}`;
-            countdownContainer.innerHTML = `<div>${actionEmoji} ORDER ${action.toUpperCase()}</div>`;
+                    console.log('Sending request with:', {
+                        action: action,
+                        timestamp: order.timestamp
+                    });
 
-            const buttons = card.querySelectorAll('.btn');
-            buttons.forEach(btn => btn.disabled = true);
+                    const response = await fetch(API_URL, {
+                        method: 'POST',
+                        body: formData
+                    });
 
-            orders.splice(index, 1);
+                    const result = await response.json();
+                    console.log('Response:', result);
 
-            alert(`${actionEmoji} Order ${action.toLowerCase()} successfully sent!`);
+                    if (result.status === 'success') {
+                        // Update UI on success
+                        const countdownContainer = card.querySelector('.countdown-container');
+                        countdownContainer.className = `countdown-container countdown-${action.toLowerCase()}`;
+                        countdownContainer.innerHTML = `<div>${actionEmoji} ORDER ${action.toUpperCase()}</div>`;
 
-            setTimeout(() => {
-                displayOrders();
-            }, 1500);
+                        // Remove from orders array
+                        orders.splice(index, 1);
 
-        } catch (error) {
-            alert(`❌ Error sending order update: ${error.message}`);
-            console.error(error);
-        }
-    }
-}
-        // Initialize dashboard
+                        alert(`${actionEmoji} Order ${action.toLowerCase()} successfully!`);
+
+                        // Refresh the display after a short delay
+                        setTimeout(() => {
+                            displayOrders();
+                        }, 1500);
+
+                    } else {
+                        throw new Error(result.message || 'Unknown error occurred');
+                    }
+
+                } catch (error) {
+                    console.error('Error performing action:', error);
+                    
+                    // Re-enable buttons on error
+                    const card = document.querySelector(`[data-index="${index}"]`);
+                    const buttons = card.querySelectorAll('.btn');
+                    buttons.forEach(btn => {
+                        btn.disabled = false;
+                        // Restore original button text
+                        if (btn.classList.contains('btn-approve')) btn.innerHTML = '✅ Approve';
+                        else if (btn.classList.contains('btn-hold')) btn.innerHTML = '⏸️ Hold';
+                        else if (btn.classList.contains('btn-cancel')) btn.innerHTML = '❌ Cancel';
+                    });
+
+                    alert(`❌ Error: ${error.message}`);
+                }
+            }
+        }        // Initialize dashboard
         document.addEventListener('DOMContentLoaded', function() {
             loadOrders();
             
