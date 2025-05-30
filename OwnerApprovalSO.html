@@ -472,73 +472,48 @@
         }
 
         // Generic function to perform any action (Approve, Hold, Cancel)
-        async function performAction(action, index) {
-            const order = orders[index];
-            
-            // Get action emoji and text
-            let actionEmoji = '';
-            let actionText = '';
-            let countdownClass = '';
-            
-            switch(action) {
-                case 'Approved':
-                    actionEmoji = '✅';
-                    actionText = 'APPROVE';
-                    countdownClass = 'countdown-approved';
-                    break;
-                case 'Hold':
-                    actionEmoji = '⏸️';
-                    actionText = 'HOLD';
-                    countdownClass = 'countdown-held';
-                    break;
-                case 'Cancelled':
-                    actionEmoji = '❌';
-                    actionText = 'CANCEL';
-                    countdownClass = 'countdown-cancelled';
-                    break;
-            }
-            
-            if (confirm(`${actionEmoji} Are you sure you want to ${actionText} this order?\n\nDealer: ${order.dealerName}\nLocation: ${order.location}`)) {
+async function performAction(action, index) {
+    const order = orders[index];
+
+    let actionEmoji = '';
+    switch(action) {
+        case 'Approved': actionEmoji = '✅'; break;
+        case 'Hold': actionEmoji = '⏸️'; break;
+        case 'Cancelled': actionEmoji = '❌'; break;
+    }
+
+    if (confirm(`${actionEmoji} Are you sure you want to ${action} this order?\n\nDealer: ${order.dealerName}\nLocation: ${order.location}`)) {
         try {
-            // Make POST request to API
-            const response = await fetch(API_URL, {
+            const formData = new FormData();
+            formData.append('action', action);
+            formData.append('timestamp', order.timestamp);
+
+            await fetch(API_URL, {
                 method: 'POST',
                 mode: 'no-cors',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    action: action,
-                    timestamp: order.timestamp
-                })
+                body: formData
             });
-            
-            // Note: With no-cors mode, we can't read the response body or check status
-            // So we'll proceed with UI updates assuming the request was sent successfully
-            
-            // Update UI immediately
+
+            // UI optimism since response can't be read
             const card = document.querySelector(`[data-index="${index}"]`);
             const countdownContainer = card.querySelector('.countdown-container');
-            countdownContainer.className = `countdown-container ${countdownClass}`;
+            countdownContainer.className = `countdown-container countdown-${action.toLowerCase()}`;
             countdownContainer.innerHTML = `<div>${actionEmoji} ORDER ${action.toUpperCase()}</div>`;
-            
+
             const buttons = card.querySelectorAll('.btn');
             buttons.forEach(btn => btn.disabled = true);
-            
-            // Remove from orders array
+
             orders.splice(index, 1);
-            
-            // Show success message
-            alert(`${actionEmoji} Order ${action.toLowerCase()} successfully!`);
-            
-            // Refresh display after a short delay
+
+            alert(`${actionEmoji} Order ${action.toLowerCase()} successfully sent!`);
+
             setTimeout(() => {
                 displayOrders();
-            }, 2000);
-            
+            }, 1500);
+
         } catch (error) {
-            alert(`❌ Error ${action.toLowerCase()} order: ${error.message}`);
-            console.error('Error:', error);
+            alert(`❌ Error sending order update: ${error.message}`);
+            console.error(error);
         }
     }
 }
