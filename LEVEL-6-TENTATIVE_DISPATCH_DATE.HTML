@@ -163,6 +163,7 @@ async function submitOrder(index) {
     button.textContent = originalText;
     button.disabled = false;
     alert("Submission failed. Please try again.");
+    fetchOrders();
   }
 }
 
