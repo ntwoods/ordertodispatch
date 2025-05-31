@@ -3,55 +3,302 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Order Countdown App</title>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          animation: {
-            pulseSlow: 'pulse 3s infinite',
-          },
-        }
+  <title>Order Countdown Dashboard</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+    
+    * {
+      font-family: 'Inter', sans-serif;
+    }
+    
+    body {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      position: relative;
+      overflow-x: hidden;
+    }
+    
+    .animated-bg {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+      background-size: 400% 400%;
+      animation: gradientShift 15s ease infinite;
+    }
+    
+    @keyframes gradientShift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    
+    .glassmorphism {
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      box-shadow: 0 25px 45px rgba(0, 0, 0, 0.1);
+    }
+    
+    .card-hover {
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .card-hover:hover {
+      transform: translateY(-10px) scale(1.02);
+      box-shadow: 0 40px 80px rgba(0, 0, 0, 0.2);
+    }
+    
+    .neon-text {
+      text-shadow: 0 0 5px rgba(255, 255, 255, 0.8),
+                   0 0 10px rgba(255, 255, 255, 0.6),
+                   0 0 15px rgba(255, 255, 255, 0.4);
+    }
+    
+    .pulse-ring {
+      position: absolute;
+      border: 3px solid #4f46e5;
+      border-radius: 50%;
+      animation: pulsate 2s ease-out infinite;
+      opacity: 0;
+    }
+    
+    @keyframes pulsate {
+      0% {
+        transform: scale(0.1);
+        opacity: 1;
+      }
+      100% {
+        transform: scale(1.2);
+        opacity: 0;
       }
     }
-  </script>
-<link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    
+    .floating {
+      animation: floating 3s ease-in-out infinite;
+    }
+    
+    @keyframes floating {
+      0% { transform: translateY(0px); }
+      50% { transform: translateY(-10px); }
+      100% { transform: translateY(0px); }
+    }
+    
+    .gradient-text {
+      background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4);
+      background-size: 300% 300%;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: gradientShift 3s ease infinite;
+    }
+    
+    .status-badge {
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .status-badge::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+      transition: left 0.5s;
+    }
+    
+    .status-badge:hover::before {
+      left: 100%;
+    }
+    
+    .button-3d {
+      background: linear-gradient(45deg, #667eea, #764ba2);
+      border: none;
+      border-radius: 12px;
+      color: white;
+      cursor: pointer;
+      font-weight: 600;
+      padding: 12px 24px;
+      position: relative;
+      text-decoration: none;
+      transition: all 0.3s;
+      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+    }
+    
+    .button-3d:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 40px rgba(102, 126, 234, 0.6);
+    }
+    
+    .button-3d:active {
+      transform: translateY(0);
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    }
+    
+    .countdown-glow {
+      text-shadow: 0 0 10px #4f46e5, 0 0 20px #4f46e5, 0 0 30px #4f46e5;
+    }
+    
+    .spinner {
+      width: 60px;
+      height: 60px;
+      border: 6px solid rgba(255, 255, 255, 0.3);
+      border-top: 6px solid #fff;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    .particle {
+      position: absolute;
+      width: 4px;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.8);
+      border-radius: 50%;
+      pointer-events: none;
+      animation: float 6s infinite ease-in-out;
+    }
+    
+    @keyframes float {
+      0%, 100% { transform: translateY(0) rotate(0deg); opacity: 1; }
+      50% { transform: translateY(-100px) rotate(180deg); opacity: 0.3; }
+    }
+    
+    .morphing-card {
+      border-radius: 20px;
+      transition: border-radius 0.3s ease;
+    }
+    
+    .morphing-card:hover {
+      border-radius: 35px;
+    }
+  </style>
 </head>
-<body class="bg-gray-100 min-h-screen p-6">
-  <div class="text-center text-2xl font-bold text-gray-800 mb-6">Pending Orders</div>
-
-  <div id="loader" class="flex justify-center items-center h-64">
-    <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-500 border-opacity-75"></div>
+<body>
+  <div class="animated-bg"></div>
+  
+  <!-- Floating particles -->
+  <div id="particles"></div>
+  
+  <!-- Header -->
+  <div class="relative z-10 pt-8 pb-6">
+    <div class="text-center" data-aos="fade-down" data-aos-duration="1000">
+      <h1 class="text-5xl md:text-7xl font-black gradient-text mb-4 floating">
+        ⚡ Assign a tentative dispatch date ⚡
+      </h1>
+      <p class="text-white text-xl md:text-2xl font-light neon-text">
+        Real-time sales order dispatch management
+      </p>
+      <div class="mt-6 flex justify-center space-x-4">
+        <div class="glassmorphism rounded-full px-6 py-2 text-white font-semibold">
+          <span class="animate-pulse">🔴</span> Live Dashboard
+        </div>
+        <div class="glassmorphism rounded-full px-6 py-2 text-white font-semibold">
+          ⏰ Real-time Updates
+        </div>
+      </div>
+    </div>
   </div>
 
-  <div id="ordersContainer" class="grid gap-6 md:grid-cols-2 lg:grid-cols-3 hidden"></div>
+  <!-- Loader -->
+  <div id="loader" class="flex flex-col justify-center items-center h-64 relative z-10">
+    <div class="relative">
+      <div class="spinner"></div>
+      <div class="pulse-ring" style="width: 80px; height: 80px; top: -10px; left: -10px;"></div>
+      <div class="pulse-ring" style="width: 80px; height: 80px; top: -10px; left: -10px; animation-delay: 1s;"></div>
+    </div>
+    <p class="text-white text-xl font-semibold mt-6 animate-pulse">Loading orders...</p>
+  </div>
+
+  <!-- Orders Container -->
+  <div id="ordersContainer" class="grid gap-8 md:grid-cols-2 lg:grid-cols-3 px-6 pb-12 relative z-10 hidden"></div>
+
+  <!-- Success Modal -->
+  <div id="successModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="glassmorphism rounded-3xl p-8 m-4 text-center max-w-md animate__animated animate__bounceIn">
+      <div class="text-6xl mb-4">🎉</div>
+      <h3 class="text-2xl font-bold text-white mb-4">Order Submitted!</h3>
+      <p class="text-white mb-6">Your order has been successfully processed.</p>
+      <button onclick="closeModal()" class="button-3d">Awesome!</button>
+    </div>
+  </div>
 
 <script>
   const API_URL = "https://script.google.com/macros/s/AKfycbxkduAfhEpEtxKXA_HuIm-lZQj62ZPZwXeZ_Fol-v6VrzfhoXY2lffR64pjPahKV2o/exec";
-  const POST_URL = API_URL; // Same endpoint for now
+  const POST_URL = API_URL;
 
   let globalOrders = [];
 
+  // Initialize AOS
+  AOS.init({
+    duration: 1000,
+    once: false,
+    offset: 100
+  });
+
+  // Create floating particles
+  function createParticles() {
+    const container = document.getElementById('particles');
+    for (let i = 0; i < 20; i++) {
+      const particle = document.createElement('div');
+      particle.className = 'particle';
+      particle.style.left = Math.random() * 100 + '%';
+      particle.style.animationDelay = Math.random() * 6 + 's';
+      particle.style.animationDuration = (Math.random() * 3 + 3) + 's';
+      container.appendChild(particle);
+    }
+  }
+
   async function fetchOrders() {
     try {
-        const urlParams = new URLSearchParams(window.location.search);
-        const crmName = urlParams.get('crm');
-        if (!crmName) {
-            throw new Error('CRM name is missing in URL');
-        }
-        // Append crmName to the API URL
-        const response = await fetch(`${API_URL}?crm=${encodeURIComponent(crmName)}`);
-        const result = await response.json();
+      const urlParams = new URLSearchParams(window.location.search);
+      const crmName = urlParams.get('crm');
+      if (!crmName) {
+        throw new Error('CRM name is missing in URL');
+      }
+      
+      const response = await fetch(`${API_URL}?crm=${encodeURIComponent(crmName)}`);
+      const result = await response.json();
+      
       if (result.status === "success") {
-        document.getElementById("loader").classList.add("hidden");
-        document.getElementById("ordersContainer").classList.remove("hidden");
-        globalOrders = result.data;
-        renderOrders(globalOrders);
+        // Animate loader out
+        anime({
+          targets: '#loader',
+          opacity: 0,
+          scale: 0.8,
+          duration: 500,
+          easing: 'easeInOutQuad',
+          complete: () => {
+            document.getElementById("loader").classList.add("hidden");
+            document.getElementById("ordersContainer").classList.remove("hidden");
+            globalOrders = result.data;
+            renderOrders(globalOrders);
+          }
+        });
       } else {
         throw new Error("Invalid response");
       }
     } catch (error) {
-      document.getElementById("loader").innerHTML = "<p class='text-red-500 text-lg'>Failed to load orders.</p>";
+      document.getElementById("loader").innerHTML = `
+        <div class="glassmorphism rounded-2xl p-8 text-center">
+          <div class="text-6xl mb-4">❌</div>
+          <p class='text-red-300 text-xl font-semibold'>Failed to load orders</p>
+          <button onclick="fetchOrders()" class="button-3d mt-4">Retry</button>
+        </div>
+      `;
       console.error("Fetch error:", error);
     }
   }
@@ -60,13 +307,19 @@
     const container = document.getElementById("ordersContainer");
     container.innerHTML = "";
 
-    // Check if there are no orders
     if (!orders || orders.length === 0) {
       container.innerHTML = `
-        <div class="col-span-full flex flex-col items-center justify-center py-16">
-          <div class="text-6xl mb-4">📋</div>
-          <h2 class="text-2xl font-semibold text-gray-600 mb-2">No Pending Orders</h2>
-          <p class="text-gray-500">All orders have been processed or no new orders are available.</p>
+        <div class="col-span-full" data-aos="fade-up">
+          <div class="glassmorphism morphing-card p-12 text-center">
+            <div class="text-8xl mb-6 floating">📋</div>
+            <h2 class="text-4xl font-bold text-white mb-4 gradient-text">No Pending Orders</h2>
+            <p class="text-white text-xl opacity-80">All orders processed! Take a well-deserved break ☕</p>
+            <div class="mt-8">
+              <button onclick="fetchOrders()" class="button-3d">
+                🔄 Refresh Dashboard
+              </button>
+            </div>
+          </div>
         </div>
       `;
       return;
@@ -74,114 +327,234 @@
 
     orders.forEach((order, index) => {
       const deadline = new Date(order.timestamp);
-      deadline.setHours(18, 0, 0, 0); // 6:00 PM
+      deadline.setHours(18, 0, 0, 0);
+      const isOverdue = new Date() > deadline;
 
       const card = document.createElement("div");
-      card.className = "bg-white shadow-xl rounded-2xl p-6 transition-transform hover:scale-105 relative";
+      card.className = "glassmorphism morphing-card card-hover p-6 relative overflow-hidden";
+      card.setAttribute('data-aos', 'fade-up');
+      card.setAttribute('data-aos-delay', (index * 100).toString());
+
+      const statusColor = isOverdue ? 'from-red-500 to-red-600' : 'from-green-400 to-green-500';
+      const statusIcon = isOverdue ? '🔥' : '✅';
+      const statusText = isOverdue ? 'OVERDUE' : 'ACTIVE';
 
       card.innerHTML = `
-        <div class="absolute top-2 right-2 text-sm px-2 py-1 rounded-full ${new Date() > deadline ? 'bg-red-200 text-red-800' : 'bg-green-200 text-green-800'}">
-          ${new Date() > deadline ? 'Overdue' : 'Active'}
+        
+        <div class="mb-6">
+          <h3 class="flex items-center space-x-2 text-white">
+            🏢 ${order.dealerName}
+          </h3>
+          <div class="space-y-2 text-white">
+            <p class="flex items-center space-x-2">
+              <span class="font-semibold">👤 Marketing:</span>
+              <span class="bg-white bg-opacity-20 px-2 py-1 rounded-lg">${order.marketingPersonName}</span>
+            </p>
+            <p class="flex items-center space-x-2">
+              <span class="font-semibold">📍 Location:</span>
+              <span class="bg-white bg-opacity-20 px-2 py-1 rounded-lg">${order.location}</span>
+            </p>
+            <p class="flex items-center space-x-2">
+              <span class="font-semibold">💼 CRM:</span>
+              <span class="bg-white bg-opacity-20 px-2 py-1 rounded-lg">${order.crmName}</span>
+            </p>
+            <p class="flex items-center space-x-2">
+              <span class="font-semibold">⏰ Deadline:</span>
+              <span class="bg-white bg-opacity-20 px-2 py-1 rounded-lg text-sm">${deadline.toLocaleString()}</span>
+            </p>
+          </div>
         </div>
-        <div class="text-xl font-semibold mb-2">${order.dealerName}</div>
-        <p><span class="font-medium">Marketing Person:</span> ${order.marketingPersonName}</p>
-        <p><span class="font-medium">Location:</span> ${order.location}</p>
-        <p><span class="font-medium">CRM:</span> ${order.crmName}</p>
-        <p><span class="font-medium">Deadline:</span> ${deadline.toLocaleString()}</p>
-        <p><span class="font-medium">Time Left:</span> <span id="countdown-${index}" class="font-mono text-blue-600"></span></p>
-        <div class="mt-4">
-          <label class="block text-sm font-medium mb-1">Tentative Dispatch Date:</label>
-          <input type="date" id="dispatch-${index}" class="w-full border rounded px-3 py-2" />
+        
+        <div class="bg-black bg-opacity-30 rounded-xl p-4 mb-4">
+          <p class="text-white font-semibold mb-2">⏱️ Time Remaining:</p>
+          <div id="countdown-${index}" class="text-3xl font-mono font-bold countdown-glow text-center"></div>
         </div>
-        <button onclick="submitOrder(${index})"
-          class="mt-4 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
-          Submit
+        
+        <div class="mb-4">
+          <label class="block text-white font-semibold mb-2">📅 Tentative Dispatch Date:</label>
+          <input type="date" id="dispatch-${index}" 
+            class="w-full bg-white bg-opacity-20 border border-white border-opacity-30 rounded-xl px-4 py-3 text-white placeholder-white placeholder-opacity-70 focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50 transition-all" />
+        </div>
+        
+        <button onclick="submitOrder(${index})" id="submit-btn-${index}"
+          class="w-full button-3d text-lg font-semibold relative overflow-hidden">
+          <span class="relative z-10">🚀 Set Dispatch Date</span>
         </button>
       `;
 
       container.appendChild(card);
-      startCountdown(deadline, index);
+      startCountdown(deadline, index, isOverdue);
+    });
+
+    // Animate cards in
+    anime({
+      targets: '.card-hover',
+      scale: [0.8, 1],
+      opacity: [0, 1],
+      delay: anime.stagger(100),
+      duration: 800,
+      easing: 'easeOutElastic(1, .8)'
     });
   }
 
-  function startCountdown(deadline, index) {
+  function startCountdown(deadline, index, isOverdue) {
     const countdownEl = document.getElementById(`countdown-${index}`);
+    
     function updateCountdown() {
       const now = new Date();
       const diff = deadline - now;
 
       if (diff <= 0) {
-        countdownEl.innerText = "00:00:00";
-        countdownEl.classList.add("text-red-500");
+        countdownEl.innerHTML = `
+          <span class="text-red-400 animate-pulse">
+            ⚠️ EXPIRED ⚠️
+          </span>
+        `;
         return;
       }
 
-      const hours = String(Math.floor(diff / (1000 * 60 * 60))).padStart(2, '0');
-      const minutes = String(Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))).padStart(2, '0');
-      const seconds = String(Math.floor((diff % (1000 * 60)) / 1000)).padStart(2, '0');
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
 
-      countdownEl.innerText = `${hours}:${minutes}:${seconds}`;
+      const timeString = days > 0 
+        ? `${days}d ${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
+        : `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+
+      const color = diff < 3600000 ? 'text-red-400' : diff < 7200000 ? 'text-yellow-400' : 'text-green-400';
+      
+      countdownEl.innerHTML = `<span class="${color}">${timeString}</span>`;
     }
 
     updateCountdown();
     setInterval(updateCountdown, 1000);
   }
 
-async function submitOrder(index) {
-  const dispatchDate = document.getElementById(`dispatch-${index}`).value;
-  if (!dispatchDate) {
-    alert("Please select a tentative dispatch date.");
-    return;
-  }
-
-  const order = globalOrders[index];
-  const button = document.querySelector(`button[onclick="submitOrder(${index})"]`);
-  
-  // Show loading state
-  const originalText = button.textContent;
-  button.textContent = "Submitting...";
-  button.disabled = true;
-
-  const payload = {
-    timestamp: order.timestamp,
-    dispatchDate: dispatchDate
-  };
-
-  console.log('Submitting payload:', payload); // For debugging
-
-  try {
-    const response = await fetch(POST_URL, {
-      method: "POST",
-      mode: "no-cors",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(payload)
-    });
-
-    // With no-cors, we can't read the response, so we assume success
-    // You might want to add a delay to simulate processing
-    setTimeout(() => {
-      alert("Submitted successfully!");
-      button.textContent = "Submitted ✓";
-      button.style.backgroundColor = "#10B981"; // Green color
-      fetchOrders();
+  async function submitOrder(index) {
+    const dispatchDate = document.getElementById(`dispatch-${index}`).value;
+    const button = document.getElementById(`submit-btn-${index}`);
+    
+    if (!dispatchDate) {
+      // Animate error
+      anime({
+        targets: `#dispatch-${index}`,
+        scale: [1, 1.05, 1],
+        duration: 300,
+        easing: 'easeInOutQuad'
+      });
       
-      // Optional: Remove the card or disable further submissions
-      // button.disabled = true;
-    }, 1000);
+      // Show custom alert
+      showAlert("Please select a tentative dispatch date! 📅", "warning");
+      return;
+    }
 
-  } catch (err) {
-    console.error('Submit error:', err);
-    button.textContent = originalText;
-    button.disabled = false;
-    alert("Submission failed. Please try again.");
-    fetchOrders();
+    const order = globalOrders[index];
+    const originalHTML = button.innerHTML;
+    
+    // Animate button
+    button.innerHTML = `
+      <div class="flex items-center justify-center space-x-2">
+        <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+        <span>Launching...</span>
+      </div>
+    `;
+    button.disabled = true;
+
+    const payload = {
+      timestamp: order.timestamp,
+      dispatchDate: dispatchDate
+    };
+
+    try {
+      const response = await fetch(POST_URL, {
+        method: "POST",
+        mode: "no-cors",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+      });
+
+      setTimeout(() => {
+        showSuccessModal();
+        button.innerHTML = `
+          <span class="flex items-center justify-center space-x-2">
+            <span>🎉</span>
+            <span>Launched Successfully!</span>
+          </span>
+        `;
+        button.style.background = "linear-gradient(45deg, #10B981, #059669)";
+        
+        // Animate card out
+        anime({
+          targets: button.closest('.card-hover'),
+          scale: 0.9,
+          opacity: 0.7,
+          duration: 500
+        });
+        
+        setTimeout(() => fetchOrders(), 2000);
+      }, 1500);
+
+    } catch (err) {
+      console.error('Submit error:', err);
+      button.innerHTML = originalHTML;
+      button.disabled = false;
+      showAlert("Launch failed! Please try again 🚀", "error");
+    }
   }
-}
 
-fetchOrders();
+  function showAlert(message, type) {
+    const alertDiv = document.createElement('div');
+    const bgColor = type === 'error' ? 'from-red-500 to-red-600' : 'from-yellow-500 to-yellow-600';
+    
+    alertDiv.className = `fixed top-6 right-6 bg-gradient-to-r ${bgColor} text-white px-6 py-4 rounded-xl shadow-2xl z-50 animate__animated animate__bounceInRight`;
+    alertDiv.innerHTML = `
+      <div class="flex items-center space-x-3">
+        <span class="text-2xl">${type === 'error' ? '❌' : '⚠️'}</span>
+        <span class="font-semibold">${message}</span>
+      </div>
+    `;
+    
+    document.body.appendChild(alertDiv);
+    
+    setTimeout(() => {
+      alertDiv.classList.remove('animate__bounceInRight');
+      alertDiv.classList.add('animate__bounceOutRight');
+      setTimeout(() => alertDiv.remove(), 500);
+    }, 3000);
+  }
 
+  function showSuccessModal() {
+    document.getElementById('successModal').classList.remove('hidden');
+  }
+
+  function closeModal() {
+    document.getElementById('successModal').classList.add('hidden');
+  }
+
+  // Initialize everything
+  createParticles();
+  fetchOrders();
+
+  // Add some interactive cursor effects
+  document.addEventListener('mousemove', (e) => {
+    const cursor = document.createElement('div');
+    cursor.className = 'fixed w-2 h-2 bg-white bg-opacity-50 rounded-full pointer-events-none z-50';
+    cursor.style.left = e.clientX + 'px';
+    cursor.style.top = e.clientY + 'px';
+    document.body.appendChild(cursor);
+    
+    anime({
+      targets: cursor,
+      scale: [1, 0],
+      opacity: [1, 0],
+      duration: 1000,
+      easing: 'easeOutQuad',
+      complete: () => cursor.remove()
+    });
+  });
 </script>
 </body>
 </html>
