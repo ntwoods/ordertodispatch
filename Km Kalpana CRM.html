@@ -475,6 +475,22 @@
     fetchAndUpdateCount('level6', 'level6-count');
     fetchAndUpdateCount('level7', 'level7-count');
     fetchAndUpdateCount('level8', 'level8-count');
+
+function updateAllCounts() {
+  fetchAndUpdateCount('ownerApproval', 'owner-approval-count');
+  fetchAndUpdateCount('level34', 'level34-count');
+  fetchAndUpdateCount('level5', 'level5-count');
+  fetchAndUpdateCount('level6', 'level6-count');
+  fetchAndUpdateCount('level7', 'level7-count');
+  fetchAndUpdateCount('level8', 'level8-count');
+}
+
+// Call it immediately once when page loads (optional)
+updateAllCounts();
+
+// Call every 10 seconds (10000 milliseconds)
+setInterval(updateAllCounts, 10000);
+
         function navigateTo(url) {
             // Add a subtle animation before navigation
             const clickedCard = event.currentTarget;
