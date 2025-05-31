@@ -2,12 +2,276 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Reminders For Dispatch Departments</title>
-<link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+  <title>Dispatch Command Center</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+    
+    * {
+      font-family: 'Inter', sans-serif;
+    }
+
+    body {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: 
+        radial-gradient(circle at 20% 50%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(255, 118, 117, 0.2) 0%, transparent 50%),
+        radial-gradient(circle at 40% 80%, rgba(252, 176, 64, 0.2) 0%, transparent 50%);
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    .glass-morphism {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      box-shadow: 0 25px 45px rgba(0, 0, 0, 0.1);
+    }
+
+    .card-hover {
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      transform-style: preserve-3d;
+    }
+
+    .card-hover:hover {
+      transform: translateY(-8px) rotateX(5deg);
+      box-shadow: 
+        0 25px 50px rgba(0, 0, 0, 0.15),
+        0 0 0 1px rgba(255, 255, 255, 0.3);
+    }
+
+    .pulse-ring {
+      animation: pulse-ring 2s cubic-bezier(0.455, 0.03, 0.515, 0.955) infinite;
+    }
+
+    @keyframes pulse-ring {
+      0% {
+        transform: scale(0.8);
+        opacity: 1;
+      }
+      80%, 100% {
+        transform: scale(1.2);
+        opacity: 0;
+      }
+    }
+
+    .float-animation {
+      animation: float 6s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-10px); }
+    }
+
+    .gradient-text {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .status-active {
+      background: linear-gradient(135deg, #10B981, #34D399);
+      box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
+    }
+
+    .status-overdue {
+      background: linear-gradient(135deg, #EF4444, #F87171);
+      box-shadow: 0 0 20px rgba(239, 68, 68, 0.4);
+      animation: pulse-danger 2s infinite;
+    }
+
+    @keyframes pulse-danger {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.8; }
+    }
+
+    .countdown-active {
+      background: linear-gradient(135deg, #3B82F6, #60A5FA);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      font-weight: 700;
+      text-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
+    }
+
+    .countdown-danger {
+      background: linear-gradient(135deg, #EF4444, #F87171);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      font-weight: 700;
+      animation: pulse 1s infinite;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      transition: all 0.3s ease;
+      box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 15px 35px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-success {
+      background: linear-gradient(135deg, #10B981, #34D399);
+      box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3);
+    }
+
+    .loader-container {
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .loading-dots {
+      display: inline-block;
+    }
+
+    .loading-dots::after {
+      content: '...';
+      animation: dots 2s steps(4, end) infinite;
+    }
+
+    @keyframes dots {
+      0%, 20% { content: '.'; }
+      40% { content: '..'; }
+      60%, 100% { content: '...'; }
+    }
+
+    .metric-card {
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(15px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      transition: all 0.3s ease;
+    }
+
+    .metric-card:hover {
+      background: rgba(255, 255, 255, 0.2);
+      transform: translateY(-2px);
+    }
+
+    .icon-glow {
+      filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.5));
+    }
+
+    .stagger-animation {
+      animation: slideInUp 0.6s ease forwards;
+      opacity: 0;
+      transform: translateY(30px);
+    }
+
+    @keyframes slideInUp {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .no-orders {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(20px);
+      border: 2px dashed rgba(255, 255, 255, 0.3);
+      animation: float 4s ease-in-out infinite;
+    }
+
+    .radio-custom {
+      appearance: none;
+      width: 20px;
+      height: 20px;
+      border: 2px solid #667eea;
+      border-radius: 50%;
+      position: relative;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .radio-custom:checked {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      border-color: #667eea;
+    }
+
+    .radio-custom:checked::after {
+      content: '';
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: white;
+    }
+  </style>
 </head>
-<body class="bg-gray-100 min-h-screen p-4">
-  <div id="loader" class="text-center text-xl text-blue-600 font-semibold">Loading orders...</div>
-  <div id="ordersContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6 hidden"></div>
+<body class="min-h-screen p-4">
+  <!-- Header Section -->
+  <div class="text-center mb-8">
+    <div class="glass-morphism rounded-3xl p-8 max-w-4xl mx-auto">
+      <div class="flex items-center justify-center mb-4">
+        <div class="relative">
+          <div class="absolute inset-0 pulse-ring bg-white opacity-20 rounded-full"></div>
+          <i class="fas fa-truck-fast text-5xl text-white icon-glow"></i>
+        </div>
+      </div>
+      <h1 class="text-4xl md:text-5xl font-bold text-white mb-2">
+        Our Dispatch Team Needs Some Reminders 
+      </h1>
+      <p class="text-xl text-white/80 font-light">
+        Real-time Order Management & Tracking Dashboard
+      </p>
+    </div>
+  </div>
+
+  <!-- Metrics Dashboard -->
+  <div id="metricsContainer" class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 max-w-6xl mx-auto hidden">
+    <div class="metric-card rounded-2xl p-6 text-center">
+      <div class="text-3xl mb-2">📊</div>
+      <div class="text-2xl font-bold text-white" id="totalOrders">0</div>
+      <div class="text-white/70">Total Orders</div>
+    </div>
+    <div class="metric-card rounded-2xl p-6 text-center">
+      <div class="text-3xl mb-2">⚡</div>
+      <div class="text-2xl font-bold text-white" id="activeOrders">0</div>
+      <div class="text-white/70">Active Orders</div>
+    </div>
+    <div class="metric-card rounded-2xl p-6 text-center">
+      <div class="text-3xl mb-2">🚨</div>
+      <div class="text-2xl font-bold text-white" id="overdueOrders">0</div>
+      <div class="text-white/70">Overdue Orders</div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div id="loader" class="text-center">
+    <div class="loader-container rounded-3xl p-12 max-w-md mx-auto">
+      <div class="mb-6">
+        <i class="fas fa-sync-alt text-4xl text-white animate-spin"></i>
+      </div>
+      <div class="text-2xl text-white font-semibold">
+        Loading orders<span class="loading-dots"></span>
+      </div>
+      <div class="text-white/60 mt-2">Fetching latest dispatch data</div>
+    </div>
+  </div>
+
+  <!-- Orders Container -->
+  <div id="ordersContainer" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 max-w-7xl mx-auto hidden"></div>
 
   <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbxMxIzOQmHv3LPTh6ca6i5uuguyH615cnjA5emEGNT0rmWpJlnrcg-KWNVP1DORkkcX/exec";
@@ -21,36 +285,63 @@
         if (!crmName) {
             throw new Error('CRM name is missing in URL');
         }
-        // Append crmName to the API URL
         const response = await fetch(`${API_URL}?crm=${encodeURIComponent(crmName)}`);
         const result = await response.json();
         if (result.status === "success") {
           document.getElementById("loader").classList.add("hidden");
           document.getElementById("ordersContainer").classList.remove("hidden");
+          document.getElementById("metricsContainer").classList.remove("hidden");
           globalOrders = result.data;
+          updateMetrics(globalOrders);
           renderOrders(globalOrders);
         } else {
           throw new Error("Invalid response");
         }
       } catch (err) {
-        document.getElementById("loader").innerText = "Failed to load orders.";
+        document.getElementById("loader").innerHTML = `
+          <div class="loader-container rounded-3xl p-12 max-w-md mx-auto">
+            <div class="mb-6">
+              <i class="fas fa-exclamation-triangle text-4xl text-red-400"></i>
+            </div>
+            <div class="text-2xl text-white font-semibold mb-2">Failed to load orders</div>
+            <div class="text-white/60">Please check your connection and try again</div>
+          </div>
+        `;
         console.error(err);
       }
+    }
+
+    function updateMetrics(orders) {
+      const total = orders.length;
+      let active = 0;
+      let overdue = 0;
+      
+      orders.forEach(order => {
+        const deadline = getDeadline(order.timestamp);
+        if (new Date() > deadline) {
+          overdue++;
+        } else {
+          active++;
+        }
+      });
+
+      document.getElementById('totalOrders').textContent = total;
+      document.getElementById('activeOrders').textContent = active;
+      document.getElementById('overdueOrders').textContent = overdue;
     }
 
     function getDeadline(originalTimestampStr) {
       const original = new Date(originalTimestampStr);
       let deadline = new Date(original);
-      const day = original.getUTCDay(); // 1 = Monday
+      const day = original.getUTCDay();
 
-      // If timestamp is Monday (1), subtract 2 days
       if (day === 1) {
         deadline.setDate(deadline.getDate() - 2);
       } else {
         deadline.setDate(deadline.getDate() - 1);
       }
 
-      deadline.setHours(18, 0, 0, 0); // 6:00 PM
+      deadline.setHours(18, 0, 0, 0);
       return deadline;
     }
 
@@ -58,45 +349,126 @@
       const container = document.getElementById("ordersContainer");
       container.innerHTML = "";
 
-        if (orders.length === 0) {
-    container.innerHTML = `
-      <div class="col-span-full text-center text-xl text-gray-600 font-semibold">
-        🛒 No Pending Orders
-      </div>
-    `;
-    return;
-  }
+      if (orders.length === 0) {
+        container.innerHTML = `
+          <div class="col-span-full">
+            <div class="no-orders rounded-3xl p-16 text-center max-w-md mx-auto">
+              <div class="text-6xl mb-6">🛒</div>
+              <div class="text-2xl font-bold text-white mb-2">No Pending Orders</div>
+              <div class="text-white/70">All caught up! Great work team.</div>
+            </div>
+          </div>
+        `;
+        return;
+      }
 
       orders.forEach((order, index) => {
         const deadline = getDeadline(order.timestamp);
+        const overdue = new Date() > deadline;
 
         const card = document.createElement("div");
-        card.className = "bg-white p-6 rounded-2xl shadow-md relative transition hover:scale-[1.02]";
+        card.className = "glass-morphism rounded-3xl p-8 card-hover stagger-animation";
+        card.style.animationDelay = `${index * 0.1}s`;
 
-        const overdue = new Date() > deadline;
-        const deadlineLabel = overdue ? "Overdue" : "Active";
+        const statusClass = overdue ? 'status-overdue' : 'status-active';
+        const statusIcon = overdue ? '🚨' : '⚡';
+        const statusText = overdue ? 'OVERDUE' : 'ACTIVE';
 
         card.innerHTML = `
-          <div class="absolute top-2 right-2 text-sm font-semibold px-3 py-1 rounded-full ${overdue ? 'bg-red-200 text-red-800' : 'bg-green-200 text-green-800'}">
-            ${deadlineLabel}
+          <div class="relative">
+            <div class="absolute -top-4 -right-4">
+              <div class="${statusClass} px-4 py-2 rounded-full text-white text-sm font-bold flex items-center gap-2">
+                <span>${statusIcon}</span>
+                <span>${statusText}</span>
+              </div>
+            </div>
+            
+            <div class="mb-6">
+              <div class="flex items-center gap-3 mb-3">
+                <div class="w-12 h-12 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center">
+                  <i class="fas fa-building text-white text-lg"></i>
+                </div>
+                <div>
+                  <div class="text-2xl font-bold text-white">${order.dealerName}</div>
+                  <div class="text-white/60 text-sm">Dealer Information</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="space-y-4 mb-6">
+              <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center">
+                  <i class="fas fa-user text-white text-sm"></i>
+                </div>
+                <div>
+                  <div class="text-white/60 text-sm">Marketing Contact</div>
+                  <div class="text-white font-semibold">${order.marketingPersonName}</div>
+                </div>
+              </div>
+
+              <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center">
+                  <i class="fas fa-map-marker-alt text-white text-sm"></i>
+                </div>
+                <div>
+                  <div class="text-white/60 text-sm">Location</div>
+                  <div class="text-white font-semibold">${order.location}</div>
+                </div>
+              </div>
+
+              <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center">
+                  <i class="fas fa-database text-white text-sm"></i>
+                </div>
+                <div>
+                  <div class="text-white/60 text-sm">CRM System</div>
+                  <div class="text-white font-semibold">${order.crmName}</div>
+                </div>
+              </div>
+
+              <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center">
+                  <i class="fas fa-clock text-white text-sm"></i>
+                </div>
+                <div>
+                  <div class="text-white/60 text-sm">Dispatch Time</div>
+                  <div class="text-white font-semibold">${new Date(order.timestamp).toLocaleString()}</div>
+                </div>
+              </div>
+
+              <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center">
+                  <i class="fas fa-flag-checkered text-white text-sm"></i>
+                </div>
+                <div>
+                  <div class="text-white/60 text-sm">Deadline</div>
+                  <div class="text-white font-semibold">${deadline.toLocaleString()}</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-white/5 rounded-2xl p-4 mb-6">
+              <div class="text-center">
+                <div class="text-white/60 text-sm mb-2">Time Remaining</div>
+                <div id="countdown-${index}" class="text-3xl font-mono ${overdue ? 'countdown-danger' : 'countdown-active'}"></div>
+              </div>
+            </div>
+
+            <div class="mb-6">
+              <label class="flex items-center gap-3 cursor-pointer group">
+                <input type="radio" name="confirm-${index}" id="radio-${index}" class="radio-custom">
+                <span class="text-white font-medium group-hover:text-white/80 transition-colors">
+                  Dispatch Department Informed
+                </span>
+              </label>
+            </div>
+
+            <button id="submit-${index}" onclick="submitConfirmation(${index})"
+                    class="w-full btn-primary text-white px-6 py-4 rounded-2xl font-semibold text-lg hover:scale-105 transition-all duration-300">
+              <i class="fas fa-paper-plane mr-2"></i>
+              Submit Confirmation
+            </button>
           </div>
-          <div class="text-xl font-bold mb-2">${order.dealerName}</div>
-          <p><strong>Marketing:</strong> ${order.marketingPersonName}</p>
-          <p><strong>Location:</strong> ${order.location}</p>
-          <p><strong>CRM:</strong> ${order.crmName}</p>
-          <p><strong>Dispatch Date & Time:</strong> ${new Date(order.timestamp).toLocaleString()}</p>
-          <p><strong>Deadline:</strong> ${deadline.toLocaleString()}</p>
-          <p><strong>Time Left:</strong> <span id="countdown-${index}" class="font-mono text-blue-700"></span></p>
-          <div class="mt-4">
-            <label class="inline-flex items-center">
-              <input type="radio" name="confirm-${index}" id="radio-${index}" class="form-radio h-4 w-4 text-blue-600">
-              <span class="ml-2 text-sm">Dispatch Department Informed</span>
-            </label>
-          </div>
-          <button id="submit-${index}" onclick="submitConfirmation(${index})"
-          class="mt-4 w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
-          Submit
-          </button>
         `;
 
         container.appendChild(card);
@@ -111,7 +483,7 @@
         const diff = deadline - now;
         if (diff <= 0) {
           el.innerText = "00:00:00";
-          el.classList.add("text-red-500");
+          el.className = "text-3xl font-mono countdown-danger";
           return;
         }
         const h = String(Math.floor(diff / (1000 * 60 * 60))).padStart(2, "0");
@@ -126,18 +498,35 @@
     async function submitConfirmation(index) {
       const radio = document.getElementById(`radio-${index}`);
       if (!radio.checked) {
-        alert("Please confirm that the Dispatch Department is informed.");
+        // Enhanced alert with custom styling
+        const alertDiv = document.createElement('div');
+        alertDiv.className = 'fixed top-4 right-4 bg-red-500 text-white px-6 py-4 rounded-lg shadow-lg z-50 transform translate-x-full transition-transform duration-300';
+        alertDiv.innerHTML = `
+          <div class="flex items-center gap-3">
+            <i class="fas fa-exclamation-triangle"></i>
+            <span>Please confirm that the Dispatch Department is informed.</span>
+          </div>
+        `;
+        document.body.appendChild(alertDiv);
+        
+        setTimeout(() => alertDiv.classList.remove('translate-x-full'), 100);
+        setTimeout(() => {
+          alertDiv.classList.add('translate-x-full');
+          setTimeout(() => document.body.removeChild(alertDiv), 300);
+        }, 3000);
         return;
       }
-    const button = document.getElementById(`submit-${index}`);
 
- // Show loading state
-  const originalText = button.textContent;
-  button.textContent = "Submitting...";
-  button.disabled = true;
+      const button = document.getElementById(`submit-${index}`);
+      const originalText = button.innerHTML;
+      
+      button.innerHTML = `
+        <i class="fas fa-spinner animate-spin mr-2"></i>
+        Submitting...
+      `;
+      button.disabled = true;
 
- 
-     const payload = {
+      const payload = {
         timestampForMap: globalOrders[index].timestampForMap
       };
 
@@ -149,24 +538,57 @@
           headers: { "Content-Type": "application/json" }
         });
 
-    setTimeout(() => {
-      alert("Submitted successfully!");
-      button.textContent = "Submitted ✓";
-      button.style.backgroundColor = "#10B981"; // Green color
-      fetchOrders();
-      // Optional: Remove the card or disable further submissions
-      // button.disabled = true;
-    }, 1000);
-        
+        setTimeout(() => {
+          // Success notification
+          const successDiv = document.createElement('div');
+          successDiv.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-4 rounded-lg shadow-lg z-50 transform translate-x-full transition-transform duration-300';
+          successDiv.innerHTML = `
+            <div class="flex items-center gap-3">
+              <i class="fas fa-check-circle"></i>
+              <span>Submitted successfully!</span>
+            </div>
+          `;
+          document.body.appendChild(successDiv);
+          
+          setTimeout(() => successDiv.classList.remove('translate-x-full'), 100);
+          setTimeout(() => {
+            successDiv.classList.add('translate-x-full');
+            setTimeout(() => document.body.removeChild(successDiv), 300);
+          }, 3000);
 
-  } catch (err) {
-    console.error('Submit error:', err);
-    button.textContent = originalText;
-    button.disabled = false;
-    alert("Submission failed. Please try again.");
-    fetchOrders();
-  }
-}
+          button.innerHTML = `
+            <i class="fas fa-check mr-2"></i>
+            Submitted ✓
+          `;
+          button.className = button.className.replace('btn-primary', 'btn-success');
+          fetchOrders();
+        }, 1000);
+
+      } catch (err) {
+        console.error('Submit error:', err);
+        button.innerHTML = originalText;
+        button.disabled = false;
+        
+        // Error notification
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'fixed top-4 right-4 bg-red-500 text-white px-6 py-4 rounded-lg shadow-lg z-50 transform translate-x-full transition-transform duration-300';
+        errorDiv.innerHTML = `
+          <div class="flex items-center gap-3">
+            <i class="fas fa-exclamation-circle"></i>
+            <span>Submission failed. Please try again.</span>
+          </div>
+        `;
+        document.body.appendChild(errorDiv);
+        
+        setTimeout(() => errorDiv.classList.remove('translate-x-full'), 100);
+        setTimeout(() => {
+          errorDiv.classList.add('translate-x-full');
+          setTimeout(() => document.body.removeChild(errorDiv), 300);
+        }, 3000);
+        
+        fetchOrders();
+      }
+    }
 
     fetchOrders();
   </script>
