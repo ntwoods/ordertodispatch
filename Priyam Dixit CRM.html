@@ -4,13 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CRM Dashboard</title>
-          <script>
-    document.addEventListener("visibilitychange", function () {
-      if (document.visibilityState === "visible") {
-        location.reload();
-      }
-    });
-  </script>
+<script>
+  document.addEventListener("visibilitychange", function () {
+    if (document.visibilityState === "visible") {
+      location.reload();
+    }
+  });
+
+  setInterval(() => {
+    location.reload();
+  }, 10000);
+</script>
 
     <style>
         * {
