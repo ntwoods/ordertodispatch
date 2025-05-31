@@ -58,6 +58,15 @@
       const container = document.getElementById("ordersContainer");
       container.innerHTML = "";
 
+        if (orders.length === 0) {
+    container.innerHTML = `
+      <div class="col-span-full text-center text-xl text-gray-600 font-semibold">
+        🛒 No Pending Orders
+      </div>
+    `;
+    return;
+  }
+
       orders.forEach((order, index) => {
         const deadline = getDeadline(order.timestamp);
 
@@ -155,6 +164,7 @@
     button.textContent = originalText;
     button.disabled = false;
     alert("Submission failed. Please try again.");
+    fetchOrders();
   }
 }
 
