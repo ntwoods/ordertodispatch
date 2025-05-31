@@ -144,10 +144,11 @@
       alert("Submitted successfully!");
       button.textContent = "Submitted ✓";
       button.style.backgroundColor = "#10B981"; // Green color
-      
+      fetchOrders();
       // Optional: Remove the card or disable further submissions
       // button.disabled = true;
     }, 1000);
+        
 
   } catch (err) {
     console.error('Submit error:', err);
