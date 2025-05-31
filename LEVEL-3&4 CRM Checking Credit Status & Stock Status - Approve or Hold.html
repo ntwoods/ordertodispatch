@@ -283,11 +283,17 @@
             const container = document.getElementById('ordersContainer');
             container.innerHTML = '';
             
-            if (ordersData.length === 0) {
-                showNoData();
-                return;
-            }
-
+    // Check if there are no orders
+    if (!orders || orders.length === 0) {
+      container.innerHTML = `
+        <div class="col-span-full flex flex-col items-center justify-center py-16">
+          <div class="text-6xl mb-4">📋</div>
+          <h2 class="text-2xl font-semibold text-gray-600 mb-2">No Pending Orders</h2>
+          <p class="text-gray-500">All orders have been processed or no new orders are available.</p>
+        </div>
+      `;
+      return;
+    }
             // Clear existing intervals
             countdownIntervals.forEach(interval => clearInterval(interval));
             countdownIntervals = [];
