@@ -622,13 +622,6 @@
                     },
                     body: JSON.stringify(data)
                 });
-                
-                if (!response.ok) {
-                    throw new Error(`Submitted Successfully!`);
-                    fetchOrders();
-                }
-                
-                const result = await response.json();
                 return result;
             } catch (error) {
                 console.error(`Submitted Successfully!`);
