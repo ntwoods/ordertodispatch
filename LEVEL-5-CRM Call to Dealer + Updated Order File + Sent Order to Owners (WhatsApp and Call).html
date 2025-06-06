@@ -612,9 +612,10 @@
         }
 
         // Function to post data
+        // Function to post data in no-cors mode (assume success, ignore response)
         async function postData(data) {
             try {
-                const response = await fetch(API_URL, {
+                await fetch(API_URL, {
                     method: 'POST',
                     mode: 'no-cors',
                     headers: {
@@ -622,10 +623,13 @@
                     },
                     body: JSON.stringify(data)
                 });
-                return result;
-            } catch (error) {
-                console.error(`Submitted Successfully!`);
+        
+                // Assume success regardless of actual result
+                console.log('Submitted Successfully!');
                 fetchOrders();
+            } catch (error) {
+                // Errors will only happen for network-level issues
+                console.error('Submission error:', error);
             }
         }
         // Initialize the application
