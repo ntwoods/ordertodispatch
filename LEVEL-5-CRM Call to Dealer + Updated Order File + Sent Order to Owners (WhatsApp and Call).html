@@ -578,23 +578,19 @@
                 });
                 
                 // Make the actual POST request
-                const result = await postData(submitData);
+                await postData(submitData);
                 
-                if (result.status === 'success') {
-                    // Show success message
-                    successMessage.style.display = 'block';
-                    setTimeout(() => {
-                        successMessage.style.display = 'none';
-                    }, 5000);
-                    
-                    // Reset form
-                    fileInput.value = '';
-                    document.getElementById(`file-selected-${orderIndex}`).style.display = 'none';
-                    if (ownersInformedRadio) {
-                        ownersInformedRadio.checked = false;
-                    }
-                } else {
-                    throw new Error(result.message || 'Unknown error occurred');
+                // Show success message (assuming success since we're using no-cors)
+                successMessage.style.display = 'block';
+                setTimeout(() => {
+                    successMessage.style.display = 'none';
+                }, 5000);
+                
+                // Reset form
+                fileInput.value = '';
+                document.getElementById(`file-selected-${orderIndex}`).style.display = 'none';
+                if (ownersInformedRadio) {
+                    ownersInformedRadio.checked = false;
                 }
                 
             } catch (error) {
@@ -611,7 +607,6 @@
             }
         }
 
-        // Function to post data
         // Function to post data in no-cors mode (assume success, ignore response)
         async function postData(data) {
             try {
@@ -624,19 +619,27 @@
                     body: JSON.stringify(data)
                 });
         
-                // Assume success regardless of actual result
-                console.log('Submitted Successfully!');
-                fetchOrders();
+                // Since we're using no-cors, we can't read the response
+                // So we assume success and refresh the orders
+                console.log('Data submitted successfully (no-cors mode)');
+                
+                // Refresh orders after a short delay to see updated data
+                setTimeout(() => {
+                    fetchOrders();
+                }, 1000);
+                
             } catch (error) {
-                // Errors will only happen for network-level issues
-                console.error('Submission error:', error);
+                // Only network-level errors will be caught here
+                console.error('Network error during submission:', error);
+                throw error;
             }
         }
+
         // Initialize the application
         document.addEventListener('DOMContentLoaded', function() {
             fetchOrders();
             
-            // Auto-refresh every 30 seconds
+            // Auto-refresh every 5 minutes
             setInterval(fetchOrders, 5 * 60 * 1000);
         });
 
