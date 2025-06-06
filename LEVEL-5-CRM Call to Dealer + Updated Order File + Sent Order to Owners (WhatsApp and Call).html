@@ -11,30 +11,30 @@
             padding: 0;
             box-sizing: border-box;
         }
-        
+
         body {
             font-family: Arial, sans-serif;
             background-color: #f5f5f5;
             padding: 20px;
         }
-        
+
         .container {
             max-width: 1200px;
             margin: 0 auto;
         }
-        
+
         h1 {
             text-align: center;
             color: #333;
             margin-bottom: 30px;
         }
-        
+
         .loading {
             text-align: center;
             font-size: 18px;
             color: #666;
         }
-        
+
         .error {
             background-color: #ffebee;
             color: #c62828;
@@ -43,13 +43,13 @@
             text-align: center;
             margin-bottom: 20px;
         }
-        
+
         .orders-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
             gap: 20px;
         }
-        
+
         .order-card {
             background: white;
             border-radius: 8px;
@@ -57,105 +57,105 @@
             padding: 20px;
             transition: transform 0.2s;
         }
-        
+
         .order-card:hover {
             transform: translateY(-2px);
             box-shadow: 0 4px 20px rgba(0,0,0,0.15);
         }
-        
+
         .order-header {
             border-bottom: 2px solid #e0e0e0;
             padding-bottom: 10px;
             margin-bottom: 15px;
         }
-        
+
         .dealer-name {
             font-size: 20px;
             font-weight: bold;
             color: #1976d2;
             margin-bottom: 5px;
         }
-        
+
         .timestamp {
             color: #666;
             font-size: 14px;
         }
-        
+
         .order-details {
             margin-bottom: 15px;
         }
-        
+
         .detail-row {
             display: flex;
             justify-content: space-between;
             margin-bottom: 8px;
             padding: 5px 0;
         }
-        
+
         .detail-label {
             font-weight: bold;
             color: #555;
             flex: 1;
         }
-        
+
         .detail-value {
             color: #333;
             flex: 2;
             text-align: right;
         }
-        
+
         .file-link {
             color: #1976d2;
             text-decoration: none;
         }
-        
+
         .file-link:hover {
             text-decoration: underline;
         }
-        
+
         .countdown-section {
             background-color: #f8f9fa;
             border-radius: 5px;
             padding: 15px;
             text-align: center;
         }
-        
+
         .countdown-label {
             font-size: 14px;
             color: #666;
             margin-bottom: 5px;
         }
-        
+
         .countdown-timer {
             font-size: 24px;
             font-weight: bold;
             font-family: monospace;
         }
-        
+
         .countdown-urgent {
             color: #d32f2f;
             animation: pulse 1s infinite;
         }
-        
+
         .countdown-warning {
             color: #f57c00;
         }
-        
+
         .countdown-normal {
             color: #388e3c;
         }
-        
+
         .countdown-expired {
             color: #d32f2f;
             background-color: #ffebee;
         }
-        
+
         @keyframes pulse {
             0% { opacity: 1; }
             50% { opacity: 0.5; }
             100% { opacity: 1; }
         }
-        
+
         .refresh-btn {
             background-color: #1976d2;
             color: white;
@@ -166,28 +166,28 @@
             font-size: 16px;
             margin-bottom: 20px;
         }
-        
+
         .refresh-btn:hover {
             background-color: #1565c0;
         }
-        
+
         .action-section {
             border-top: 2px solid #e0e0e0;
             padding-top: 15px;
             margin-top: 15px;
         }
-        
+
         .file-upload-section {
             margin-bottom: 15px;
         }
-        
+
         .file-upload-label {
             display: block;
             font-weight: bold;
             color: #555;
             margin-bottom: 8px;
         }
-        
+
         .file-input {
             width: 100%;
             padding: 8px;
@@ -197,71 +197,113 @@
             cursor: pointer;
             transition: border-color 0.3s;
         }
-        
+
         .file-input:hover {
             border-color: #1976d2;
         }
-        
+
         .file-selected {
             color: #388e3c;
             font-size: 14px;
             margin-top: 5px;
             display: none;
         }
-        
+
         .radio-section {
             margin-bottom: 15px;
         }
-        
+
         .radio-label {
             font-weight: bold;
             color: #555;
             margin-bottom: 8px;
             display: block;
         }
-        
+
         .radio-group {
             display: flex;
             gap: 15px;
         }
-        
+
         .radio-option {
             display: flex;
             align-items: center;
             gap: 5px;
         }
-        
+
         .radio-option input[type="radio"] {
             margin: 0;
         }
-        
+
         .radio-option label {
             color: #333;
             cursor: pointer;
             font-weight: normal;
         }
-        
-        .submit-btn {
-            background-color: #388e3c;
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .submit-btn, .hold-btn {
             color: white;
             border: none;
             padding: 10px 20px;
             border-radius: 5px;
             cursor: pointer;
             font-size: 14px;
-            width: 100%;
+            flex-grow: 1;
             transition: background-color 0.3s;
         }
-        
+
+        .submit-btn {
+            background-color: #388e3c; /* Green for Approve */
+        }
+
         .submit-btn:hover {
             background-color: #2e7d32;
         }
-        
+
         .submit-btn:disabled {
             background-color: #ccc;
             cursor: not-allowed;
         }
-        
+
+        .hold-btn {
+            background-color: #ff9800; /* Orange for Hold */
+        }
+
+        .hold-btn:hover {
+            background-color: #f57c00;
+        }
+
+        .hold-btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        .hold-until-section {
+            margin-top: 15px;
+            margin-bottom: 15px;
+            display: none; /* Hidden by default */
+        }
+
+        .hold-until-label {
+            display: block;
+            font-weight: bold;
+            color: #555;
+            margin-bottom: 8px;
+        }
+
+        .hold-until-input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
         .success-message {
             background-color: #e8f5e8;
             color: #2e7d32;
@@ -270,7 +312,7 @@
             margin-top: 10px;
             display: none;
         }
-        
+
         .error-message {
             background-color: #ffebee;
             color: #c62828;
@@ -295,7 +337,7 @@
     let countdownInterval;
 
     // Your API endpoint URL
-    const API_URL = 'https://script.google.com/macros/s/AKfycbwJ0ShdlkgUU-k3fzPIVh9hQC5Y57M-pch8e55lvh0GS5A15llrM4p8v72diztByGx7/exec';
+    const API_URL = 'https://script.google.com/macros/s/AKfycbyA-Q0NczExlSQmU9ZSNqFsUzVU5u3mK1gQewekQA2L7VOL7rJzTiI-Vmhqc3fiu9bb/exec';
 
     // Function to fetch orders from the API
     async function fetchOrders() {
@@ -321,7 +363,7 @@
             }
         } catch (error) {
             console.error('Error fetching orders:', error);
-            document.getElementById('content').innerHTML = 
+            document.getElementById('content').innerHTML =
                 '<div class="error">Error loading orders. Please check your API URL and try again.</div>';
         }
     }
@@ -329,7 +371,7 @@
         // Function to display orders in cards
         function displayOrders() {
             const content = document.getElementById('content');
-            
+
             if (orders.length === 0) {
                 content.innerHTML = '<div class="loading">No orders found.</div>';
                 return;
@@ -341,7 +383,7 @@
                         <div class="dealer-name">${order.dealerName}</div>
                         <div class="timestamp">Order Time: ${formatDateTime(order.timestamp)}</div>
                     </div>
-                    
+
                     <div class="order-details">
                         <div class="detail-row">
                             <span class="detail-label">Marketing Person:</span>
@@ -362,19 +404,19 @@
                             </span>
                         </div>
                     </div>
-                    
+
                     <div class="countdown-section">
                         <div class="countdown-label">Time Remaining:</div>
                         <div class="countdown-timer" id="countdown-${index}">Calculating...</div>
                     </div>
-                    
+
                     <div class="action-section">
-                        <div class="file-upload-section">
+                        <div class="file-upload-section" id="file-upload-section-${index}">
                             <label class="file-upload-label">Attach Final Order Here:</label>
                             <input type="file" class="file-input" id="file-${index}" onchange="handleFileSelect(${index})">
                             <div class="file-selected" id="file-selected-${index}">✓ File selected</div>
                         </div>
-                        
+
                         <div class="radio-section">
                             <label class="radio-label">Status:</label>
                             <div class="radio-group">
@@ -384,8 +426,17 @@
                                 </div>
                             </div>
                         </div>
-                        
-                        <button class="submit-btn" onclick="submitOrder(${index})">Submit</button>
+
+                        <div class="hold-until-section" id="hold-until-section-${index}">
+                            <label class="hold-until-label">Hold Until:</label>
+                            <input type="date" class="hold-until-input" id="hold-until-${index}">
+                        </div>
+
+                        <div class="button-group">
+                            <button class="submit-btn" onclick="submitOrder(${index}, 'Approve')">Approve</button>
+                            <button class="hold-btn" onclick="submitOrder(${index}, 'Hold')">Hold</button>
+                        </div>
+
                         <div class="success-message" id="success-${index}">Order submitted successfully!</div>
                         <div class="error-message" id="error-${index}">Error submitting order. Please try again.</div>
                     </div>
@@ -399,9 +450,9 @@
         function calculateDeadline(timestamp) {
             const orderTime = new Date(timestamp);
             const hour = orderTime.getHours();
-            
+
             let deadline;
-            
+
             if (hour >= 17) {
                 // After 5 PM, deadline is next business day at 10 AM
                 deadline = getNextBusinessDay(orderTime);
@@ -410,7 +461,7 @@
                 // Before 5 PM, deadline is same day + 1 hour
                 deadline = new Date(orderTime.getTime() + (60 * 60 * 1000));
             }
-            
+
             return deadline;
         }
 
@@ -418,12 +469,12 @@
         function getNextBusinessDay(date) {
             const nextDay = new Date(date);
             nextDay.setDate(nextDay.getDate() + 1);
-            
+
             // If it's Saturday (6) or Sunday (0), move to Monday
             while (nextDay.getDay() === 0 || nextDay.getDay() === 6) {
                 nextDay.setDate(nextDay.getDate() + 1);
             }
-            
+
             return nextDay;
         }
 
@@ -438,31 +489,31 @@
             if (milliseconds <= 0) {
                 return 'EXPIRED';
             }
-            
+
             const totalSeconds = Math.floor(milliseconds / 1000);
             const hours = Math.floor(totalSeconds / 3600);
             const minutes = Math.floor((totalSeconds % 3600) / 60);
             const seconds = totalSeconds % 60;
-            
+
             return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
         }
 
         // Function to update countdown timers
         function updateCountdowns() {
             const now = new Date();
-            
+
             orders.forEach((order, index) => {
                 const deadline = calculateDeadline(order.timestamp);
                 const timeRemaining = deadline.getTime() - now.getTime();
                 const countdownElement = document.getElementById(`countdown-${index}`);
-                
+
                 if (countdownElement) {
                     const formattedTime = formatCountdown(timeRemaining);
                     countdownElement.textContent = formattedTime;
-                    
+
                     // Apply styling based on time remaining
                     countdownElement.className = 'countdown-timer';
-                    
+
                     if (timeRemaining <= 0) {
                         countdownElement.classList.add('countdown-expired');
                     } else if (timeRemaining <= 30 * 60 * 1000) { // 30 minutes
@@ -482,10 +533,10 @@
             if (countdownInterval) {
                 clearInterval(countdownInterval);
             }
-            
+
             // Update immediately
             updateCountdowns();
-            
+
             // Update every second
             countdownInterval = setInterval(updateCountdowns, 1000);
         }
@@ -508,7 +559,7 @@
         function handleFileSelect(orderIndex) {
             const fileInput = document.getElementById(`file-${orderIndex}`);
             const fileSelectedDiv = document.getElementById(`file-selected-${orderIndex}`);
-            
+
             if (fileInput.files.length > 0) {
                 const file = fileInput.files[0];
                 fileSelectedDiv.style.display = 'block';
@@ -518,81 +569,131 @@
             }
         }
 
-        // Function to submit order data
-        async function submitOrder(orderIndex) {
+        // Function to toggle the visibility of the "Hold Until" date field and file input mandate
+        function toggleHoldUntilField(orderIndex, actionType) {
+            const fileUploadSection = document.getElementById(`file-upload-section-${orderIndex}`);
+            const holdUntilSection = document.getElementById(`hold-until-section-${orderIndex}`);
+            const ownersInformedRadioYes = document.getElementById(`owners-informed-yes-${orderIndex}`);
+
+            if (actionType === 'Hold') {
+                holdUntilSection.style.display = 'block'; // Show hold until field
+                fileUploadSection.style.display = 'none'; // Hide file upload for Hold
+                if (ownersInformedRadioYes) ownersInformedRadioYes.checked = false; // Uncheck Owners Informed
+            } else { // 'Approve'
+                holdUntilSection.style.display = 'none'; // Hide hold until field
+                fileUploadSection.style.display = 'block'; // Show file upload for Approve
+            }
+        }
+
+        // Function to submit order data (Approve or Hold)
+        async function submitOrder(orderIndex, actionType) {
             const fileInput = document.getElementById(`file-${orderIndex}`);
             const ownersInformedRadio = document.querySelector(`input[name="owners-informed-${orderIndex}"]:checked`);
-            const submitBtn = document.querySelector(`#order-${orderIndex} .submit-btn`);
+            const approveBtn = document.querySelector(`#order-${orderIndex} .submit-btn`);
+            const holdBtn = document.querySelector(`#order-${orderIndex} .hold-btn`);
+            const holdUntilInput = document.getElementById(`hold-until-${orderIndex}`);
             const successMessage = document.getElementById(`success-${orderIndex}`);
             const errorMessage = document.getElementById(`error-${orderIndex}`);
-            
+
             // Hide previous messages
             successMessage.style.display = 'none';
             errorMessage.style.display = 'none';
-            
-            // Validation
-            if (!fileInput.files.length) {
-                alert('Please attach a file before submitting.');
-                return;
-            }
-            
-            if (!ownersInformedRadio) {
-                alert('Please select the owners informed status.');
-                return;
-            }
-            
-            // Disable submit button during processing
-            submitBtn.disabled = true;
-            submitBtn.textContent = 'Converting & Submitting...';
-            
+
+            // Disable buttons during processing
+            approveBtn.disabled = true;
+            holdBtn.disabled = true;
+
+            // Immediately toggle fields based on action type
+            toggleHoldUntilField(orderIndex, actionType); // Call this here to set initial state
+
+            let submitData = {
+                action: actionType, // 'Approve' or 'Hold'
+                orderIndex: orderIndex,
+                dealerName: orders[orderIndex].dealerName,
+                timestamp: orders[orderIndex].timestamp,
+                marketingPersonName: orders[orderIndex].marketingPersonName,
+                location: orders[orderIndex].location,
+                crmName: orders[orderIndex].crmName,
+                ownersInformed: ownersInformedRadio ? ownersInformedRadio.value : ''
+            };
+
             try {
-                const file = fileInput.files[0];
-                
-                // Convert file to base64
-                const fileBase64 = await fileToBase64(file);
-                
-                // Prepare data object with base64 encoded file
-                const submitData = {
-                    action: 'submit', // Add action parameter for POST requests
-                    orderIndex: orderIndex,
-                    dealerName: orders[orderIndex].dealerName,
-                    timestamp: orders[orderIndex].timestamp,
-                    marketingPersonName: orders[orderIndex].marketingPersonName,
-                    location: orders[orderIndex].location,
-                    crmName: orders[orderIndex].crmName,
-                    ownersInformed: ownersInformedRadio.value,
-                    file: {
+                if (actionType === 'Approve') {
+                    approveBtn.textContent = 'Converting & Approving...';
+                    // Validation for Approve
+                    if (!fileInput.files.length) {
+                        alert('Please attach a file before approving.');
+                        // Re-enable buttons and exit if validation fails
+                        approveBtn.disabled = false;
+                        holdBtn.disabled = false;
+                        approveBtn.textContent = 'Approve';
+                        holdBtn.textContent = 'Hold';
+                        return;
+                    }
+                    if (!ownersInformedRadio) {
+                        alert('Please select the owners informed status for approval.');
+                        // Re-enable buttons and exit if validation fails
+                        approveBtn.disabled = false;
+                        holdBtn.disabled = false;
+                        approveBtn.textContent = 'Approve';
+                        holdBtn.textContent = 'Hold';
+                        return;
+                    }
+
+                    const file = fileInput.files[0];
+                    const fileBase64 = await fileToBase64(file);
+                    submitData.file = {
                         name: file.name,
                         type: file.type,
                         size: file.size,
                         base64: fileBase64
+                    };
+                } else if (actionType === 'Hold') {
+                    holdBtn.textContent = 'Holding...';
+                    // Validation for Hold
+                    if (!holdUntilInput.value) {
+                        alert('Please provide a "Hold Until" date.');
+                        // Re-enable buttons and exit if validation fails
+                        approveBtn.disabled = false;
+                        holdBtn.disabled = false;
+                        approveBtn.textContent = 'Approve';
+                        holdBtn.textContent = 'Hold';
+                        return;
                     }
-                };
-                
+                    if (!ownersInformedRadio) {
+                        alert('Please select the owners informed status for holding the order.');
+                        // Re-enable buttons and exit if validation fails
+                        approveBtn.disabled = false;
+                        holdBtn.disabled = false;
+                        approveBtn.textContent = 'Approve';
+                        holdBtn.textContent = 'Hold';
+                        return;
+                    }
+                    submitData.holdUntil = holdUntilInput.value; // Add holdUntil date
+                }
+
                 console.log('Submitting order data:', {
                     ...submitData,
-                    file: {
-                        ...submitData.file,
-                        base64: submitData.file.base64.substring(0, 50) + '...' // Log only first 50 chars of base64
-                    }
+                    file: submitData.file ? { ...submitData.file, base64: submitData.file.base64.substring(0, 50) + '...' } : undefined
                 });
-                
-                // Make the actual POST request
+
                 await postData(submitData);
-                
-                // Show success message (assuming success since we're using no-cors)
+
                 successMessage.style.display = 'block';
                 setTimeout(() => {
                     successMessage.style.display = 'none';
                 }, 5000);
-                
-                // Reset form
+
+                // Reset form fields
                 fileInput.value = '';
                 document.getElementById(`file-selected-${orderIndex}`).style.display = 'none';
                 if (ownersInformedRadio) {
                     ownersInformedRadio.checked = false;
                 }
-                
+                holdUntilInput.value = ''; // Clear hold until date
+                document.getElementById(`hold-until-section-${orderIndex}`).style.display = 'none'; // Hide hold until field
+                document.getElementById(`file-upload-section-${orderIndex}`).style.display = 'block'; // Show file upload for next action
+
             } catch (error) {
                 console.error('Error submitting order:', error);
                 errorMessage.textContent = `Error: ${error.message}`;
@@ -601,9 +702,11 @@
                     errorMessage.style.display = 'none';
                 }, 5000);
             } finally {
-                // Re-enable submit button
-                submitBtn.disabled = false;
-                submitBtn.textContent = 'Submit';
+                // Re-enable buttons
+                approveBtn.disabled = false;
+                holdBtn.disabled = false;
+                approveBtn.textContent = 'Approve';
+                holdBtn.textContent = 'Hold';
             }
         }
 
@@ -618,16 +721,16 @@
                     },
                     body: JSON.stringify(data)
                 });
-        
+
                 // Since we're using no-cors, we can't read the response
                 // So we assume success and refresh the orders
                 console.log('Data submitted successfully (no-cors mode)');
-                
+
                 // Refresh orders after a short delay to see updated data
                 setTimeout(() => {
                     fetchOrders();
                 }, 1000);
-                
+
             } catch (error) {
                 // Only network-level errors will be caught here
                 console.error('Network error during submission:', error);
@@ -638,7 +741,7 @@
         // Initialize the application
         document.addEventListener('DOMContentLoaded', function() {
             fetchOrders();
-            
+
             // Auto-refresh every 5 minutes
             setInterval(fetchOrders, 5 * 60 * 1000);
         });
