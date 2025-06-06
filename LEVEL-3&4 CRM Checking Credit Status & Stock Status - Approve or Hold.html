@@ -317,8 +317,7 @@
                     </div>
                     <div class="flex justify-between">
                         <span class="text-sm text-gray-600">File:</span>
-                        <a href="${order.fileUploadLink}" target="_blank" class="text-sm text-blue-600 hover:text-blue-800">View Document</a>
-                    </div>
+<button onclick="openMultipleDocuments('${order.fileUploadLink.replace(/'/g, "\\'")}', ${index})" class="text-sm text-blue-600 hover:text-blue-800 underline bg-transparent border-none cursor-pointer">View Document</button>                    </div>
                 </div>
 
                 <!-- Status Options -->
@@ -492,6 +491,55 @@
                 showSuccessNotification(`Credit status ${status === 'approved' ? 'approved' : 'rejected'} successfully!`);
             }
         }
+
+// Replace the existing "View Document" link in your createOrderCard function
+// Change this line:
+// <a href="${order.fileUploadLink}" target="_blank" class="text-sm text-blue-600 hover:text-blue-800">View Document</a>
+
+// To this:
+// <button onclick="openMultipleDocuments('${order.fileUploadLink.replace(/'/g, "\\'")}', ${index})" class="text-sm text-blue-600 hover:text-blue-800 underline bg-transparent border-none cursor-pointer">View Document</button>
+
+// Add this function to your existing JavaScript section:
+function openMultipleDocuments(urlString, index) {
+    // Split the URLs by comma and trim whitespace
+    const urls = urlString.split(',').map(url => url.trim()).filter(url => url.length > 0);
+    
+    if (urls.length === 0) {
+        alert('No valid URLs found');
+        return;
+    }
+    
+    // Show a confirmation if there are multiple URLs
+    if (urls.length > 1) {
+        const confirmed = confirm(`This will open ${urls.length} documents in separate tabs. Continue?`);
+        if (!confirmed) {
+            return;
+        }
+    }
+    
+    // Open each URL in a new tab with a small delay to prevent popup blocker
+    urls.forEach((url, urlIndex) => {
+        setTimeout(() => {
+            window.open(url, '_blank');
+        }, urlIndex * 100); // 100ms delay between each tab opening
+    });
+}
+
+// Alternative version without confirmation dialog (if you prefer):
+function openMultipleDocumentsNoConfirm(urlString, index) {
+    const urls = urlString.split(',').map(url => url.trim()).filter(url => url.length > 0);
+    
+    if (urls.length === 0) {
+        alert('No valid URLs found');
+        return;
+    }
+    
+    urls.forEach((url, urlIndex) => {
+        setTimeout(() => {
+            window.open(url, '_blank');
+        }, urlIndex * 100);
+    });
+}
 
         function promptStockStatus(timestamp, index, status) {
             currentStockTimestamp = timestamp;
