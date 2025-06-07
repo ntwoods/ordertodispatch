@@ -298,6 +298,7 @@
                         action: 'approveOrder', // A hypothetical action for your Google Script
                         timestamp: timestamp
                     }).toString(),
+                    mode: "cors"
                 });
 
                 const result = await response.json();
@@ -390,7 +391,7 @@
             console.log("Fetching data from:", API_URL_WITH_CRM);
 
             try {
-                const response = await fetch(API_URL_WITH_CRM);
+                const response = await fetch(API_URL_WITH_CRM, {mode: "cors"});
                 if (!response.ok) {
                     // Try to parse error as JSON, if not, use plain text
                     const errorText = await response.text();
