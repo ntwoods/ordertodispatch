@@ -331,20 +331,20 @@
     }
 
     function getDeadline(originalTimestampStr) {
-      const original = new Date(originalTimestampStr);
+      const [year, month, day] = originalTimestampStr.split('-').map(Number);
+      const original = new Date(year, month - 1, day); // Local time
       let deadline = new Date(original);
-      const day = original.getUTCDay();
-
-      if (day === 1) {
+      const dayOfWeek = original.getDay(); // Local day (0 = Sun, 1 = Mon, ...)
+    
+      if (dayOfWeek === 1) {
         deadline.setDate(deadline.getDate() - 2);
       } else {
         deadline.setDate(deadline.getDate() - 1);
       }
-
-      deadline.setHours(18, 0, 0, 0);
+    
+      deadline.setHours(18, 0, 0, 0); // 6:00 PM
       return deadline;
     }
-
     function renderOrders(orders) {
       const container = document.getElementById("ordersContainer");
       container.innerHTML = "";
