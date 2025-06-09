@@ -1,0 +1,7 @@
+{
+  "name": "NTWoods CRM",
+  "short_name": "CRM",
+  "start_url": "/",
+  "display": "standalone",
+  "gcm_sender_id": "482941778795"
+}
