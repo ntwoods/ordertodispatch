@@ -333,7 +333,7 @@
     function getDeadline(originalTimestampStr) {
       const original = new Date(originalTimestampStr);
       let deadline = new Date(original);
-      const day = original.getUTCDay();
+      const day = original.getDay();
 
       if (day === 1) {
         deadline.setDate(deadline.getDate() - 2);
