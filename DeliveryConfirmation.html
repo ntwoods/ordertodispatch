@@ -430,12 +430,13 @@
                 hour12: true
             });
         }
-
-        // Generate order ID from timestamp
-        function generateOrderId(timestamp) {
-            const date = new Date(timestamp);
-            return `ORD-${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, '0')}${String(date.getDate()).padStart(2, '0')}-${String(date.getHours()).padStart(2, '0')}${String(date.getMinutes()).padStart(2, '0')}`;
-        }
+    
+      let orderCounter = 0; // This resets every time page reloads
+    
+      function generateOrderId() {
+        orderCounter++;
+        return `Order-${orderCounter}`;
+      }
 
         // Calculate deadline (6 PM on the expected delivery date)
         function calculateDeadline(expectedDeliveryDate) {
@@ -568,7 +569,7 @@
 
         // Create order card HTML
         function createOrderCard(order, index) {
-            const orderId = generateOrderId(order.timestamp);
+            const orderId = generateOrderId();
             const deadline = calculateDeadline(order.expectedDeliveryDate);
             const orderCard = document.createElement('div');
             orderCard.className = 'order-card';
