@@ -122,6 +122,7 @@
         .workflow-card:nth-child(5) { animation-delay: 0.4s; }
         .workflow-card:nth-child(6) { animation-delay: 0.5s; }
         .workflow-card:nth-child(7) { animation-delay: 0.6s; }
+        .workflow-card:nth-child(8) { animation-delay: 0.7s; }
 
 
         .workflow-card::before {
@@ -230,6 +231,10 @@
             background: linear-gradient(135deg, #7f8c8d, #34495e);
         }
 
+        .workflow-card:nth-child(8) .card-icon { /* Level 5 */
+            background: linear-gradient(135deg, #7f8c8d, #34495e);
+        }
+       
 
         .workflow-card:hover .card-icon {
             transform: rotate(8deg) scale(1.05); /* Subtler rotate/scale */
@@ -561,6 +566,23 @@
                     </svg>
                 </div>
             </div>
+
+                        <div class="workflow-card" id="level9-card" onclick="navigateTo('https://ntwoods.github.io/ordertodispatch/DeliveryConfirmation?crm=Priyam%20Dixit')">
+                <div class="card-level">Level-6</div> 
+                <div class="card-icon">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M21 6.5L12 2 3 6.5V17.5L12 22l9-4.5V6.5zM12 4.15L18.6 7.5 12 10.85 5.4 7.5 12 4.15zM5 9.24l6 3.06v6.3L5 15.54V9.24zM13 18.6v-6.3l6-3.06v6.3l-6 3.06z"/>
+                    </svg>
+                </div>
+                <h3 class="card-title">Goods Delivery Confirmation</h3>
+                <p class="card-description">Confirmation of Goods Receiving from Dealer.</p>
+                <div class="card-count" id="level9-count">Loading...</div>
+                <div class="card-arrow">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M13.025 1l-2.847 2.828 6.176 6.176h-16.354v3.992h16.354l-6.176 6.176 2.847 2.828 10.975-11z"/>
+                    </svg>
+                </div>
+            </div>            
         </div>
     </div>
 
@@ -572,7 +594,8 @@
             level5: 'https://script.google.com/macros/s/AKfycbwuVRnAkiEKnTNy6yPBiPxA6BHIim4OlHjx1B3duF0Qt81itDZzgESH_g6pGWDkKhTs/exec?crm=Priyam%20Dixit',
             level6: 'https://script.google.com/macros/s/AKfycbxkduAfhEpEtxKXA_HuIm-lZQj62ZPZwXeZ_Fol-v6VrzfhoXY2lffR64pjPahKV2o/exec?crm=Priyam%20Dixit',
             level7: 'https://script.google.com/macros/s/AKfycbxMxIzOQmHv3LPTh6ca6i5uuguyH615cnjA5emEGNT0rmWpJlnrcg-KWNVP1DORkkcX/exec?crm=Priyam%20Dixit',
-            level8: 'https://script.google.com/macros/s/AKfycbwUr0UhENK6RGtdvYMC6-V0Khwb3kibKP4SLXC4nzL6Hm4idr6P-Olx4XTWvgZ_e2xk-Q/exec?crm=Priyam%20Dixit'
+            level8: 'https://script.google.com/macros/s/AKfycbwUr0UhENK6RGtdvYMC6-V0Khwb3kibKP4SLXC4nzL6Hm4idr6P-Olx4XTWvgZ_e2xk-Q/exec?crm=Priyam%20Dixit',
+            level9: 'https://script.google.com/macros/s/AKfycbyo5HTKVwD2L5ORxrYKRzdJYK3trFJ5FOHkmPC00TsKQQ3iLJ6aXkboKQgzZJpuf6jNqQ/exec?crm=Priyam%20Dixit'            
         };
 
         async function fetchAndUpdateCount(levelKey, elementId, cardId) {
@@ -612,6 +635,7 @@
         fetchAndUpdateCount('level6', 'level6-count', 'level6-card');
         fetchAndUpdateCount('level7', 'level7-count', 'level7-card');
         fetchAndUpdateCount('level8', 'level8-count', 'level8-card');
+        fetchAndUpdateCount('level9', 'level9-count', 'level9-card');        
         
         function navigateTo(url) {
             const clickedCard = event.currentTarget;
