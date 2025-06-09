@@ -432,7 +432,9 @@
                 </div>
                 <div>
                   <div class="text-white/60 text-sm">Dispatch Time</div>
-                  <div class="text-white font-semibold">${new Date(order.timestamp).toLocaleString()}</div>
+                  <div class="text-white font-semibold">
+                  ${new Date(order.timestamp).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })}
+                  </div>
                 </div>
               </div>
 
