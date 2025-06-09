@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRM Sales Orders Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .header h1 {
+            color: #2c3e50;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .crm-name {
+            color: #667eea;
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .stat-item {
+            background: #667eea;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 12px;
+            text-align: center;
+            min-width: 120px;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 60px;
+            color: white;
+            font-size: 1.2rem;
+        }
+
+        .loading::after {
+            content: '';
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+            margin-left: 10px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .orders-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 25px;
+            margin-top: 20px;
+        }
+
+        .order-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .order-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .order-card.overdue {
+            border-left: 5px solid #ff4757;
+            background: rgba(255, 245, 245, 0.95);
+        }
+
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f8f9fa;
+        }
+
+        .order-id {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .order-status {
+            background: #ffeaa7;
+            color: #2d3436;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .order-status.overdue {
+            background: #ff4757;
+            color: white;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+
+        .countdown-container {
+            background: linear-gradient(135deg, #ff6b6b, #ff8e8e);
+            color: white;
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+        }
+
+        .countdown-container.overdue {
+            background: linear-gradient(135deg, #ff4757, #ff3742);
+            animation: pulse 2s infinite;
+        }
+
+        .countdown-container.warning {
+            background: linear-gradient(135deg, #ff9ff3, #f368e0);
+        }
+
+        .countdown-label {
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+            opacity: 0.9;
+        }
+
+        .countdown-timer {
+            font-size: 1.5rem;
+            font-weight: bold;
+            font-family: 'Courier New', monospace;
+            letter-spacing: 1px;
+        }
+
+        .countdown-deadline {
+            font-size: 0.8rem;
+            opacity: 0.8;
+            margin-top: 5px;
+        }
+
+        .order-details {
+            margin-bottom: 20px;
+        }
+
+        .detail-row {
+            display: flex;
+            margin-bottom: 12px;
+            align-items: center;
+        }
+
+        .detail-label {
+            font-weight: 600;
+            color: #2c3e50;
+            min-width: 120px;
+            font-size: 0.9rem;
+        }
+
+        .detail-value {
+            color: #636e72;
+            font-size: 0.9rem;
+            flex: 1;
+        }
+
+        .detail-value.dealer-name {
+            color: #0984e3;
+            font-weight: 600;
+        }
+
+        .detail-value.location {
+            color: #00b894;
+            font-weight: 500;
+        }
+
+        .timestamp {
+            background: #f8f9fa;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.8rem;
+            color: #636e72;
+        }
+
+        .order-actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid #f8f9fa;
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            flex: 1;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #00b894, #00a085);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #00a085, #008f75);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 184, 148, 0.3);
+        }
+
+        .btn-secondary {
+            background: #74b9ff;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #0984e3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(116, 185, 255, 0.3);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .btn-icon {
+            margin-right: 8px;
+            font-size: 1rem;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px;
+            color: white;
+        }
+
+        .empty-state h3 {
+            font-size: 1.8rem;
+            margin-bottom: 15px;
+            opacity: 0.9;
+        }
+
+        .empty-state p {
+            font-size: 1.1rem;
+            opacity: 0.7;
+        }
+
+        .error-message {
+            background: #ff7675;
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .success-message {
+            background: #00b894;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            text-align: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .success-message.show {
+            opacity: 1;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .orders-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .order-actions {
+                flex-direction: column;
+            }
+
+            .countdown-timer {
+                font-size: 1.2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 Sales Orders Dashboard</h1>
+            <div class="crm-name" id="crmName">Loading...</div>
+            <div class="stats">
+                <div class="stat-item">
+                    <span class="stat-number" id="totalOrders">0</span>
+                    <span class="stat-label">Pending Orders</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number" id="completedToday">0</span>
+                    <span class="stat-label">Completed Today</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number" id="overdueOrders">0</span>
+                    <span class="stat-label">Overdue Orders</span>
+                </div>
+            </div>
+        </div>
+
+        <div id="loadingDiv" class="loading">
+            Loading your orders...
+        </div>
+
+        <div id="errorDiv" class="error-message" style="display: none;"></div>
+        
+        <div id="successDiv" class="success-message"></div>
+
+        <div id="ordersContainer" class="orders-grid" style="display: none;"></div>
+
+        <div id="emptyState" class="empty-state" style="display: none;">
+            <h3>🎉 All caught up!</h3>
+            <p>No pending orders at the moment.</p>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'https://script.google.com/macros/s/AKfycbyo5HTKVwD2L5ORxrYKRzdJYK3trFJ5FOHkmPC00TsKQQ3iLJ6aXkboKQgzZJpuf6jNqQ/exec';
+        let ordersData = [];
+        let completedToday = 0;
+        let countdownIntervals = {};
+
+        // Get CRM name from URL parameters
+        function getCrmFromUrl() {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get('crm');
+        }
+
+        // Format timestamp for display
+        function formatTimestamp(isoString) {
+            const date = new Date(isoString);
+            return date.toLocaleString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: true
+            });
+        }
+
+        // Generate order ID from timestamp
+        function generateOrderId(timestamp) {
+            const date = new Date(timestamp);
+            return `ORD-${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, '0')}${String(date.getDate()).padStart(2, '0')}-${String(date.getHours()).padStart(2, '0')}${String(date.getMinutes()).padStart(2, '0')}`;
+        }
+
+        // Calculate deadline (6 PM on the expected delivery date)
+        function calculateDeadline(expectedDeliveryDate) {
+            const deliveryDate = new Date(expectedDeliveryDate);
+            const deadline = new Date(deliveryDate);
+            deadline.setHours(18, 0, 0, 0); // Set to 6:00 PM
+            return deadline;
+        }
+
+        // Format countdown display
+        function formatCountdown(timeDiff) {
+            if (timeDiff <= 0) {
+                return "OVERDUE";
+            }
+
+            const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((timeDiff % (1000 * 60)) / 1000);
+
+            if (days > 0) {
+                return `${days}d ${hours}h ${minutes}m`;
+            } else if (hours > 0) {
+                return `${hours}h ${minutes}m ${seconds}s`;
+            } else {
+                return `${minutes}m ${seconds}s`;
+            }
+        }
+
+        // Update countdown for a specific order
+        function updateCountdown(orderId, deadline, countdownElement, statusElement, cardElement) {
+            const now = new Date().getTime();
+            const timeDiff = deadline.getTime() - now;
+            
+            const countdownText = formatCountdown(timeDiff);
+            countdownElement.querySelector('.countdown-timer').textContent = countdownText;
+            
+            if (timeDiff <= 0) {
+                // Order is overdue
+                countdownElement.classList.add('overdue');
+                statusElement.textContent = 'Overdue';
+                statusElement.classList.add('overdue');
+                cardElement.classList.add('overdue');
+                
+                // Clear the interval for this order
+                if (countdownIntervals[orderId]) {
+                    clearInterval(countdownIntervals[orderId]);
+                    delete countdownIntervals[orderId];
+                }
+            } else if (timeDiff <= 2 * 60 * 60 * 1000) { // Less than 2 hours
+                countdownElement.classList.add('warning');
+            }
+        }
+
+        // Start countdown timer for an order
+        function startCountdown(orderId, expectedDeliveryDate, countdownElement, statusElement, cardElement) {
+            const deadline = calculateDeadline(expectedDeliveryDate);
+            
+            // Update immediately
+            updateCountdown(orderId, deadline, countdownElement, statusElement, cardElement);
+            
+            // Update every second
+            countdownIntervals[orderId] = setInterval(() => {
+                updateCountdown(orderId, deadline, countdownElement, statusElement, cardElement);
+            }, 1000);
+        }
+
+        // Show success message
+        function showSuccess(message) {
+            const successDiv = document.getElementById('successDiv');
+            successDiv.textContent = message;
+            successDiv.classList.add('show');
+            setTimeout(() => {
+                successDiv.classList.remove('show');
+            }, 3000);
+        }
+
+        // Mark order as received
+        async function markAsReceived(timestampForMap, orderElement) {
+            const button = orderElement.querySelector('.btn-primary');
+            const originalText = button.innerHTML;
+            
+            button.disabled = true;
+            button.innerHTML = '<span class="btn-icon">⏳</span>Processing...';
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `timestampForMap=${encodeURIComponent(timestampForMap)}`
+                });
+
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    // Clear countdown interval for this order
+                    const orderId = orderElement.querySelector('.order-id').textContent;
+                    if (countdownIntervals[orderId]) {
+                        clearInterval(countdownIntervals[orderId]);
+                        delete countdownIntervals[orderId];
+                    }
+                    
+                    orderElement.style.transition = 'all 0.5s ease';
+                    orderElement.style.opacity = '0.5';
+                    orderElement.style.transform = 'scale(0.95)';
+                    
+                    setTimeout(() => {
+                        orderElement.remove();
+                        completedToday++;
+                        updateStats();
+                        
+                        if (document.querySelectorAll('.order-card').length === 0) {
+                            showEmptyState();
+                        }
+                    }, 500);
+                    
+                    showSuccess('✅ Order marked as received successfully!');
+                } else {
+                    throw new Error(result.message || 'Failed to update order');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                button.disabled = false;
+                button.innerHTML = originalText;
+                showError('Failed to mark order as received. Please try again.');
+            }
+        }
+
+        // Create order card HTML
+        function createOrderCard(order, index) {
+            const orderId = generateOrderId(order.timestamp);
+            const deadline = calculateDeadline(order.expectedDeliveryDate);
+            const orderCard = document.createElement('div');
+            orderCard.className = 'order-card';
+            orderCard.style.animationDelay = `${index * 0.1}s`;
+            
+            orderCard.innerHTML = `
+                <div class="order-header">
+                    <div class="order-id">${orderId}</div>
+                    <div class="order-status">Pending</div>
+                </div>
+                <div class="countdown-container">
+                    <div class="countdown-label">⏰ Time to Deadline</div>
+                    <div class="countdown-timer">Calculating...</div>
+                    <div class="countdown-deadline">Deadline: ${deadline.toLocaleString('en-US', {
+                        weekday: 'short',
+                        month: 'short',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: true
+                    })}</div>
+                </div>
+                <div class="order-details">
+                    <div class="detail-row">
+                        <div class="detail-label">👤 Dealer:</div>
+                        <div class="detail-value dealer-name">${order.dealerName}</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">🏢 Marketing:</div>
+                        <div class="detail-value">${order.marketingPersonName}</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">📍 Location:</div>
+                        <div class="detail-value location">${order.location}</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">📅 Order Time:</div>
+                        <div class="detail-value">
+                            <div class="timestamp">${formatTimestamp(order.timestamp)}</div>
+                        </div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">📦 Expected:</div>
+                        <div class="detail-value">
+                            <div class="timestamp">${formatTimestamp(order.expectedDeliveryDate)}</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="order-actions">
+                    <button class="btn btn-primary" onclick="markAsReceived('${order.timestampForMap}', this.closest('.order-card'))">
+                        <span class="btn-icon">✅</span>Mark as Received
+                    </button>
+                    <a href="${order.fileUploadLink}" target="_blank" class="btn btn-secondary">
+                        <span class="btn-icon">📎</span>View File
+                    </a>
+                </div>
+            `;
+            
+            // Start countdown after the card is added to DOM
+            setTimeout(() => {
+                const countdownElement = orderCard.querySelector('.countdown-container');
+                const statusElement = orderCard.querySelector('.order-status');
+                startCountdown(orderId, order.expectedDeliveryDate, countdownElement, statusElement, orderCard);
+            }, 100);
+            
+            return orderCard;
+        }
+
+        // Update statistics
+        function updateStats() {
+            const totalOrders = document.querySelectorAll('.order-card').length;
+            const overdueOrders = document.querySelectorAll('.order-card.overdue').length;
+            
+            document.getElementById('totalOrders').textContent = totalOrders;
+            document.getElementById('completedToday').textContent = completedToday;
+            document.getElementById('overdueOrders').textContent = overdueOrders;
+        }
+
+        // Show error message
+        function showError(message) {
+            const errorDiv = document.getElementById('errorDiv');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            document.getElementById('loadingDiv').style.display = 'none';
+        }
+
+        // Show empty state
+        function showEmptyState() {
+            document.getElementById('ordersContainer').style.display = 'none';
+            document.getElementById('emptyState').style.display = 'block';
+        }
+
+        // Fetch and display orders
+        async function fetchOrders() {
+            const crmName = getCrmFromUrl();
+            
+            if (!crmName) {
+                showError('❌ CRM name not found in URL. Please check the URL parameters.');
+                return;
+            }
+
+            document.getElementById('crmName').textContent = `Welcome, ${decodeURIComponent(crmName)}`;
+
+            try {
+                const response = await fetch(`${API_URL}?crm=${encodeURIComponent(crmName)}`);
+                const result = await response.json();
+
+                document.getElementById('loadingDiv').style.display = 'none';
+
+                if (result.status === 'success') {
+                    ordersData = result.data;
+                    
+                    if (ordersData.length === 0) {
+                        showEmptyState();
+                    } else {
+                        const container = document.getElementById('ordersContainer');
+                        container.style.display = 'grid';
+                        
+                        ordersData.forEach((order, index) => {
+                            const orderCard = createOrderCard(order, index);
+                            container.appendChild(orderCard);
+                        });
+                        
+                        // Update stats after a short delay to account for countdown initialization
+                        setTimeout(updateStats, 200);
+                        
+                        // Update stats every 30 seconds to keep overdue count current
+                        setInterval(updateStats, 30000);
+                    }
+                } else {
+                    showError('❌ Failed to fetch orders. Please try again later.');
+                }
+            } catch (error) {
+                console.error('Error fetching orders:', error);
+                showError('❌ Network error. Please check your connection and try again.');
+            }
+        }
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', fetchOrders);
+
+        // Clean up intervals when page is about to unload
+        window.addEventListener('beforeunload', () => {
+            Object.values(countdownIntervals).forEach(interval => {
+                clearInterval(interval);
+            });
+        });
+    </script>
+</body>
+</html>
