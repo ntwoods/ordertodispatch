@@ -13,6 +13,12 @@
     const API_URL = "https://script.google.com/macros/s/AKfycbwUr0UhENK6RGtdvYMC6-V0Khwb3kibKP4SLXC4nzL6Hm4idr6P-Olx4XTWvgZ_e2xk-Q/exec";
 
     let globalOrders = [];
+function formatDateToDDMMMYYYY(dateStr) {
+  const date = new Date(dateStr);
+  const options = { day: '2-digit', month: 'short', year: 'numeric' };
+  return date.toLocaleDateString('en-GB', options).replace(/ /g, '-');
+}
+
 
 function openMultipleDocuments(urlString, index) {
     // Split the URLs by comma and trim whitespace
@@ -108,9 +114,9 @@ function openMultipleDocuments(urlString, index) {
           <p><strong>Marketing:</strong> ${order.marketingPersonName}</p>
           <p><strong>Location:</strong> ${order.location}</p>
           <p><strong>CRM:</strong> ${order.crmName}</p>
-          <p><strong>Expected Delivery:</strong> ${order.expectedDeliveryDate}</p>
-          <p><strong>Dispatch Date & Time:</strong> ${new Date(order.timestamp).toLocaleString()}</p>
-          <p><strong>Deadline:</strong> ${deadline.toLocaleString()}</p>
+          <p><strong>Expected Delivery:</strong> ${formatDateToDDMMMYYYY(order.expectedDeliveryDate)}</p>
+          <p><strong>Dispatch Date & Time:</strong> ${formatDateToDDMMMYYYY(order.timestamp)}</p>
+          <p><strong>Deadline:</strong> ${formatDateToDDMMMYYYY(deadline)}</p>
           <p><strong>Time Left:</strong> <span id="countdown-${index}" class="font-mono text-blue-700"></span></p>
                         <span class="text-m text-black-600">Dispatch Receipt:</span>
 <button onclick="openMultipleDocuments('${order.dispatchDetailUrl.replace(/'/g, "\\'")}', ${index})" class="text-sm text-blue-600 hover:text-blue-800 underline bg-transparent border-none cursor-pointer">View Dispatch Receipts</button>
