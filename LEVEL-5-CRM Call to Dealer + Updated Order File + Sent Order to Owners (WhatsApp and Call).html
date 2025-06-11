@@ -247,7 +247,7 @@
             margin-top: 15px;
         }
 
-        .submit-btn, .hold-btn {
+        .submit-btn, .hold-btn, .cancel-btn {
             color: white;
             border: none;
             padding: 10px 20px;
@@ -273,6 +273,10 @@
 
         .hold-btn {
             background-color: #ff9800; /* Orange for Hold */
+        }
+        
+	.cancel-btn {
+            background-color: red; /* Orange for Hold */
         }
 
         .hold-btn:hover {
@@ -430,11 +434,14 @@
                         <div class="hold-until-section" id="hold-until-section-${index}">
                             <label class="hold-until-label">Hold Until:</label>
                             <input type="date" class="hold-until-input" id="hold-until-${index}">
+                            <label class="hold-until-label">Hold Remark:</label>
+                            <input type="text" class="hold-until-input" id="hold-until-remark-${index}">
                         </div>
 
                         <div class="button-group">
                             <button class="submit-btn" onclick="submitOrder(${index}, 'Approve')">Approve</button>
                             <button class="hold-btn" onclick="submitOrder(${index}, 'Hold')">Hold</button>
+                            <button class="cancel-btn" onclick="submitOrder(${index}, 'Cancel')">Cancel</button>
                         </div>
 
                         <div class="success-message" id="success-${index}">Order submitted successfully!</div>
@@ -586,129 +593,119 @@
         }
 
         // Function to submit order data (Approve or Hold)
-        async function submitOrder(orderIndex, actionType) {
-            const fileInput = document.getElementById(`file-${orderIndex}`);
-            const ownersInformedRadio = document.querySelector(`input[name="owners-informed-${orderIndex}"]:checked`);
-            const approveBtn = document.querySelector(`#order-${orderIndex} .submit-btn`);
-            const holdBtn = document.querySelector(`#order-${orderIndex} .hold-btn`);
-            const holdUntilInput = document.getElementById(`hold-until-${orderIndex}`);
-            const successMessage = document.getElementById(`success-${orderIndex}`);
-            const errorMessage = document.getElementById(`error-${orderIndex}`);
+async function submitOrder(orderIndex, actionType) {
+    const fileInput = document.getElementById(`file-${orderIndex}`);
+    const ownersInformedRadio = document.querySelector(`input[name="owners-informed-${orderIndex}"]:checked`);
+    const approveBtn = document.querySelector(`#order-${orderIndex} .submit-btn`);
+    const holdBtn = document.querySelector(`#order-${orderIndex} .hold-btn`);
+    const cancelBtn = document.querySelector(`#order-${orderIndex} .cancel-btn`);
+    const holdUntilInput = document.getElementById(`hold-until-${orderIndex}`);
+    const holdUntilRemark = document.getElementById(`hold-until-remark-${orderIndex}`);
+    const successMessage = document.getElementById(`success-${orderIndex}`);
+    const errorMessage = document.getElementById(`error-${orderIndex}`);
 
-            // Hide previous messages
-            successMessage.style.display = 'none';
-            errorMessage.style.display = 'none';
+    // Hide previous messages
+    successMessage.style.display = 'none';
+    errorMessage.style.display = 'none';
 
-            // Disable buttons during processing
-            approveBtn.disabled = true;
-            holdBtn.disabled = true;
+    // Disable buttons during processing
+    approveBtn.disabled = true;
+    holdBtn.disabled = true;
+    cancelBtn.disabled = true;
 
-            // Immediately toggle fields based on action type
-            toggleHoldUntilField(orderIndex, actionType); // Call this here to set initial state
+    // Set field visibility based on action
+    toggleHoldUntilField(orderIndex, actionType);
 
-            let submitData = {
-                action: actionType, // 'Approve' or 'Hold'
-                orderIndex: orderIndex,
-                dealerName: orders[orderIndex].dealerName,
-                timestamp: orders[orderIndex].timestamp,
-                marketingPersonName: orders[orderIndex].marketingPersonName,
-                location: orders[orderIndex].location,
-                crmName: orders[orderIndex].crmName,
-                ownersInformed: ownersInformedRadio ? ownersInformedRadio.value : ''
+    let submitData = {
+        action: actionType, // 'Approve', 'Hold', or 'Cancel'
+        orderIndex: orderIndex,
+        dealerName: orders[orderIndex].dealerName,
+        timestamp: orders[orderIndex].timestamp,
+        marketingPersonName: orders[orderIndex].marketingPersonName,
+        location: orders[orderIndex].location,
+        holdRemark: holdUntilRemark.value,
+        crmName: orders[orderIndex].crmName,
+        ownersInformed: ownersInformedRadio ? ownersInformedRadio.value : ''
+    };
+
+    try {
+        if (actionType === 'Approve') {
+            approveBtn.textContent = 'Converting & Approving...';
+
+            if (!fileInput.files.length) {
+                alert('Please attach a file before approving.');
+                throw new Error('File is required for approval');
+            }
+            if (!ownersInformedRadio) {
+                alert('Please select the owners informed status for approval.');
+                throw new Error('Owner informed status required');
+            }
+
+            const file = fileInput.files[0];
+            const fileBase64 = await fileToBase64(file);
+            submitData.file = {
+                name: file.name,
+                type: file.type,
+                size: file.size,
+                base64: fileBase64
             };
 
-            try {
-                if (actionType === 'Approve') {
-                    approveBtn.textContent = 'Converting & Approving...';
-                    // Validation for Approve
-                    if (!fileInput.files.length) {
-                        alert('Please attach a file before approving.');
-                        // Re-enable buttons and exit if validation fails
-                        approveBtn.disabled = false;
-                        holdBtn.disabled = false;
-                        approveBtn.textContent = 'Approve';
-                        holdBtn.textContent = 'Hold';
-                        return;
-                    }
-                    if (!ownersInformedRadio) {
-                        alert('Please select the owners informed status for approval.');
-                        // Re-enable buttons and exit if validation fails
-                        approveBtn.disabled = false;
-                        holdBtn.disabled = false;
-                        approveBtn.textContent = 'Approve';
-                        holdBtn.textContent = 'Hold';
-                        return;
-                    }
+        } else if (actionType === 'Hold') {
+            holdBtn.textContent = 'Holding...';
 
-                    const file = fileInput.files[0];
-                    const fileBase64 = await fileToBase64(file);
-                    submitData.file = {
-                        name: file.name,
-                        type: file.type,
-                        size: file.size,
-                        base64: fileBase64
-                    };
-                } else if (actionType === 'Hold') {
-                    holdBtn.textContent = 'Holding...';
-                    // Validation for Hold
-                    if (!holdUntilInput.value) {
-                        alert('Please provide a "Hold Until" date.');
-                        // Re-enable buttons and exit if validation fails
-                        approveBtn.disabled = false;
-                        holdBtn.disabled = false;
-                        approveBtn.textContent = 'Approve';
-                        holdBtn.textContent = 'Hold';
-                        return;
-                    }
-                    if (!ownersInformedRadio) {
-                        alert('Please select the owners informed status for holding the order.');
-                        // Re-enable buttons and exit if validation fails
-                        approveBtn.disabled = false;
-                        holdBtn.disabled = false;
-                        approveBtn.textContent = 'Approve';
-                        holdBtn.textContent = 'Hold';
-                        return;
-                    }
-                    submitData.holdUntil = holdUntilInput.value; // Add holdUntil date
-                }
-
-                console.log('Submitting order data:', {
-                    ...submitData,
-                    file: submitData.file ? { ...submitData.file, base64: submitData.file.base64.substring(0, 50) + '...' } : undefined
-                });
-
-                await postData(submitData);
-
-                successMessage.style.display = 'block';
-                setTimeout(() => {
-                    successMessage.style.display = 'none';
-                }, 5000);
-
-                // Reset form fields
-                fileInput.value = '';
-                document.getElementById(`file-selected-${orderIndex}`).style.display = 'none';
-                if (ownersInformedRadio) {
-                    ownersInformedRadio.checked = false;
-                }
-                holdUntilInput.value = ''; // Clear hold until date
-                document.getElementById(`hold-until-section-${orderIndex}`).style.display = 'none'; // Hide hold until field
-                document.getElementById(`file-upload-section-${orderIndex}`).style.display = 'block'; // Show file upload for next action
-
-            } catch (error) {
-                console.error('Error submitting order:', error);
-                errorMessage.textContent = `Error: ${error.message}`;
-                errorMessage.style.display = 'block';
-                setTimeout(() => {
-                    errorMessage.style.display = 'none';
-                }, 5000);
-            } finally {
-                // Re-enable buttons
-                approveBtn.disabled = false;
-                holdBtn.disabled = false;
-                approveBtn.textContent = 'Approve';
-                holdBtn.textContent = 'Hold';
+            if (!holdUntilInput.value || !holdUntilRemark.value) {
+                alert('Please provide a "Hold Until" date and remark.');
+                throw new Error('Hold details missing');
             }
+            if (!ownersInformedRadio) {
+                alert('Please select the owners informed status for holding the order.');
+                throw new Error('Owner informed status required');
+            }
+
+            submitData.holdUntil = holdUntilInput.value;
+
+        } else if (actionType === 'Cancel') {
+            cancelBtn.textContent = 'Cancelling...';
+            // You can add validation here if cancel action needs reason, confirmation, etc.
         }
+
+        console.log('Submitting order data:', {
+            ...submitData,
+            file: submitData.file ? { ...submitData.file, base64: submitData.file.base64.substring(0, 50) + '...' } : undefined
+        });
+
+        await postData(submitData);
+
+        successMessage.style.display = 'block';
+        setTimeout(() => {
+            successMessage.style.display = 'none';
+        }, 5000);
+
+        // Reset form fields
+        fileInput.value = '';
+        document.getElementById(`file-selected-${orderIndex}`).style.display = 'none';
+        if (ownersInformedRadio) ownersInformedRadio.checked = false;
+        holdUntilInput.value = '';
+        document.getElementById(`hold-until-section-${orderIndex}`).style.display = 'none';
+        document.getElementById(`file-upload-section-${orderIndex}`).style.display = 'block';
+
+    } catch (error) {
+        console.error('Error submitting order:', error);
+        errorMessage.textContent = `Error: ${error.message}`;
+        errorMessage.style.display = 'block';
+        setTimeout(() => {
+            errorMessage.style.display = 'none';
+        }, 5000);
+    } finally {
+        approveBtn.disabled = false;
+        holdBtn.disabled = false;
+        cancelBtn.disabled = false;
+        approveBtn.textContent = 'Approve';
+        holdBtn.textContent = 'Hold';
+        cancelBtn.textContent = 'Cancel';
+    }
+}
+
 
         // Function to post data in no-cors mode (assume success, ignore response)
         async function postData(data) {
