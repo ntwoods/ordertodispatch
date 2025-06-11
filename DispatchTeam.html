@@ -501,7 +501,7 @@ async function markDone(orderIndex) {
             refreshSpinner.style.display = 'block';
             refreshText.classList.remove('hidden');
             fetchOrders();
-        }, 60 * 1000);
+        }, 300 * 1000);
 
         // Set current year in footer
         document.getElementById('current-year').textContent = new Date().getFullYear();
