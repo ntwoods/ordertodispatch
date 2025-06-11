@@ -247,32 +247,34 @@ async function markDone(orderIndex) {
     markDoneButton.classList.add('opacity-50', 'cursor-not-allowed');
 
     try {
-        let fileBase64 = '';
-        let fileName = '';
-        let fileType = '';
-        let fileSize = '';
-        let fileBase641 = '';
-        let fileName1 = '';
-        let fileType1 = '';
-        let fileSize1 = '';
+	let fileArray = [];
+	let file1Array = [];
 
+	if (fileInput.files.length > 0) {
+	    for (let i = 0; i < fileInput.files.length; i++) {
+	        const file = fileInput.files[i];
+	        const base64 = await fileToBase64(file);
+	        fileArray.push({
+	            name: file.name,
+	            type: file.type,
+	            size: file.size,
+	            base64: base64
+	        });
+	    }
+	}
 
-        if (fileInput.files.length > 0) { // Check for the first file independently
-            const file = fileInput.files[0];
-            fileName = file.name;
-            fileType = file.type;
-            fileSize = file.size;
-            fileBase64 = await fileToBase64(file);
-        }
-
-        if (fileInput1.files.length > 0) { // Check for the second file independently
-            const file1 = fileInput1.files[0];
-            fileName1 = file1.name;
-            fileType1 = file1.type;
-            fileSize1 = file1.size;
-            fileBase641 = await fileToBase64(file1);
-        }
-
+	if (fileInput1.files.length > 0) {
+	    for (let i = 0; i < fileInput1.files.length; i++) {
+	        const file1 = fileInput1.files[i];
+	        const base64 = await fileToBase64(file1);
+	        file1Array.push({
+	            name: file1.name,
+	            type: file1.type,
+	            size: file1.size,
+	            base64: base64
+	        });
+	    }
+	}
 		const payload = {
 		    action: 'markDone',
 		    timestamp: order.timestamp,
@@ -284,18 +286,8 @@ async function markDone(orderIndex) {
 		    fileUploadLink: order.fileUploadLink,
 		    expectedDeliveryDate: deliveryDate,
 		    dispatchTeamRemark: remark,
-		    file: {
-		        name: fileName,
-		        type: fileType,
-		        size: fileSize,
-		        base64: fileBase64
-		    },
-		    file1: {
-		        name: fileName1,
-		        type: fileType1,
-		        size: fileSize1,
-		        base64: fileBase641
-		    }
+		    fileArray: fileArray,
+		    file1Array: file1Array
 		};
 
         await fetch(API_URL, {
@@ -415,13 +407,13 @@ async function markDone(orderIndex) {
                         
 <div class="mb-4">
     <label class="file-upload-label">Attach Dispatch Receipt:</label>
-    <input type="file" class="file-input" id="file-${index}" onchange="handleFileSelect(${index})" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.xlsx,.xls">
+    <input type="file" class="file-input" id="file-${index}" multiple onchange="handleFileSelect(${index})" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.xlsx,.xls">
     <div class="file-selected" id="file-selected-${index}">✓ File selected</div>
 </div>
 
 <div class="mb-4">
     <label class="file-upload-label">Attach Invoice:</label>
-    <input type="file" class="file-input" id="file1-${index}" onchange="handleFileSelect1(${index})" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.xlsx,.xls">
+    <input type="file" class="file-input" id="file1-${index}" multiple onchange="handleFileSelect1(${index})" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.xlsx,.xls">
     <div class="file-selected" id="file-selected1-${index}">✓ File selected</div>
 </div>
 
