@@ -207,6 +207,21 @@
             }
         }
 
+        // Function to handle file selection
+        function handleFileSelect1(orderIndex) {
+            const fileInput = document.getElementById(`file1-${orderIndex}`);
+            const fileSelectedDiv = document.getElementById(`file-selected1-${orderIndex}`);
+            
+            if (fileInput.files.length > 0) {
+                const file = fileInput.files[0];
+                fileSelectedDiv.style.display = 'block';
+                fileSelectedDiv.textContent = `✓ ${file.name} selected (${(file.size / 1024).toFixed(1)} KB)`;
+            } else {
+                fileSelectedDiv.style.display = 'none';
+            }
+        }
+
+// Function to mark order as done
 // Function to mark order as done
 async function markDone(orderIndex) {
     const order = allOrdersData[orderIndex];
@@ -218,6 +233,8 @@ async function markDone(orderIndex) {
     const deliveryDate = document.getElementById(`delivery-${orderIndex}`).value;
     const remark = document.getElementById(`remark-${orderIndex}`).value;
     const fileInput = document.getElementById(`file-${orderIndex}`);
+    const fileInput1 = document.getElementById(`file1-${orderIndex}`);
+
 
     if (!deliveryDate) {
         alert('Please select an expected delivery date');
@@ -234,12 +251,26 @@ async function markDone(orderIndex) {
         let fileName = '';
         let fileType = '';
         let fileSize = '';
+        let fileBase641 = '';
+        let fileName1 = '';
+        let fileType1 = '';
+        let fileSize1 = '';
 
 
-        if (fileInput.files.length > 0) {
+        if (fileInput.files.length > 0) { // Check for the first file independently
             const file = fileInput.files[0];
             fileName = file.name;
+            fileType = file.type;
+            fileSize = file.size;
             fileBase64 = await fileToBase64(file);
+        }
+
+        if (fileInput1.files.length > 0) { // Check for the second file independently
+            const file1 = fileInput1.files[0];
+            fileName1 = file1.name;
+            fileType1 = file1.type;
+            fileSize1 = file1.size;
+            fileBase641 = await fileToBase64(file1);
         }
 
 		const payload = {
@@ -258,6 +289,12 @@ async function markDone(orderIndex) {
 		        type: fileType,
 		        size: fileSize,
 		        base64: fileBase64
+		    },
+		    file1: {
+		        name: fileName1,
+		        type: fileType1,
+		        size: fileSize1,
+		        base64: fileBase641
 		    }
 		};
 
@@ -290,7 +327,6 @@ async function markDone(orderIndex) {
         markDoneButton.classList.remove('opacity-50', 'cursor-not-allowed');
     }
 }
-
 
         async function fetchOrders() {
             loadingSpinner.style.display = 'flex';
@@ -377,11 +413,18 @@ async function markDone(orderIndex) {
                             <input type="text" id="remark-${index}" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter any remarks..."/>
                         </div>
                         
-                        <div class="mb-4">
-                            <label class="file-upload-label">Attach Dispatch Receipt:</label>
-                            <input type="file" class="file-input" id="file-${index}" onchange="handleFileSelect(${index})" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.xlsx,.xls">
-                            <div class="file-selected" id="file-selected-${index}">✓ File selected</div>
-                        </div>
+<div class="mb-4">
+    <label class="file-upload-label">Attach Dispatch Receipt:</label>
+    <input type="file" class="file-input" id="file-${index}" onchange="handleFileSelect(${index})" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.xlsx,.xls">
+    <div class="file-selected" id="file-selected-${index}">✓ File selected</div>
+</div>
+
+<div class="mb-4">
+    <label class="file-upload-label">Attach Invoice:</label>
+    <input type="file" class="file-input" id="file1-${index}" onchange="handleFileSelect1(${index})" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.xlsx,.xls">
+    <div class="file-selected" id="file-selected1-${index}">✓ File selected</div>
+</div>
+
                         
                         <button onclick="markDone(${index})" class="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition duration-200 font-medium">
                             Mark Done
