@@ -97,47 +97,58 @@ function openMultipleDocuments(urlString, index) {
     return;
   }
 
-      orders.forEach((order, index) => {
-        const deadline = getDeadline(order.timestamp);
+orders.forEach((order, index) => {
+  const deadline = getDeadline(order.timestamp);
 
-        const card = document.createElement("div");
-        card.className = "bg-white p-6 rounded-2xl shadow-md relative transition hover:scale-[1.02]";
+  const hasInvoice = order.invoiceUrl && order.invoiceUrl.trim() !== "";
+  const bgColor = hasInvoice ? "bg-green-100 border border-green-300" : "bg-red-100 border border-red-300";
 
-        const overdue = new Date() > deadline;
-        const deadlineLabel = overdue ? "Overdue" : "Active";
+  const card = document.createElement("div");
+  card.className = `${bgColor} p-6 rounded-2xl shadow-md relative transition hover:scale-[1.02]`;
 
-        card.innerHTML = `
-          <div class="absolute top-2 right-2 text-sm font-semibold px-3 py-1 rounded-full ${overdue ? 'bg-red-200 text-red-800' : 'bg-green-200 text-green-800'}">
-            ${deadlineLabel}
-          </div>
-          <div class="text-xl font-bold mb-2">${order.dealerName}</div>
-          <p><strong>Marketing:</strong> ${order.marketingPersonName}</p>
-          <p><strong>Location:</strong> ${order.location}</p>
-          <p><strong>CRM:</strong> ${order.crmName}</p>
-          <p><strong>Expected Delivery:</strong> ${formatDateToDDMMMYYYY(order.expectedDeliveryDate)}</p>
-          <p><strong>Dispatch Date & Time:</strong> ${formatDateToDDMMMYYYY(order.timestamp)}</p>
-          <p><strong>Deadline:</strong> ${formatDateToDDMMMYYYY(deadline)}</p>
-          <p><strong>Time Left:</strong> <span id="countdown-${index}" class="font-mono text-blue-700"></span></p>
-                        <span class="text-m text-black-600">Dispatch Receipt:</span>
-<button onclick="openMultipleDocuments('${order.dispatchDetailUrl.replace(/'/g, "\\'")}', ${index})" class="text-sm text-blue-600 hover:text-blue-800 underline bg-transparent border-none cursor-pointer">View Dispatch Receipts</button>
-        <span class="text-m text-black-600">Invoices:</span>
-<button onclick="openMultipleDocuments('${order.invoiceUrl.replace(/'/g, "\\'")}', ${index})" class="text-sm text-blue-600 hover:text-blue-800 underline bg-transparent border-none cursor-pointer">View Invoices</button>
-          <div class="mt-4">
-            <label class="inline-flex items-center">
-              <input type="radio" name="confirm-${index}" id="radio-${index}" class="form-radio h-4 w-4 text-blue-600">
-              <span class="ml-2 text-sm">Dispatch Details Sent To Dealer</span>
-            </label>
-          </div>
-          <button id="submit-${index}" onclick="submitConfirmation(${index})"
-            class="mt-4 w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
-            Submit
-          </button>
-        `;
+  const overdue = new Date() > deadline;
+  const deadlineLabel = overdue ? "Overdue" : "Active";
 
-        container.appendChild(card);
-        startCountdown(deadline, index);
-      });
-    }
+  card.innerHTML = `
+    <!-- Deadline Badge -->
+    <div class="absolute top-2 right-2 text-sm font-semibold px-3 py-1 rounded-full ${overdue ? 'bg-red-200 text-red-800' : 'bg-green-200 text-green-800'}">
+      ${deadlineLabel}
+    </div>
+
+    <!-- Missing Invoice Label -->
+    ${!hasInvoice ? `<div class="absolute top-2 left-2 text-xs font-semibold px-2 py-1 rounded-full bg-red-200 text-red-800">Missing Invoice</div>` : ""}
+
+    <div class="text-xl font-bold mb-2">${order.dealerName}</div>
+    <p><strong>Marketing:</strong> ${order.marketingPersonName}</p>
+    <p><strong>Location:</strong> ${order.location}</p>
+    <p><strong>CRM:</strong> ${order.crmName}</p>
+    <p><strong>Expected Delivery:</strong> ${formatDateToDDMMMYYYY(order.expectedDeliveryDate)}</p>
+    <p><strong>Dispatch Date & Time:</strong> ${formatDateToDDMMMYYYY(order.timestamp)}</p>
+    <p><strong>Deadline:</strong> ${formatDateToDDMMMYYYY(deadline)}</p>
+    <p><strong>Time Left:</strong> <span id="countdown-${index}" class="font-mono text-blue-700"></span></p>
+
+    <span class="text-m text-black-600">Dispatch Receipt:</span>
+    <button onclick="openMultipleDocuments('${order.dispatchDetailUrl.replace(/'/g, "\\'")}', ${index})" class="text-sm text-blue-600 hover:text-blue-800 underline bg-transparent border-none cursor-pointer">View Dispatch Receipts</button>
+
+    <span class="text-m text-black-600">Invoices:</span>
+    <button onclick="openMultipleDocuments('${order.invoiceUrl.replace(/'/g, "\\'")}', ${index})" class="text-sm text-blue-600 hover:text-blue-800 underline bg-transparent border-none cursor-pointer">View Invoices</button>
+
+    <div class="mt-4">
+      <label class="inline-flex items-center">
+        <input type="radio" name="confirm-${index}" id="radio-${index}" class="form-radio h-4 w-4 text-blue-600">
+        <span class="ml-2 text-sm">Dispatch Details Sent To Dealer</span>
+      </label>
+    </div>
+    <button id="submit-${index}" onclick="submitConfirmation(${index})"
+      class="mt-4 w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
+      Submit
+    </button>
+  `;
+
+  container.appendChild(card);
+  startCountdown(deadline, index);
+});
+}
 
     function startCountdown(deadline, index) {
       const el = document.getElementById(`countdown-${index}`);
