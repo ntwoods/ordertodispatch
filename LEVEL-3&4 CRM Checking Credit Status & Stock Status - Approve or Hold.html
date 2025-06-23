@@ -316,6 +316,11 @@
                         <span class="text-sm font-medium">${order.crmName}</span>
                     </div>
                     <div class="flex justify-between">
+                        <span class="text-sm text-gray-600">Concerned Owner:</span>
+                        <span class="text-sm font-medium">${order.concernedOwner}</span>
+                    </div>
+                    
+                    <div class="flex justify-between">
                         <span class="text-sm text-gray-600">File:</span>
 <button onclick="openMultipleDocuments('${order.fileUploadLink.replace(/'/g, "\\'")}', ${index})" class="text-sm text-blue-600 hover:text-blue-800 underline bg-transparent border-none cursor-pointer">View Document</button>                    </div>
                 </div>
