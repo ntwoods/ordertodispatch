@@ -9,7 +9,7 @@
         /* Global styles */
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #000000;
+            background: linear-gradient(135deg, #000000 0%, #1a1a1a 100%);
             color: #ffffff;
             margin: 0;
             padding: 20px;
@@ -28,11 +28,12 @@
             padding-bottom: 10px;
             width: 100%;
             max-width: 800px;
+            text-shadow: 0 2px 4px rgba(184, 134, 11, 0.3);
         }
 
         /* Loader styles */
         .loader {
-            border: 8px solid #f3f3f3;
+            border: 8px solid #333333;
             border-top: 8px solid #b8860b;
             border-radius: 50%;
             width: 60px;
@@ -57,8 +58,6 @@
             top: 20px;
             left: 50%;
             transform: translateX(-50%);
-            background-color: #b8860b;
-            color: #000000;
             padding: 15px 25px;
             border-radius: 8px;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
@@ -67,6 +66,8 @@
             opacity: 0;
             transition: opacity 0.3s ease-in-out;
             text-align: center;
+            max-width: 80%;
+            word-wrap: break-word;
         }
 
         .message-box.show {
@@ -74,10 +75,51 @@
             opacity: 1;
         }
 
+        .message-box.success {
+            background-color: #28a745;
+            color: #ffffff;
+        }
+
+        .message-box.error {
+            background-color: #dc3545;
+            color: #ffffff;
+        }
+
+        .message-box.info {
+            background-color: #b8860b;
+            color: #000000;
+        }
+
+        /* Debug section */
+        .debug-section {
+            width: 100%;
+            max-width: 1200px;
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #1a1a1a;
+            border: 1px solid #333333;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 0.9rem;
+        }
+
+        .debug-section h3 {
+            color: #b8860b;
+            margin-top: 0;
+        }
+
+        .debug-info {
+            background-color: #2a2a2a;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 5px 0;
+            word-break: break-all;
+        }
+
         /* Grid container for order cards */
         .order-grid-container {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
             gap: 25px;
             width: 100%;
             max-width: 1200px;
@@ -87,7 +129,7 @@
 
         /* Individual order card styles */
         .order-card {
-            background-color: #1a1a1a;
+            background: linear-gradient(145deg, #1a1a1a, #2a2a2a);
             border: 1px solid #333333;
             border-radius: 12px;
             padding: 25px;
@@ -95,89 +137,136 @@
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .order-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #b8860b, #ffd700);
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+
+        .order-card:hover::before {
+            transform: scaleX(1);
         }
 
         .order-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.6);
+            transform: translateY(-8px);
+            box-shadow: 0 12px 30px rgba(184, 134, 11, 0.2);
+            border-color: #b8860b;
         }
 
         .order-card p {
             margin: 8px 0;
-            line-height: 1.5;
+            line-height: 1.6;
             color: #e0e0e0;
         }
 
         .order-card p strong {
             color: #b8860b;
+            font-weight: 600;
         }
 
         .order-card a {
             color: #b8860b;
             text-decoration: none;
             font-weight: 600;
-            transition: color 0.2s ease-in-out;
+            transition: all 0.3s ease;
             word-break: break-all;
+            position: relative;
         }
 
         .order-card a:hover {
             color: #ffd700;
             text-decoration: underline;
+            text-shadow: 0 0 8px rgba(255, 215, 0, 0.5);
         }
 
         /* File upload section */
         .file-upload-section {
             margin-top: 20px;
             padding-top: 15px;
-            border-top: 1px dashed #333333;
+            border-top: 1px dashed #444444;
         }
 
         .file-upload-section input[type="file"] {
             display: block;
             width: 100%;
-            padding: 10px;
+            padding: 12px;
             margin-bottom: 15px;
             background-color: #2a2a2a;
-            border: 1px solid #444444;
+            border: 2px solid #444444;
             border-radius: 8px;
             color: #ffffff;
             box-sizing: border-box;
+            transition: border-color 0.3s ease;
+        }
+
+        .file-upload-section input[type="file"]:focus {
+            outline: none;
+            border-color: #b8860b;
         }
 
         .file-upload-section input[type="file"]::-webkit-file-upload-button {
-            background-color: #b8860b;
+            background: linear-gradient(135deg, #b8860b, #a0740a);
             color: #000000;
             padding: 8px 15px;
             border: none;
             border-radius: 6px;
             cursor: pointer;
-            transition: background-color 0.2s ease-in-out;
+            transition: all 0.3s ease;
+            font-weight: 600;
         }
 
         .file-upload-section input[type="file"]::-webkit-file-upload-button:hover {
-            background-color: #a0740a;
+            background: linear-gradient(135deg, #a0740a, #8b6508);
+            transform: translateY(-1px);
         }
 
         .file-upload-section button {
-            background-color: #b8860b;
+            background: linear-gradient(135deg, #b8860b, #a0740a);
             color: #000000;
             border: none;
-            padding: 12px 20px;
+            padding: 14px 20px;
             border-radius: 8px;
             cursor: pointer;
             font-weight: 600;
             font-size: 1rem;
-            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
+            transition: all 0.3s ease;
             width: 100%;
             box-sizing: border-box;
             display: block;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .file-upload-section button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .file-upload-section button:hover::before {
+            left: 100%;
         }
 
         .file-upload-section button:hover {
-            background-color: #a0740a;
+            background: linear-gradient(135deg, #a0740a, #8b6508);
             transform: translateY(-2px);
-            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
+            box-shadow: 0 6px 20px rgba(184, 134, 11, 0.4);
         }
 
         .file-upload-section button:active {
@@ -186,33 +275,32 @@
         }
 
         .file-upload-section button:disabled {
-            background-color: #555;
+            background: #555;
             cursor: not-allowed;
             opacity: 0.7;
+            transform: none;
         }
 
-        /* Debug section */
-        .debug-section {
+        /* Refresh button */
+        .refresh-btn {
             position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background-color: #1a1a1a;
-            border: 1px solid #333;
-            border-radius: 8px;
+            bottom: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, #b8860b, #a0740a);
+            color: #000000;
+            border: none;
             padding: 15px;
-            max-width: 300px;
-            font-size: 12px;
-            z-index: 1000;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            z-index: 100;
         }
 
-        .debug-section h4 {
-            margin: 0 0 10px 0;
-            color: #b8860b;
-        }
-
-        .debug-section p {
-            margin: 5px 0;
-            color: #ccc;
+        .refresh-btn:hover {
+            transform: scale(1.1) rotate(180deg);
+            box-shadow: 0 6px 20px rgba(184, 134, 11, 0.4);
         }
 
         /* Responsive adjustments */
@@ -231,33 +319,48 @@
                 padding: 0 10px 10px;
             }
 
-            .debug-section {
-                position: relative;
-                bottom: auto;
-                right: auto;
-                margin-top: 20px;
-                width: 100%;
-                max-width: none;
+            .refresh-btn {
+                bottom: 20px;
+                right: 20px;
             }
+        }
+
+        /* Loading skeleton */
+        .skeleton {
+            background: linear-gradient(90deg, #2a2a2a 25%, #3a3a3a 50%, #2a2a2a 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+        }
+
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        .skeleton-card {
+            height: 300px;
+            border-radius: 12px;
         }
     </style>
 </head>
 <body>
     <div class="message-box" id="messageBox"></div>
     <div class="loader" id="loader"></div>
+    
     <h1 id="pageTitle">Loading Orders...</h1>
+    
+    <!-- Debug Section -->
+    <div class="debug-section" id="debugSection" style="display: none;">
+        <h3>Debug Information</h3>
+        <div class="debug-info" id="debugInfo"></div>
+    </div>
+    
     <div id="orderCardsContainer" class="order-grid-container">
         <!-- Order cards will be injected here by JavaScript -->
     </div>
 
-    <!-- Debug information -->
-    <div class="debug-section">
-        <h4>Debug Info</h4>
-        <p>GET URL: <span id="debugGetUrl">Loading...</span></p>
-        <p>POST URL: <span id="debugPostUrl">Loading...</span></p>
-        <p>Last Request: <span id="debugLastRequest">None</span></p>
-        <p>Request Status: <span id="debugStatus">Ready</span></p>
-    </div>
+    <!-- Refresh Button -->
+    <button class="refresh-btn" id="refreshBtn" title="Refresh Orders">↻</button>
 
     <script>
         // DOM Elements
@@ -265,54 +368,62 @@
         const loader = document.getElementById('loader');
         const pageTitle = document.getElementById('pageTitle');
         const messageBox = document.getElementById('messageBox');
-
-        // Debug elements
-        const debugGetUrl = document.getElementById('debugGetUrl');
-        const debugPostUrl = document.getElementById('debugPostUrl');
-        const debugLastRequest = document.getElementById('debugLastRequest');
-        const debugStatus = document.getElementById('debugStatus');
+        const debugSection = document.getElementById('debugSection');
+        const debugInfo = document.getElementById('debugInfo');
+        const refreshBtn = document.getElementById('refreshBtn');
 
         // API URLs
         const GET_API_URL = 'https://script.google.com/macros/s/AKfycbwEH-ENBzDEZtAyPGaj7XNUYfkHwb8TmM3SvCvmtIcKZ9yPo6I84IFds3ZZblAw_pTo/exec';
-        
-        // CRITICAL FIX: You need a DIFFERENT URL for POST requests
-        // This should be your deployed Google Apps Script URL that handles POST (doPost function)
-        const POST_UPLOAD_API_URL = 'https://script.google.com/macros/s/YOUR_POST_SCRIPT_ID/exec'; // REPLACE WITH YOUR ACTUAL POST URL
+        const POST_UPLOAD_API_URL = 'https://script.google.com/macros/s/AKfycbwEH-ENBzDEZtAyPGaj7XNUYfkHwb8TmM3SvCvmtIcKZ9yPo6I84IFds3ZZblAw_pTo/exec';
 
-        // Update debug info
-        debugGetUrl.textContent = GET_API_URL.substring(0, 50) + '...';
-        debugPostUrl.textContent = POST_UPLOAD_API_URL.substring(0, 50) + '...';
+        // Global variables
+        let currentCrmName = null;
+        let debugMode = false;
 
         /**
-         * Displays a message box with the given text and type.
+         * Enhanced debug logging
+         */
+        function debugLog(message, data = null) {
+            console.log('[DEBUG]', message, data);
+            if (debugMode) {
+                const timestamp = new Date().toLocaleTimeString();
+                const logEntry = `[${timestamp}] ${message}`;
+                debugInfo.innerHTML += `<div>${logEntry}</div>`;
+                if (data) {
+                    debugInfo.innerHTML += `<div style="margin-left: 20px; color: #888;">${JSON.stringify(data, null, 2)}</div>`;
+                }
+                debugSection.style.display = 'block';
+            }
+        }
+
+        /**
+         * Enhanced message box with better styling
          */
         function showMessageBox(message, type = 'info') {
             messageBox.textContent = message;
             messageBox.className = `message-box show ${type}`;
-            debugLastRequest.textContent = new Date().toLocaleTimeString();
+            debugLog(`Message: ${message} (${type})`);
+            
             setTimeout(() => {
                 messageBox.classList.remove('show');
-            }, 4000);
+            }, type === 'error' ? 5000 : 3000);
         }
 
         /**
-         * Shows the loader spinner.
+         * Show/hide loader with enhanced animation
          */
         function showLoader() {
             loader.style.display = 'block';
-            debugStatus.textContent = 'Loading...';
+            debugLog('Loader shown');
         }
 
-        /**
-         * Hides the loader spinner.
-         */
         function hideLoader() {
             loader.style.display = 'none';
-            debugStatus.textContent = 'Ready';
+            debugLog('Loader hidden');
         }
 
         /**
-         * Extracts the value of a specific query parameter from the URL.
+         * Extract query parameters
          */
         function getQueryParam(name) {
             const urlParams = new URLSearchParams(window.location.search);
@@ -320,34 +431,63 @@
         }
 
         /**
-         * Renders the fetched order data into the UI as individual cards.
+         * Create skeleton loading cards
+         */
+        function showSkeletonCards(count = 3) {
+            orderCardsContainer.innerHTML = '';
+            for (let i = 0; i < count; i++) {
+                const skeletonCard = document.createElement('div');
+                skeletonCard.className = 'skeleton skeleton-card';
+                orderCardsContainer.appendChild(skeletonCard);
+            }
+        }
+
+        /**
+         * Enhanced order card rendering with better error handling
          */
         function renderOrderCards(orders) {
+            debugLog('Rendering order cards', { orderCount: orders?.length });
             orderCardsContainer.innerHTML = '';
 
             if (!orders || orders.length === 0) {
-                orderCardsContainer.innerHTML = '<p style="text-align: center; width: 100%;">No orders found for this CRM.</p>';
+                orderCardsContainer.innerHTML = `
+                    <div style="grid-column: 1 / -1; text-align: center; padding: 40px; background-color: #1a1a1a; border-radius: 12px; border: 1px solid #333333;">
+                        <h3 style="color: #b8860b; margin-bottom: 15px;">No Orders Found</h3>
+                        <p style="color: #e0e0e0;">No orders found for CRM: <strong>${currentCrmName || 'Unknown'}</strong></p>
+                        <p style="color: #888; font-size: 0.9rem;">Try refreshing the page or check if the CRM name is correct.</p>
+                    </div>
+                `;
                 return;
             }
 
-            orders.forEach(order => {
+            orders.forEach((order, index) => {
+                debugLog(`Rendering order ${index + 1}`, order);
+                
                 const card = document.createElement('div');
                 card.className = 'order-card';
+                card.style.animationDelay = `${index * 100}ms`;
+
+                // Safely handle potentially missing fields
+                const safeGet = (field, defaultValue = 'N/A') => {
+                    return order[field] !== undefined && order[field] !== null && order[field] !== '' 
+                        ? order[field] 
+                        : defaultValue;
+                };
 
                 card.innerHTML = `
-                    <p><strong>Dealer Name:</strong> ${order.dealerName || 'N/A'}</p>
-                    <p><strong>Marketing Person:</strong> ${order.marketingPerson || 'N/A'}</p>
-                    <p><strong>Concerned Owner:</strong> ${order.concernedOwner || 'N/A'}</p>
-                    <p><strong>Location:</strong> ${order.location || 'N/A'}</p>
-                    <p><strong>CRM Name:</strong> ${order.crmName || 'N/A'}</p>
+                    <p><strong>Dealer Name:</strong> ${safeGet('dealerName')}</p>
+                    <p><strong>Marketing Person:</strong> ${safeGet('marketingPerson')}</p>
+                    <p><strong>Concerned Owner:</strong> ${safeGet('concernedOwner')}</p>
+                    <p><strong>Location:</strong> ${safeGet('location')}</p>
+                    <p><strong>CRM Name:</strong> ${safeGet('crmName')}</p>
                     ${order.timeStamp ? `<p><strong>Order Timestamp:</strong> ${order.timeStamp}</p>` : ''}
                     ${order.finalOrder ? `<p><strong>Final Order Document:</strong> <a href="${order.finalOrder}" target="_blank" rel="noopener noreferrer">View Document</a></p>` : ''}
                     <div class="file-upload-section">
-                        <input type="file" class="file-input" accept=".pdf,.xlsx,.xls,.png,.jpg">
+                        <input type="file" class="file-input" accept=".pdf,.xlsx,.xls,.png,.jpg,.jpeg">
                         <button class="submit-additional-order-btn"
-                                data-dealer-name="${order.dealerName || ''}"
-                                data-crm-name="${order.crmName || ''}"
-                                data-timestamp="${order.timeStamp || ''}">
+                                data-dealer-name="${safeGet('dealerName', '')}"
+                                data-crm-name="${safeGet('crmName', '')}"
+                                data-timestamp="${safeGet('timeStamp', '')}">
                             Submit Additional Order
                         </button>
                     </div>
@@ -355,41 +495,158 @@
                 orderCardsContainer.appendChild(card);
             });
 
-            // Attach event listeners to the new buttons after they are rendered
+            // Attach event listeners
             document.querySelectorAll('.submit-additional-order-btn').forEach(button => {
                 button.addEventListener('click', handleAdditionalOrderSubmit);
             });
+
+            debugLog('Order cards rendered successfully');
         }
 
         /**
-         * Fetches order data from the API based on crmName and renders them.
+         * Enhanced fetch function with better error handling and retry logic
+         */
+        async function fetchWithRetry(url, options = {}, maxRetries = 3) {
+            for (let attempt = 1; attempt <= maxRetries; attempt++) {
+                try {
+                    debugLog(`Fetch attempt ${attempt}/${maxRetries}`, { url, options });
+                    
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+                    
+                    const response = await fetch(url, {
+                        ...options,
+                        signal: controller.signal
+                    });
+                    
+                    clearTimeout(timeoutId);
+                    debugLog(`Fetch response received`, { 
+                        status: response.status, 
+                        statusText: response.statusText,
+                        ok: response.ok,
+                        headers: Object.fromEntries(response.headers.entries())
+                    });
+                    
+                    return response;
+                } catch (error) {
+                    debugLog(`Fetch attempt ${attempt} failed`, { error: error.message });
+                    
+                    if (attempt === maxRetries) {
+                        throw error;
+                    }
+                    
+                    // Wait before retry (exponential backoff)
+                    await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
+                }
+            }
+        }
+
+        /**
+         * Enhanced order fetching with comprehensive error handling
          */
         async function fetchOrders(crmName) {
+            if (!crmName) {
+                showMessageBox('CRM name is required', 'error');
+                return;
+            }
+
+            currentCrmName = crmName;
             showLoader();
-            pageTitle.textContent = `Orders for ${decodeURIComponent(crmName || 'Unknown CRM')}`;
+            showSkeletonCards();
+            pageTitle.textContent = `Orders for ${decodeURIComponent(crmName)}`;
+            debugLog('Starting fetch orders', { crmName });
+
             try {
-                const response = await fetch(`${GET_API_URL}?crmName=${encodeURIComponent(crmName)}`);
+                // Construct URL with proper encoding
+                const encodedCrmName = encodeURIComponent(crmName);
+                const fetchUrl = `${GET_API_URL}?crmName=${encodedCrmName}`;
+                debugLog('Fetch URL constructed', { fetchUrl });
+                
+                const response = await fetchWithRetry(fetchUrl, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Cache-Control': 'no-cache'
+                    }
+                });
+
                 if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
-                const result = await response.json();
-                if (result && result.data) {
-                    renderOrderCards(result.data);
+
+                // Try to parse response as JSON
+                let result;
+                const responseText = await response.text();
+                debugLog('Raw response received', { responseText: responseText.substring(0, 500) + '...' });
+
+                try {
+                    result = JSON.parse(responseText);
+                    debugLog('JSON parsed successfully', result);
+                } catch (parseError) {
+                    debugLog('JSON parse failed', { error: parseError.message, responseText });
+                    throw new Error(`Invalid JSON response: ${parseError.message}`);
+                }
+
+                // Handle different response structures
+                let orders = [];
+                if (result) {
+                    if (Array.isArray(result)) {
+                        orders = result;
+                        debugLog('Response is array', { length: orders.length });
+                    } else if (result.data && Array.isArray(result.data)) {
+                        orders = result.data;
+                        debugLog('Response has data array', { length: orders.length });
+                    } else if (result.orders && Array.isArray(result.orders)) {
+                        orders = result.orders;
+                        debugLog('Response has orders array', { length: orders.length });
+                    } else if (result.success && result.data) {
+                        orders = Array.isArray(result.data) ? result.data : [result.data];
+                        debugLog('Response has success flag', { length: orders.length });
+                    } else {
+                        debugLog('Unexpected response structure', result);
+                        throw new Error('Unexpected API response structure');
+                    }
+                }
+
+                renderOrderCards(orders);
+                
+                if (orders.length === 0) {
+                    showMessageBox(`No orders found for CRM: ${crmName}`, 'info');
                 } else {
-                    renderOrderCards([]);
-                    showMessageBox('No data found or unexpected API response format.', 'info');
+                    showMessageBox(`Successfully loaded ${orders.length} order(s)`, 'success');
                 }
+
             } catch (error) {
+                debugLog('Fetch orders error', { error: error.message, stack: error.stack });
                 console.error('Error fetching orders:', error);
-                orderCardsContainer.innerHTML = `<p style="text-align: center; width: 100%; color: #ff6347;">Failed to load orders. Please try again later. Error: ${error.message}</p>`;
-                showMessageBox('Failed to fetch orders. Check console for details.', 'error');
+                
+                let errorMessage = 'Failed to load orders. ';
+                if (error.name === 'AbortError') {
+                    errorMessage += 'Request timed out.';
+                } else if (error.message.includes('Failed to fetch')) {
+                    errorMessage += 'Network error or CORS issue.';
+                } else {
+                    errorMessage += error.message;
+                }
+
+                orderCardsContainer.innerHTML = `
+                    <div style="grid-column: 1 / -1; text-align: center; padding: 40px; background-color: #2a1a1a; border-radius: 12px; border: 1px solid #dc3545;">
+                        <h3 style="color: #dc3545; margin-bottom: 15px;">⚠️ Error Loading Orders</h3>
+                        <p style="color: #e0e0e0; margin-bottom: 10px;"><strong>CRM:</strong> ${crmName}</p>
+                        <p style="color: #ff6b6b; margin-bottom: 15px;">${errorMessage}</p>
+                        <button onclick="fetchOrders('${crmName}')" style="background: #b8860b; color: #000; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;">
+                            Try Again
+                        </button>
+                    </div>
+                `;
+                showMessageBox(errorMessage, 'error');
             } finally {
                 hideLoader();
             }
         }
 
         /**
-         * Converts a File object to a Base64 encoded string.
+         * File to Base64 conversion
          */
         function fileToBase64(file) {
             return new Promise((resolve, reject) => {
@@ -401,7 +658,7 @@
         }
 
         /**
-         * Handles the submission of an additional order file.
+         * Enhanced file upload handling
          */
         async function handleAdditionalOrderSubmit(event) {
             const button = event.target;
@@ -411,112 +668,152 @@
             const crmName = button.dataset.crmName;
             const timeStamp = button.dataset.timestamp;
 
-            console.log('Submit button clicked:', { dealerName, crmName, timeStamp });
-            debugStatus.textContent = 'Preparing upload...';
+            debugLog('Starting file upload', { dealerName, crmName, timeStamp });
 
             const file = fileInput.files[0];
-
             if (!file) {
                 showMessageBox('Please select a file to upload.', 'error');
-                debugStatus.textContent = 'Error: No file selected';
                 return;
             }
 
-            // Validate file type
+            // Enhanced file validation
             const allowedTypes = {
                 'application/pdf': 'pdf',
                 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'xlsx',
                 'application/vnd.ms-excel': 'xls',
                 'image/png': 'png',
                 'image/jpeg': 'jpg',
+                'image/jpg': 'jpg'
             };
 
             if (!allowedTypes[file.type]) {
-                showMessageBox('Unsupported file type. Please upload PDF, XLSX, XLS, PNG, or JPG.', 'error');
-                debugStatus.textContent = 'Error: Invalid file type';
+                showMessageBox(`Unsupported file type: ${file.type}. Please upload PDF, XLSX, XLS, PNG, or JPG.`, 'error');
                 return;
             }
 
-            // Check if POST URL is properly configured
-            if (POST_UPLOAD_API_URL.includes('YOUR_POST_SCRIPT_ID')) {
-                showMessageBox('POST API URL not configured. Please update POST_UPLOAD_API_URL with your actual script URL.', 'error');
-                debugStatus.textContent = 'Error: POST URL not configured';
+            // File size check (10MB limit)
+            if (file.size > 10 * 1024 * 1024) {
+                showMessageBox('File size too large. Please upload files smaller than 10MB.', 'error');
                 return;
             }
 
+            if (!dealerName || !crmName) {
+                showMessageBox('Missing dealer name or CRM name. Cannot upload.', 'error');
+                return;
+            }
+
+            const originalButtonText = button.textContent;
             button.disabled = true;
+            button.textContent = 'Uploading...';
             showLoader();
-            debugStatus.textContent = 'Converting file to base64...';
 
             try {
                 const fileBase64 = await fileToBase64(file);
-                const fileName = file.name;
-                const fileMimeType = file.type;
-
                 const payload = {
                     dealerName: dealerName,
                     crmName: crmName,
                     fileBase64: fileBase64,
-                    fileName: fileName,
-                    fileMimeType: fileMimeType,
-                    timeStamp: timeStamp || new Date().toISOString() // Fallback timestamp
+                    fileName: file.name,
+                    fileMimeType: file.type,
+                    timeStamp: timeStamp || new Date().toISOString()
                 };
 
-                console.log('Payload prepared:', {
-                    dealerName,
-                    crmName,
-                    fileName,
-                    fileMimeType,
-                    timeStamp,
-                    base64Length: fileBase64.length
+                debugLog('Upload payload prepared', { 
+                    ...payload, 
+                    fileBase64: '[BASE64_DATA]' // Don't log the actual base64 data
                 });
 
-                debugStatus.textContent = 'Sending POST request...';
-
-                // Make the POST request
-                const response = await fetch(POST_UPLOAD_API_URL, {
+                await fetch(POST_UPLOAD_API_URL, {
                     method: 'POST',
-                    mode: 'no-cors', // As requested
+                    mode: 'no-cors',
                     headers: {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify(payload),
                 });
 
-                console.log('POST request sent. Response (limited due to no-cors):', response);
-
-                // With no-cors, we can't read the response, so we assume success if no error is thrown
-                showMessageBox('File upload request sent successfully. Check your Google Apps Script logs for confirmation.', 'success');
-                debugStatus.textContent = 'Upload request sent';
-
-                // Refresh orders
-                const currentCrmName = getQueryParam('crmName');
+                showMessageBox('File upload request sent successfully. Refreshing orders...', 'success');
+                
+                // Refresh orders after upload
                 if (currentCrmName) {
-                    setTimeout(() => fetchOrders(currentCrmName), 2000); // Delay to allow processing
+                    setTimeout(() => fetchOrders(currentCrmName), 1000);
                 }
 
             } catch (error) {
+                debugLog('Upload error', { error: error.message });
                 console.error('Error uploading file:', error);
                 showMessageBox(`File upload failed: ${error.message}`, 'error');
-                debugStatus.textContent = `Error: ${error.message}`;
             } finally {
                 hideLoader();
                 button.disabled = false;
+                button.textContent = originalButtonText;
                 fileInput.value = '';
             }
         }
 
-        // On page load, get crmName from URL and fetch orders
-        document.addEventListener('DOMContentLoaded', () => {
+        /**
+         * Initialize the application
+         */
+        function initializeApp() {
+            debugLog('Initializing application');
+            
+            // Check for debug mode
+            debugMode = getQueryParam('debug') === 'true';
+            if (debugMode) {
+                debugSection.style.display = 'block';
+                debugLog('Debug mode enabled');
+            }
+
+            // Get CRM name from URL
             const crmName = getQueryParam('crmName');
+            debugLog('CRM name from URL', { crmName });
+
             if (crmName) {
                 fetchOrders(crmName);
             } else {
-                pageTitle.textContent = 'Welcome! Please provide a crmName in the URL (e.g., ?crmName=Km%20Kalpana)';
+                pageTitle.textContent = 'Welcome! Please provide a crmName in the URL';
                 hideLoader();
-                orderCardsContainer.innerHTML = '<p style="text-align: center; width: 100%;">No CRM name provided in the URL. Please add `?crmName=<your_crm_name>` to the URL to view orders.</p>';
+                orderCardsContainer.innerHTML = `
+                    <div style="grid-column: 1 / -1; text-align: center; padding: 40px; background-color: #1a1a1a; border-radius: 12px; border: 1px solid #333333;">
+                        <h3 style="color: #b8860b; margin-bottom: 15px;">🔗 Missing CRM Parameter</h3>
+                        <p style="color: #e0e0e0; margin-bottom: 10px;">No CRM name provided in the URL.</p>
+                        <p style="color: #888; font-size: 0.9rem;">Please add <code>?crmName=&lt;your_crm_name&gt;</code> to the URL to view orders.</p>
+                        <p style="color: #888; font-size: 0.9rem;">Example: <code>?crmName=Km%20Kalpana</code></p>
+                    </div>
+                `;
+            }
+        }
+
+        // Event Listeners
+        document.addEventListener('DOMContentLoaded', initializeApp);
+
+        // Refresh button
+        refreshBtn.addEventListener('click', () => {
+            if (currentCrmName) {
+                fetchOrders(currentCrmName);
+            } else {
+                showMessageBox('No CRM name available to refresh', 'error');
             }
         });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (event) => {
+            if (event.ctrlKey && event.key === 'r') {
+                event.preventDefault();
+                if (currentCrmName) {
+                    fetchOrders(currentCrmName);
+                }
+            }
+            
+            // Toggle debug mode with Ctrl+D
+            if (event.ctrlKey && event.key === 'd') {
+                event.preventDefault();
+                debugMode = !debugMode;
+                debugSection.style.display = debugMode ? 'block' : 'none';
+                showMessageBox(`Debug mode ${debugMode ? 'enabled' : 'disabled'}`, 'info');
+            }
+        });
+
     </script>
 </body>
 </html>
