@@ -397,16 +397,17 @@ async function markDone(orderIndex) {
                                 </a>
                             </p>
                         ` : ''}
-                        ${order.additionalOrder ? `
-                            <p class="text-sm text-gray-500">
-                                <a href="${order.additionalOrder}" target="_blank" class="text-red-500 hover:underline flex items-center" onclick="event.stopPropagation();">
-                                    <strong class="font-medium">Additional Order</strong>
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                                    </svg>
-                                </a>
-                            </p>
-                        ` : ''}
+			${order.additionalOrder ? `
+			    <p class="text-sm text-gray-500">
+				<button onclick="event.stopPropagation(); openMultipleDocuments('${order.additionalOrder.replace(/'/g, "\\'")}', ${index})"
+					class="text-red-500 hover:underline flex items-center bg-transparent border-none cursor-pointer p-0 m-0">
+				    <strong class="font-medium">Additional Order</strong>
+				    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+				    </svg>
+				</button>
+			    </p>
+			` : ''}
 			
                     </div>
                     
@@ -449,7 +450,32 @@ async function markDone(orderIndex) {
                 ordersGrid.appendChild(orderCard);
             });
         }
+	function openMultipleDocuments(urlString, index) {
+	    // Split the URLs by comma and trim whitespace
+	    const urls = urlString.split(',').map(url => url.trim()).filter(url => url.length > 0);
+	    
+	    if (urls.length === 0) {
+		alert('No valid URLs found');
+		return;
+	    }
+	    
+	    // Show a confirmation if there are multiple URLs
+	    if (urls.length > 1) {
+		const confirmed = confirm(`This will open ${urls.length} documents in separate tabs. Continue?`);
+		if (!confirmed) {
+		    return;
+		}
+	    }
+	    
+	    // Open each URL in a new tab with a small delay to prevent popup blocker
+	    urls.forEach((url, urlIndex) => {
+		setTimeout(() => {
+		    window.open(url, '_blank');
+		}, urlIndex * 100); // 100ms delay between each tab opening
+	    });
+	}
 
+	    
         // Function to open the detail modal
         function openModal(index) {
             const order = allOrdersData[index];
