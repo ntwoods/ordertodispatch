@@ -32,3 +32,5 @@
   }
 
   window.addEventListener("DOMContentLoaded", setReadOnlyMode);
+  window.setReadOnlyMode = setReadOnlyMode;
+
