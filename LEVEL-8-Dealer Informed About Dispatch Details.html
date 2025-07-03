@@ -59,6 +59,10 @@ function openMultipleDocuments(urlString, index) {
           document.getElementById("ordersContainer").classList.remove("hidden");
           globalOrders = result.data;
           renderOrders(globalOrders);
+          if (typeof setReadOnlyMode === "function") {
+            setReadOnlyMode();
+          }
+
         } else {
           throw new Error("Invalid response");
         }
@@ -127,7 +131,7 @@ orders.forEach((order, index) => {
     <p><strong>Dispatch Date & Time:</strong> ${formatDateToDDMMMYYYY(order.timestamp)}</p>
     <p><strong>Deadline:</strong> ${formatDateToDDMMMYYYY(deadline)}</p>
     <p><strong>Time Left:</strong> <span id="countdown-${index}" class="font-mono text-blue-700"></span></p>
-
+    <div class="editable">
     <span class="text-m text-black-600">Dispatch Receipt:</span>
     <button onclick="openMultipleDocuments('${order.dispatchDetailUrl.replace(/'/g, "\\'")}', ${index})" class="text-sm text-blue-600 hover:text-blue-800 underline bg-transparent border-none cursor-pointer">View Dispatch Receipts</button>
 
@@ -144,6 +148,7 @@ orders.forEach((order, index) => {
       class="mt-4 w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
       Submit
     </button>
+    </div>
   `;
 
   container.appendChild(card);
@@ -215,5 +220,6 @@ orders.forEach((order, index) => {
 
     fetchOrders();
   </script>
+  <script src="js/viewOnly.js"></script>
 </body>
 </html>
