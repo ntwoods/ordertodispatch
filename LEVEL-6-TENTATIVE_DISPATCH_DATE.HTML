@@ -286,6 +286,10 @@
             document.getElementById("ordersContainer").classList.remove("hidden");
             globalOrders = result.data;
             renderOrders(globalOrders);
+            if (typeof setReadOnlyMode === "function") {
+              setReadOnlyMode();
+            }
+
           }
         });
       } else {
@@ -379,11 +383,12 @@
           <input type="date" id="dispatch-${index}" 
             class="w-full bg-white bg-opacity-20 border border-white border-opacity-30 rounded-xl px-4 py-3 text-white placeholder-white placeholder-opacity-70 focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50 transition-all" />
         </div>
-        
+        <div class="editable">
         <button onclick="submitOrder(${index})" id="submit-btn-${index}"
           class="w-full button-3d text-lg font-semibold relative overflow-hidden">
           <span class="relative z-10">🚀 Set Dispatch Date</span>
         </button>
+        </div>
       `;
 
       container.appendChild(card);
@@ -560,5 +565,6 @@
     });
   });
 </script>
+<script src="js/viewOnly.js"></script>
 </body>
 </html>
