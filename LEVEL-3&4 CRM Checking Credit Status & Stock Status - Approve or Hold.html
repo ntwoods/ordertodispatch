@@ -172,6 +172,7 @@
     </main>
 
     <!-- Stock Status Modal -->
+    <div class="editable">
     <div id="stockModal" class="fixed inset-0 modal-overlay z-50 hidden">
         <div class="flex items-center justify-center min-h-screen px-4">
             <div class="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 transform transition-all">
@@ -185,6 +186,7 @@
                 </div>
             </div>
         </div>
+    </div>
     </div>
 
     <script>
@@ -326,11 +328,13 @@
                 </div>
 
                 <!-- Status Options -->
+                <div class="editable">
                 <div class="grid grid-cols-2 gap-4 mb-6">
                     <div class="bg-white rounded-lg p-3">
                         <div class="flex items-center justify-between mb-2">
                             <span class="text-sm font-medium text-gray-700">Credit Status</span>
                         </div>
+
                         <div class="flex space-x-2">
                             <button onclick="toggleCreditStatus(${index}, 'approved')" 
                                     class="status-toggle p-1 rounded-full credit-approved-${index} bg-gray-200 hover:bg-green-100">
@@ -346,7 +350,7 @@
                             </button>
                         </div>
                     </div>
-                    
+
                     <div class="bg-white rounded-lg p-3">
                         <div class="flex items-center justify-between mb-2">
                             <span class="text-sm font-medium text-gray-700">Stock Status</span>
@@ -367,13 +371,13 @@
                         </div>
                     </div>
                 </div>
-
                 <!-- Action Buttons -->
                 <div class="flex space-x-3">
                     <button id="approve-btn-${index}" onclick="approveOrder('${order.timestamp}', ${index})" 
                             class="flex-1 bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded-lg font-medium transition-colors">
                         Proceed
                     </button>
+                </div>
                 </div>
             `;
 
