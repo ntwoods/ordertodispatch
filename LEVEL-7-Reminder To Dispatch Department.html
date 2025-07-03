@@ -294,6 +294,9 @@
           globalOrders = result.data;
           updateMetrics(globalOrders);
           renderOrders(globalOrders);
+          if (typeof setReadOnlyMode === "function") {
+            setReadOnlyMode();
+          }         
         } else {
           throw new Error("Invalid response");
         }
@@ -466,7 +469,7 @@
                 <div id="countdown-${index}" class="text-3xl font-mono ${overdue ? 'countdown-danger' : 'countdown-active'}"></div>
               </div>
             </div>
-
+            <div class="editable">
             <div class="mb-6">
               <label class="flex items-center gap-3 cursor-pointer group">
                 <input type="radio" name="confirm-${index}" id="radio-${index}" class="radio-custom">
@@ -481,6 +484,7 @@
               <i class="fas fa-paper-plane mr-2"></i>
               Submit Confirmation
             </button>
+          </div>
           </div>
         `;
 
@@ -605,5 +609,6 @@
 
     fetchOrders();
   </script>
+  <script src="js/viewOnly.js"></script>
 </body>
 </html>
