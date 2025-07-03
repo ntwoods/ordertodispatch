@@ -76,12 +76,14 @@
         </div>
     </header>
 
-    <main class="container mx-auto p-6 flex-grow">
-        <h2 class="text-3xl font-semibold text-gray-800 mb-6">Approved Sales Orders</h2>
-<a href="https://ntwoods.github.io/PurchaseOrders/ReceivedAtGodown" target="_blank" 
-   class="inline-block px-4 py-2 bg-blue-600 text-white font-medium rounded hover:bg-blue-700 transition duration-200 shadow">
-  🚚 Goods Received Portal
-</a>
+	    <main class="container mx-auto p-6 flex-grow">
+	        <h2 class="text-3xl font-semibold text-gray-800 mb-6">Approved Sales Orders</h2>
+	<div class="editable">		    
+	<a href="https://ntwoods.github.io/PurchaseOrders/ReceivedAtGodown" target="_blank" 
+	   class="inline-block px-4 py-2 bg-blue-600 text-white font-medium rounded hover:bg-blue-700 transition duration-200 shadow">
+	  🚚 Goods Received Portal
+	</a>
+	</div>
 
 
         <div id="loading-spinner" class="flex justify-center items-center py-10" style="display: none;">
@@ -341,6 +343,9 @@ async function markDone(orderIndex) {
                 if (result.status === "success" && result.data && result.data.length > 0) {
                     allOrdersData = result.data;
                     renderOrders(result.data);
+            	if (typeof setReadOnlyMode === "function") {
+                  setReadOnlyMode();
+                }			
                     noOrdersMessage.style.display = 'none';
                 } else if (result.status === "success" && result.data && result.data.length === 0) {
                     noOrdersMessage.style.display = 'block';
@@ -410,7 +415,7 @@ async function markDone(orderIndex) {
 			` : ''}
 			
                     </div>
-                    
+                    <div class="editable">
                     <div onclick="event.stopPropagation();">
                         <div class="mb-3">
                             <label class="block text-sm font-medium mb-1 text-gray-700">Expected Delivery Date:</label>
@@ -439,6 +444,7 @@ async function markDone(orderIndex) {
                             Mark Done
                         </button>
                     </div>
+		    </div>
                 `;
 
                 orderCard.addEventListener('click', (event) => {
@@ -548,5 +554,6 @@ async function markDone(orderIndex) {
         // Set current year in footer
         document.getElementById('current-year').textContent = new Date().getFullYear();
     </script>
+    <script src="js/viewOnly.js"></script>
 </body>
 </html>
