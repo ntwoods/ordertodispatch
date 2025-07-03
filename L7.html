@@ -357,8 +357,10 @@
                     <div class="countdown-timer" id="countdown-${order.timestamp}">
                         Calculating...
                     </div>
+                    <div class="editable">		
                     <div class="card-actions">
                         <button class="approve-btn" data-timestamp="${order.timestamp}">Approve</button>
+                    </div>
                     </div>
                 `;
 
@@ -406,7 +408,10 @@
                 if (result.status === 'success' && result.data) {
                     // Filter for "Hold" orders (assuming script returns all for the CRM, then we filter status)
                     const holdOrders = result.data.filter(order => order.status === 'Hold');
-                    renderOrderCards(holdOrders);
+                    renderOrderCards(holdOrders);                   
+                if (typeof setReadOnlyMode === "function") {
+                      setReadOnlyMode();
+                    }                    
                 } else {
                     orderCardsContainer.innerHTML = '<p style="text-align: center; color: var(--overdue-color);">Error: ' + (result.message || 'Failed to fetch data.') + '</p>';
                 }
@@ -421,5 +426,6 @@
         // Initial fetch on page load
         document.addEventListener('DOMContentLoaded', fetchData);
     </script>
+    <script src="js/viewOnly.js"></script>
 </body>
 </html>
