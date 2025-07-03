@@ -361,6 +361,9 @@
             if (result.status === 'success') {
                 orders = result.data;
                 displayOrders();
+		if (typeof setReadOnlyMode === "function") {
+		  setReadOnlyMode();
+		}	    
                 startCountdown();
             } else {
                 throw new Error('Failed to fetch orders');
@@ -417,7 +420,7 @@
                         <div class="countdown-label">Time Remaining:</div>
                         <div class="countdown-timer" id="countdown-${index}">Calculating...</div>
                     </div>
-
+		   <div class="editable">
                     <div class="action-section">
                         <div class="file-upload-section" id="file-upload-section-${index}">
                             <label class="file-upload-label">Attach Final Order Here:</label>
@@ -451,6 +454,7 @@
                         <div class="success-message" id="success-${index}">Order submitted successfully!</div>
                         <div class="error-message" id="error-${index}">Error submitting order. Please try again.</div>
                     </div>
+		    </div>
                 </div>
             `).join('');
 
@@ -754,5 +758,6 @@ async function submitOrder(orderIndex, actionType) {
             }
         });
     </script>
+    <script src="js/viewOnly.js"></script>
 </body>
 </html>
