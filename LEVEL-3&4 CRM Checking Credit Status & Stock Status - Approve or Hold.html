@@ -285,6 +285,9 @@
             });
 
             document.getElementById('ordersContainer').classList.remove('hidden');
+            if (typeof setReadOnlyMode === "function") {
+                  setReadOnlyMode();
+                }
         }
 
         function createOrderCard(order, index) {
