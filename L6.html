@@ -611,14 +611,24 @@
                             <div class="timestamp">${formatTimestamp(order.expectedDeliveryDate)}</div>
                         </div>
                     </div>
+                <span class="text-m text-black-600">Final Order:</span>
+                <button onclick="openMultipleDocuments('${order.finalOrder.replace(/'/g, "\\'")}', ${index})" class="text-sm text-blue-600 hover:text-blue-800 underline bg-transparent border-none cursor-pointer">Final Order File</button>
+
+                ${order.additionalOrder ? `
+                  <span class="text-m text-red-600">Additional Order:</span>
+                  <button onclick="openMultipleDocuments('${order.additionalOrder.replace(/'/g, "\\'")}', ${index})" 
+                          class="text-sm text-blue-600 hover:text-blue-800 underline bg-transparent border-none cursor-pointer">
+                    Additional Order File
+                  </button>
+                ` : ''}                
                 </div>
+               
+                <div class="editable">
                 <div class="order-actions">
                     <button class="btn btn-primary" onclick="markAsReceived('${order.timestampForMap}', this.closest('.order-card'))">
                         <span class="btn-icon">✅</span>Mark as Received
                     </button>
-                    <a href="${order.fileUploadLink}" target="_blank" class="btn btn-secondary">
-                        <span class="btn-icon">📎</span>View File
-                    </a>
+                </div>
                 </div>
             `;
             
