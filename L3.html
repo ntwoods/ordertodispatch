@@ -17,35 +17,19 @@
     }
     
     body {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background-color: #e3f2fd; /* Very light blue background */
       min-height: 100vh;
       position: relative;
       overflow-x: hidden;
     }
     
-    .animated-bg {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: -1;
-      background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
-      background-size: 400% 400%;
-      animation: gradientShift 15s ease infinite;
-    }
-    
-    @keyframes gradientShift {
-      0% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
-    }
+    /* Removed animated-bg as per new theme; static blue background on body is sufficient */
     
     .glassmorphism {
-      background: rgba(255, 255, 255, 0.15);
-      backdrop-filter: blur(20px);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      box-shadow: 0 25px 45px rgba(0, 0, 0, 0.1);
+      background: rgba(255, 255, 255, 0.8); /* White with some transparency */
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(144, 202, 249, 0.5); /* Lighter blue border */
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1); /* Softer shadow */
     }
     
     .card-hover {
@@ -53,19 +37,18 @@
     }
     
     .card-hover:hover {
-      transform: translateY(-10px) scale(1.02);
-      box-shadow: 0 40px 80px rgba(0, 0, 0, 0.2);
+      transform: translateY(-5px) scale(1.01);
+      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
     }
     
     .neon-text {
-      text-shadow: 0 0 5px rgba(255, 255, 255, 0.8),
-                   0 0 10px rgba(255, 255, 255, 0.6),
-                   0 0 15px rgba(255, 255, 255, 0.4);
+      text-shadow: none; /* Removed neon effect */
+      color: #1565c0; /* Darker blue for emphasis */
     }
     
     .pulse-ring {
       position: absolute;
-      border: 3px solid #4f46e5;
+      border: 3px solid #64b5f6; /* Medium blue */
       border-radius: 50%;
       animation: pulsate 2s ease-out infinite;
       opacity: 0;
@@ -88,13 +71,13 @@
     
     @keyframes floating {
       0% { transform: translateY(0px); }
-      50% { transform: translateY(-10px); }
+      50% { transform: translateY(-5px); } /* Reduced floating effect */
       100% { transform: translateY(0px); }
     }
     
     .gradient-text {
-      background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4);
-      background-size: 300% 300%;
+      background: linear-gradient(45deg, #1976d2, #2196f3, #64b5f6); /* Shades of blue gradient */
+      background-size: 200% 200%;
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       animation: gradientShift 3s ease infinite;
@@ -121,38 +104,39 @@
     }
     
     .button-3d {
-      background: linear-gradient(45deg, #667eea, #764ba2);
+      background: linear-gradient(45deg, #1976d2, #1565c0); /* Blue gradient for buttons */
       border: none;
-      border-radius: 12px;
+      border-radius: 8px;
       color: white;
       cursor: pointer;
       font-weight: 600;
-      padding: 12px 24px;
+      padding: 10px 20px;
       position: relative;
       text-decoration: none;
       transition: all 0.3s;
-      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+      box-shadow: 0 4px 15px rgba(25, 118, 210, 0.4);
     }
     
     .button-3d:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 12px 40px rgba(102, 126, 234, 0.6);
+      transform: translateY(-1px);
+      box-shadow: 0 8px 25px rgba(25, 118, 210, 0.6);
     }
     
     .button-3d:active {
       transform: translateY(0);
-      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+      box-shadow: 0 2px 10px rgba(25, 118, 210, 0.3);
     }
     
     .countdown-glow {
-      text-shadow: 0 0 10px #4f46e5, 0 0 20px #4f46e5, 0 0 30px #4f46e5;
+      text-shadow: none; /* Removed glow effect */
+      color: #0d47a1; /* Dark blue for countdown */
     }
     
     .spinner {
-      width: 60px;
-      height: 60px;
-      border: 6px solid rgba(255, 255, 255, 0.3);
-      border-top: 6px solid #fff;
+      width: 50px;
+      height: 50px;
+      border: 5px solid rgba(255, 255, 255, 0.3);
+      border-top: 5px solid #42a5f5; /* Light blue spinner */
       border-radius: 50%;
       animation: spin 1s linear infinite;
     }
@@ -164,9 +148,9 @@
     
     .particle {
       position: absolute;
-      width: 4px;
-      height: 4px;
-      background: rgba(255, 255, 255, 0.8);
+      width: 3px;
+      height: 3px;
+      background: rgba(144, 202, 249, 0.8); /* Light blue particles */
       border-radius: 50%;
       pointer-events: none;
       animation: float 6s infinite ease-in-out;
@@ -174,64 +158,143 @@
     
     @keyframes float {
       0%, 100% { transform: translateY(0) rotate(0deg); opacity: 1; }
-      50% { transform: translateY(-100px) rotate(180deg); opacity: 0.3; }
+      50% { transform: translateY(-50px) rotate(180deg); opacity: 0.3; } /* Reduced float distance */
     }
     
     .morphing-card {
-      border-radius: 20px;
+      border-radius: 12px;
       transition: border-radius 0.3s ease;
     }
     
     .morphing-card:hover {
-      border-radius: 35px;
+      border-radius: 20px;
+    }
+
+    /* Additional styles for text colors */
+    .text-white {
+      color: #212121; /* Dark gray for general text on light background */
+    }
+
+    .text-white span { /* Specific adjustments for spans within text-white */
+        color: #424242; /* Medium gray */
+    }
+
+    .glassmorphism.rounded-full {
+      background: white; /* White background for status badges */
+      color: #1976d2; /* Blue text for status badges */
+      border: 1px solid #90caf9;
+    }
+
+    .glassmorphism.rounded-3xl {
+        background: white;
+        border: 1px solid #bbdefb;
+    }
+    
+    .glassmorphism.rounded-2xl {
+        background: white;
+        border: 1px solid #bbdefb;
+    }
+
+    /* Card specific text colors */
+    .morphing-card h3 {
+        color: #1976d2; /* Blue for dealer name */
+    }
+
+    .morphing-card p {
+        color: #424242; /* Dark gray for general card text */
+    }
+
+    .morphing-card .bg-white.bg-opacity-20 {
+        background-color: rgba(144, 202, 249, 0.3); /* Light blue for detail spans */
+        color: #1976d2; /* Darker blue for text in detail spans */
+    }
+
+    .morphing-card .bg-black.bg-opacity-30 {
+        background-color: #bbdefb; /* Light blue for countdown section */
+        border: 1px solid #90caf9;
+    }
+
+    .morphing-card .bg-black.bg-opacity-30 p {
+        color: #424242; /* Dark gray for countdown label */
+    }
+
+    .countdown-glow span.text-red-400 {
+        color: #d32f2f; /* Red for urgent countdown */
+    }
+    .countdown-glow span.text-yellow-400 {
+        color: #f57c00; /* Orange for warning countdown */
+    }
+    .countdown-glow span.text-green-400 {
+        color: #2e7d32; /* Green for normal countdown */
+    }
+
+    .morphing-card input[type="date"] {
+      background-color: #e3f2fd; /* Very light blue for input */
+      border: 1px solid #90caf9; /* Lighter blue border */
+      color: #212121; /* Dark gray text */
+    }
+    .morphing-card input[type="date"]::placeholder {
+      color: #64b5f6; /* Lighter blue placeholder */
+    }
+
+    /* Success modal and error alerts */
+    .glassmorphism.rounded-3xl .text-white {
+        color: #212121; /* Dark gray for modal text */
+    }
+    .glassmorphism.rounded-3xl h3 {
+        color: #1976d2; /* Blue for modal heading */
+    }
+
+    .bg-gradient-to-r.from-red-500.to-red-600 {
+        background: linear-gradient(45deg, #ef5350, #c62828); /* Red for error alerts */
+    }
+    .bg-gradient-to-r.from-yellow-500.to-yellow-600 {
+        background: linear-gradient(45deg, #ffb300, #fb8c00); /* Orange for warning alerts */
+    }
+
+    /* Cursor effect */
+    .fixed.w-2.h-2.bg-white.bg-opacity-50 {
+        background-color: rgba(144, 202, 249, 0.7); /* Light blue cursor particles */
     }
   </style>
 </head>
 <body>
-  <div class="animated-bg"></div>
   
-  <!-- Floating particles -->
-  <div id="particles"></div>
-  
-  <!-- Header -->
   <div class="relative z-10 pt-8 pb-6">
     <div class="text-center" data-aos="fade-down" data-aos-duration="1000">
       <h1 class="text-5xl md:text-7xl font-black gradient-text mb-4 floating">
         ⚡ Assign a tentative dispatch date ⚡
       </h1>
-      <p class="text-white text-xl md:text-2xl font-light neon-text">
+      <p class="text-xl md:text-2xl font-light neon-text">
         Real-time sales order dispatch management
       </p>
       <div class="mt-6 flex justify-center space-x-4">
-        <div class="glassmorphism rounded-full px-6 py-2 text-white font-semibold">
+        <div class="glassmorphism rounded-full px-6 py-2 font-semibold">
           <span class="animate-pulse">🔴</span> Live Dashboard
         </div>
-        <div class="glassmorphism rounded-full px-6 py-2 text-white font-semibold">
+        <div class="glassmorphism rounded-full px-6 py-2 font-semibold">
           ⏰ Real-time Updates
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Loader -->
   <div id="loader" class="flex flex-col justify-center items-center h-64 relative z-10">
     <div class="relative">
       <div class="spinner"></div>
       <div class="pulse-ring" style="width: 80px; height: 80px; top: -10px; left: -10px;"></div>
       <div class="pulse-ring" style="width: 80px; height: 80px; top: -10px; left: -10px; animation-delay: 1s;"></div>
     </div>
-    <p class="text-white text-xl font-semibold mt-6 animate-pulse">Loading orders...</p>
+    <p class="text-xl font-semibold mt-6 animate-pulse neon-text">Loading orders...</p>
   </div>
 
-  <!-- Orders Container -->
   <div id="ordersContainer" class="grid gap-8 md:grid-cols-2 lg:grid-cols-3 px-6 pb-12 relative z-10 hidden"></div>
 
-  <!-- Success Modal -->
   <div id="successModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
     <div class="glassmorphism rounded-3xl p-8 m-4 text-center max-w-md animate__animated animate__bounceIn">
       <div class="text-6xl mb-4">🎉</div>
-      <h3 class="text-2xl font-bold text-white mb-4">Order Submitted!</h3>
-      <p class="text-white mb-6">Your order has been successfully processed.</p>
+      <h3 class="text-2xl font-bold mb-4">Order Submitted!</h3>
+      <p class="mb-6">Your order has been successfully processed.</p>
       <button onclick="closeModal()" class="button-3d">Awesome!</button>
     </div>
   </div>
@@ -316,8 +379,8 @@
         <div class="col-span-full" data-aos="fade-up">
           <div class="glassmorphism morphing-card p-12 text-center">
             <div class="text-8xl mb-6 floating">📋</div>
-            <h2 class="text-4xl font-bold text-white mb-4 gradient-text">No Pending Orders</h2>
-            <p class="text-white text-xl opacity-80">All orders processed! Take a well-deserved break ☕</p>
+            <h2 class="text-4xl font-bold mb-4 gradient-text">No Pending Orders</h2>
+            <p class="text-xl opacity-80">All orders processed! Take a well-deserved break ☕</p>
             <div class="mt-8">
               <button onclick="fetchOrders()" class="button-3d">
                 🔄 Refresh Dashboard
@@ -346,10 +409,10 @@
       card.innerHTML = `
         
         <div class="mb-6">
-          <h3 class="flex items-center space-x-2 text-white">
+          <h3 class="flex items-center space-x-2">
             🏢 ${order.dealerName}
           </h3>
-          <div class="space-y-2 text-white">
+          <div class="space-y-2">
             <p class="flex items-center space-x-2">
               <span class="font-semibold">👤 Marketing:</span>
               <span class="bg-white bg-opacity-20 px-2 py-1 rounded-lg">${order.marketingPersonName}</span>
@@ -374,14 +437,14 @@
         </div>
         
         <div class="bg-black bg-opacity-30 rounded-xl p-4 mb-4">
-          <p class="text-white font-semibold mb-2">⏱️ Time Remaining:</p>
+          <p class="font-semibold mb-2">⏱️ Time Remaining:</p>
           <div id="countdown-${index}" class="text-3xl font-mono font-bold countdown-glow text-center"></div>
         </div>
         <div class="editable">        
         <div class="mb-4">
-          <label class="block text-white font-semibold mb-2">📅 Tentative Dispatch Date:</label>
+          <label class="block font-semibold mb-2">📅 Tentative Dispatch Date:</label>
           <input type="date" id="dispatch-${index}" 
-            class="w-full bg-white bg-opacity-20 border border-white border-opacity-30 rounded-xl px-4 py-3 text-white placeholder-white placeholder-opacity-70 focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50 transition-all" />
+            class="w-full bg-white bg-opacity-20 border border-white border-opacity-30 rounded-xl px-4 py-3 placeholder-white placeholder-opacity-70 focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50 transition-all" />
         </div>
         <button onclick="submitOrder(${index})" id="submit-btn-${index}"
           class="w-full button-3d text-lg font-semibold relative overflow-hidden">
