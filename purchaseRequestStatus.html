@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRM Requests Status Portal</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #0056b3;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .crm-name-display {
+            font-size: 1.2em;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: bold;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+        }
+        th {
+            background-color: #007bff;
+            color: white;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        tr:hover {
+            background-color: #ddd;
+        }
+        .loading-message, .error-message, .no-data-message {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 1.1em;
+            color: #555;
+        }
+        .error-message {
+            color: #dc3545;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>CRM Requests Status Portal</h1>
+        <div class="crm-name-display" id="crmNameDisplay"></div>
+        <div id="statusMessage" class="loading-message">Loading requests...</div>
+        <table id="requestsTable" style="display: none;">
+            <thead>
+                <tr>
+                    <th>Request ID</th>
+                    <th>Dealer Name</th>
+                    <th>Product</th>
+                    <th>Quantity</th>
+                    <th>Priority</th>
+                    <th>CRM Remark</th>
+                    <th>Request Date</th>
+                    <th>Expected Delivery</th>
+                    <th>Remark Purchase</th>
+                </tr>
+            </thead>
+            <tbody>
+                </tbody>
+        </table>
+    </div>
+
+    <script>
+        const API_URL = "https://script.google.com/macros/s/AKfycbyffY1_V3ap0VOnFJ8tIPP5bR9_gy_cVQ8_WmLpu0Q6E_dzHOUDPbdXnP4Db5gXRyxl/exec";
+        const crmNameDisplay = document.getElementById('crmNameDisplay');
+        const statusMessage = document.getElementById('statusMessage');
+        const requestsTable = document.getElementById('requestsTable');
+        const tableBody = requestsTable.querySelector('tbody');
+
+        // Function to format date to dd-mmm-yy
+        function formatDate(dateString) {
+            if (!dateString) return '';
+            try {
+                const date = new Date(dateString);
+                const options = { day: '2-digit', month: 'short', year: '2-digit' };
+                // Use 'en-GB' locale for 'dd-mmm-yy' like formatting (e.g., 07-Jul-25)
+                return date.toLocaleDateString('en-GB', options).replace(/ /g, '-');
+            } catch (e) {
+                console.error("Error formatting date:", dateString, e);
+                return dateString; // Return original if parsing fails
+            }
+        }
+
+        async function fetchRequests() {
+            // Get CRM name from URL parameter
+            const urlParams = new URLSearchParams(window.location.search);
+            const crmName = urlParams.get('crmName');
+
+            if (!crmName) {
+                statusMessage.className = 'error-message';
+                statusMessage.textContent = 'Error: CRM name not found in the URL. Please provide it as a parameter (e.g., ?crmName=JohnDoe)';
+                return;
+            }
+
+            crmNameDisplay.textContent = `Requests for CRM: ${crmName}`;
+            statusMessage.textContent = 'Loading requests...';
+
+            try {
+                const response = await fetch(`${API_URL}?crmName=${encodeURIComponent(crmName)}`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const result = await response.json();
+
+                if (result.status === "success" && result.data && result.data.length > 0) {
+                    statusMessage.style.display = 'none';
+                    requestsTable.style.display = 'table';
+                    tableBody.innerHTML = ''; // Clear existing rows
+
+                    result.data.forEach(request => {
+                        const row = tableBody.insertRow();
+                        row.insertCell().textContent = request.requestId || '';
+                        row.insertCell().textContent = request.dealername || '';
+                        row.insertCell().textContent = request.product || '';
+                        row.insertCell().textContent = request.quantity || '';
+                        row.insertCell().textContent = request.priority || '';
+                        row.insertCell().textContent = request.crmRemark || '';
+                        row.insertCell().textContent = formatDate(request.requestDate);
+                        row.insertCell().textContent = formatDate(request.expectedDelivery);
+                        row.insertCell().textContent = request.remarkPurchase || '';
+                    });
+                } else {
+                    statusMessage.className = 'no-data-message';
+                    statusMessage.textContent = `No requests found for CRM: ${crmName}.`;
+                    requestsTable.style.display = 'none';
+                }
+
+            } catch (error) {
+                console.error("Failed to fetch requests:", error);
+                statusMessage.className = 'error-message';
+                statusMessage.textContent = `Error fetching data: ${error.message}. Please check the API URL and your internet connection.`;
+                requestsTable.style.display = 'none';
+            }
+        }
+
+        // Fetch requests when the page loads
+        document.addEventListener('DOMContentLoaded', fetchRequests);
+    </script>
+</body>
+</html>
