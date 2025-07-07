@@ -356,8 +356,8 @@
             card.className = `order-card glass-effect rounded-2xl p-6 shadow-lg card-hover animate-slide-up`;
             card.style.animationDelay = `${index * 0.1}s`;
 
-            const crms = ["CRM1", "CRM2", "CRM3", "CRM4", "CRM5"]; // Example CRMs
-            const owners = ["Owner A", "Owner B", "Owner C"]; // Example Owners
+            const crms = ["Km Kalpana", "Priyam Dixit", "Mahima Agarwal", "Akansha Jain"]; // Example CRMs
+            const owners = ["Parakh Sir", "Pawan Sir", "Nitish Sir"]; // Example Owners
 
             const crmOptions = crms.map(crm => `<option value="${crm}" ${order.crmName === crm ? 'selected' : ''}>${crm}</option>`).join('');
             const ownerOptions = owners.map(owner => `<option value="${owner}" ${order.concernedOwner === owner ? 'selected' : ''}>${owner}</option>`).join('');
