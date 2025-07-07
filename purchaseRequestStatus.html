@@ -125,7 +125,7 @@
             statusMessage.textContent = 'Loading requests...';
 
             try {
-                const response = await fetch(`${API_URL}?crmName=${encodeURIComponent(crmName)}`);
+                const response = await fetch(`${API_URL}?crm=${encodeURIComponent(crmName)}`);
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
