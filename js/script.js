@@ -6,12 +6,44 @@ let currentStockTimestamp = null;
 let currentStockStatus = null;
 let currentStockIndex = null;
 
-// Initialize the app
+// L2 specific variables
+const API_URL_L2 = 'https://script.google.com/macros/s/AKfycbyA-Q0NczExlSQmU9ZSNqFsUzVU5u3mK1gQewekQA2L7VOL7rJzTiI-Vmhqc3fiu9bb/exec'; // L2's specific API URL
+let ordersL2 = []; // Use a separate array for L2 orders to avoid conflict
+let countdownIntervalL2; // Separate interval for L2
+
 document.addEventListener('DOMContentLoaded', function() {
-    updateCurrentTime();
-    setInterval(updateCurrentTime, 1000);
-    fetchOrders();
+    // For L1.html
+    if (document.getElementById('ordersContainer')) { // Check if L1 specific element exists
+        updateCurrentTime();
+        setInterval(updateCurrentTime, 1000);
+        fetchOrders(); // Call L1's fetchOrders
+    }
+
+    // For L2.html
+    if (document.getElementById('ordersGridL2')) { // Check if L2 specific element exists
+        fetchOrdersL2(); // Call L2's fetchOrders
+        // Auto-refresh for L2 every 5 minutes
+        setInterval(fetchOrdersL2, 5 * 60 * 1000);
+    }
 });
+
+// Cleanup interval when page is unloaded (This can be common for both)
+window.addEventListener('beforeunload', function() {
+    if (countdownInterval) { // For L1
+        clearInterval(countdownInterval);
+    }
+    if (countdownIntervalL2) { // For L2
+        clearInterval(countdownIntervalL2);
+    }
+});
+
+// Ensure common functions like calculateDeadline and formatCountdown are accessible
+// These were already in your L1 script.js, just ensure they are not inside
+// any specific L1-only scope.
+function calculateDeadline(timestamp) { /* ... L1's existing logic ... */ }
+function formatCountdown(milliseconds) { /* ... L1's existing logic ... */ }
+function formatDateTime(timestamp) { /* ... L2's existing logic ... */ }
+function fileToBase64(file) { /* ... L2's existing logic ... */ }
 
 function updateCurrentTime() {
     const now = new Date();
@@ -472,5 +504,349 @@ async function refreshData() {
     
     setTimeout(() => {
         refreshIcon.classList.remove('loading-spinner');
+    }, 500);
+}
+
+
+// --- L2 Specific Functions ---
+
+async function fetchOrdersL2() {
+    try {
+        showLoadingL2(true); // Show loading spinner for L2
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const crmName = urlParams.get('crm'); // Get CRM name from URL
+
+        if (!crmName) {
+            throw new Error('CRM name is missing in URL');
+        }
+
+        const response = await fetch(`${API_URL_L2}?crm=${encodeURIComponent(crmName)}`); // Fetch data using L2's API URL
+        const result = await response.json(); // Parse JSON response
+
+        if (result.status === 'success' && result.data) { // Check for successful response and data
+            ordersL2 = result.data; // Store L2 specific orders
+            displayOrdersL2(); // Render orders
+            if (typeof setReadOnlyMode === "function") { // Apply read-only mode if function exists
+                setReadOnlyMode();
+            }
+            startCountdownL2(); // Start countdown for L2 orders
+        } else {
+            showNoDataL2(); // Show no data message
+        }
+    } catch (error) {
+        console.error('Error fetching orders for L2:', error); // Log error
+        showNoDataL2(); // Show no data message on error
+    } finally {
+        showLoadingL2(false); // Hide loading spinner
+    }
+}
+
+function showLoadingL2(show) {
+    document.getElementById('loadingContainerL2').classList.toggle('hidden', !show); // Toggle loading container visibility
+    document.getElementById('ordersGridL2').classList.toggle('hidden', show); // Toggle orders grid visibility
+    document.getElementById('noDataContainerL2').classList.add('hidden'); // Hide no data message
+}
+
+function showNoDataL2() {
+    document.getElementById('loadingContainerL2').classList.add('hidden'); // Hide loading container
+    document.getElementById('ordersGridL2').classList.add('hidden'); // Hide orders grid
+    document.getElementById('noDataContainerL2').classList.remove('hidden'); // Show no data message
+}
+
+function displayOrdersL2() {
+    const content = document.getElementById('ordersGridL2'); // Get orders grid container
+    content.innerHTML = ''; // Clear existing content
+
+    if (ordersL2.length === 0) { // Check if there are no orders
+        showNoDataL2(); // Show no data message
+        return;
+    }
+
+    const ordersHTML = ordersL2.map((order, index) => `
+        <div class="order-card" id="order-l2-${index}">
+            <div class="order-header">
+                <div class="dealer-name">${order.dealerName}</div>
+                <div class="timestamp">Order Time: ${formatDateTime(order.timestamp)}</div>
+            </div>
+
+            <div class="order-details">
+                <div class="detail-row">
+                    <span class="detail-label">Marketing:</span>
+                    <span class="detail-value">${order.marketingPersonName}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Location:</span>
+                    <span class="detail-value">${order.location}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">CRM Name:</span>
+                    <span class="detail-value">${order.crmName}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Concerned Owner:</span>
+                    <span class="detail-value">${order.concernedOwner}</span>
+                </div>			
+                <div class="detail-row">
+                    <span class="detail-label">File:</span>
+                    <span class="detail-value">
+                        <a href="${order.fileUploadLink}" target="_blank" class="file-link">View File</a>
+                    </span>
+                </div>
+            </div>
+
+            <div class="countdown-section">
+                <div class="countdown-label">Time Remaining:</div>
+                <div class="countdown-timer" id="countdown-l2-${index}">Calculating...</div>
+            </div>
+            <div class="editable">
+                <div class="action-section">
+                    <div class="file-upload-section" id="file-upload-section-l2-${index}">
+                        <label class="file-upload-label">Attach Final Order Here:</label>
+                        <input type="file" class="file-input" id="file-l2-${index}" onchange="handleFileSelectL2(${index})">
+                        <div class="file-selected" id="file-selected-l2-${index}">✓ File selected</div>
+                    </div>
+
+                    <div class="radio-section">
+                        <label class="radio-label">Status:</label>
+                        <div class="radio-group">
+                            <div class="radio-option">
+                                <input type="radio" id="owners-informed-yes-l2-${index}" name="owners-informed-l2-${index}" value="yes">
+                                <label for="owners-informed-yes-l2-${index}">Owners Informed</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="hold-until-section" id="hold-until-section-l2-${index}">
+                        <label class="hold-until-label">Hold Until:</label>
+                        <input type="date" class="hold-until-input" id="hold-until-l2-${index}">
+                        <label class="hold-until-label">Hold Remark:</label>
+                        <input type="text" class="hold-until-input" id="hold-until-remark-l2-${index}">
+                    </div>
+
+                    <div class="button-group">
+                        <button class="submit-btn" onclick="submitOrderL2(${index}, 'Approve')">Approve</button>
+                        <button class="hold-btn" onclick="submitOrderL2(${index}, 'Hold')">Hold</button>
+                        <button class="cancel-btn" onclick="submitOrderL2(${index}, 'Cancel')">Cancel</button>
+                    </div>
+
+                    <div class="success-message" id="success-l2-${index}">Order submitted successfully!</div>
+                    <div class="error-message" id="error-l2-${index}">Error submitting order. Please try again.</div>
+                </div>
+            </div>
+        </div>
+    `).join('');
+
+    content.innerHTML = `<div class="orders-grid">${ordersHTML}</div>`; // Set inner HTML of the grid
+    document.getElementById('ordersGridL2').classList.remove('hidden'); // Show the orders grid
+}
+
+// Re-using calculateDeadline and formatDateTime from L1's script.js as they are common.
+// No need to duplicate them here if they are already in script.js and are generic enough.
+
+function startCountdownL2() {
+    if (countdownIntervalL2) { // Clear existing interval for L2
+        clearInterval(countdownIntervalL2);
+    }
+    updateCountdownsL2(); // Update immediately
+    countdownIntervalL2 = setInterval(updateCountdownsL2, 1000); // Update every second
+}
+
+function updateCountdownsL2() {
+    const now = new Date(); // Current time
+
+    ordersL2.forEach((order, index) => { // Iterate through L2 orders
+        const deadline = calculateDeadline(order.timestamp); // Calculate deadline using common function
+        const timeRemaining = deadline.getTime() - now.getTime(); // Calculate time remaining
+        const countdownElement = document.getElementById(`countdown-l2-${index}`); // Get countdown element
+
+        if (countdownElement) {
+            const formattedTime = formatCountdown(timeRemaining); // Format time using common function
+            countdownElement.textContent = formattedTime; // Set text content
+
+            countdownElement.className = 'countdown-timer'; // Reset classes
+
+            if (timeRemaining <= 0) {
+                countdownElement.classList.add('countdown-expired'); // Add expired class
+            } else if (timeRemaining <= 30 * 60 * 1000) { // 30 minutes
+                countdownElement.classList.add('countdown-urgent'); // Add urgent class
+            } else if (timeRemaining <= 60 * 60 * 1000) { // 1 hour
+                countdownElement.classList.add('countdown-warning'); // Add warning class
+            } else {
+                countdownElement.classList.add('countdown-normal'); // Add normal class
+            }
+        }
+    });
+}
+
+function handleFileSelectL2(orderIndex) {
+    const fileInput = document.getElementById(`file-l2-${orderIndex}`); // Get file input for L2
+    const fileSelectedDiv = document.getElementById(`file-selected-l2-${orderIndex}`); // Get file selected div for L2
+
+    if (fileInput.files.length > 0) {
+        const file = fileInput.files[0];
+        fileSelectedDiv.style.display = 'block'; // Show selected file message
+        fileSelectedDiv.textContent = `✓ ${file.name} selected (${(file.size / 1024).toFixed(1)} KB)`; // Display file info
+    } else {
+        fileSelectedDiv.style.display = 'none'; // Hide selected file message
+    }
+}
+
+function toggleHoldUntilFieldL2(orderIndex, actionType) {
+    const fileUploadSection = document.getElementById(`file-upload-section-l2-${orderIndex}`); // Get file upload section for L2
+    const holdUntilSection = document.getElementById(`hold-until-section-l2-${orderIndex}`); // Get hold until section for L2
+    const ownersInformedRadioYes = document.getElementById(`owners-informed-yes-l2-${orderIndex}`); // Get owners informed radio for L2
+
+    if (actionType === 'Hold') {
+        holdUntilSection.style.display = 'block'; // Show hold until field
+        fileUploadSection.style.display = 'none'; // Hide file upload for Hold
+        if (ownersInformedRadioYes) ownersInformedRadioYes.checked = false; // Uncheck Owners Informed
+    } else { // 'Approve' or 'Cancel'
+        holdUntilSection.style.display = 'none'; // Hide hold until field
+        fileUploadSection.style.display = 'block'; // Show file upload for Approve
+    }
+}
+
+async function submitOrderL2(orderIndex, actionType) {
+    const fileInput = document.getElementById(`file-l2-${orderIndex}`); // File input for L2
+    const ownersInformedRadio = document.querySelector(`input[name="owners-informed-l2-${orderIndex}"]:checked`); // Owners informed radio for L2
+    const approveBtn = document.querySelector(`#order-l2-${orderIndex} .submit-btn`); // Approve button for L2
+    const holdBtn = document.querySelector(`#order-l2-${orderIndex} .hold-btn`); // Hold button for L2
+    const cancelBtn = document.querySelector(`#order-l2-${orderIndex} .cancel-btn`); // Cancel button for L2
+    const holdUntilInput = document.getElementById(`hold-until-l2-${orderIndex}`); // Hold until input for L2
+    const holdUntilRemark = document.getElementById(`hold-until-remark-l2-${orderIndex}`); // Hold until remark for L2
+    const successMessage = document.getElementById(`success-l2-${orderIndex}`); // Success message for L2
+    const errorMessage = document.getElementById(`error-l2-${orderIndex}`); // Error message for L2
+
+    // Hide previous messages
+    successMessage.style.display = 'none';
+    errorMessage.style.display = 'none';
+
+    // Disable buttons during processing
+    approveBtn.disabled = true;
+    holdBtn.disabled = true;
+    cancelBtn.disabled = true;
+
+    // Set field visibility based on action
+    toggleHoldUntilFieldL2(orderIndex, actionType);
+
+    let submitData = {
+        action: actionType, // 'Approve', 'Hold', or 'Cancel'
+        orderIndex: orderIndex, // Order index
+        dealerName: ordersL2[orderIndex].dealerName, // Dealer name
+        timestamp: ordersL2[orderIndex].timestamp, // Timestamp
+        marketingPersonName: ordersL2[orderIndex].marketingPersonName, // Marketing person name
+        location: ordersL2[orderIndex].location, // Location
+        holdRemark: holdUntilRemark.value, // Hold remark
+        crmName: ordersL2[orderIndex].crmName, // CRM name
+        ownersInformed: ownersInformedRadio ? ownersInformedRadio.value : '' // Owners informed status
+    };
+
+    try {
+        if (actionType === 'Approve') {
+            approveBtn.textContent = 'Converting & Approving...'; // Update button text
+
+            if (!fileInput.files.length) {
+                alert('Please attach a file before approving.');
+                throw new Error('File is required for approval'); // File required
+            }
+            if (!ownersInformedRadio) {
+                alert('Please select the owners informed status for approval.');
+                throw new Error('Owner informed status required'); // Owner informed required
+            }
+
+            const file = fileInput.files[0]; // Get file
+            const fileBase64 = await fileToBase64(file); // Convert file to base64
+            submitData.file = { // Add file data to submitData
+                name: file.name,
+                type: file.type,
+                size: file.size,
+                base64: fileBase64
+            };
+
+        } else if (actionType === 'Hold') {
+            holdBtn.textContent = 'Holding...'; // Update button text
+
+            if (!holdUntilInput.value || !holdUntilRemark.value) {
+                alert('Please provide a "Hold Until" date and remark.');
+                throw new Error('Hold details missing'); // Hold details required
+            }
+            if (!ownersInformedRadio) {
+                alert('Please select the owners informed status for holding the order.');
+                throw new Error('Owner informed status required'); // Owner informed required
+            }
+
+            submitData.holdUntil = holdUntilInput.value; // Add hold until date
+
+        } else if (actionType === 'Cancel') {
+            cancelBtn.textContent = 'Cancelling...'; // Update button text
+            // You can add validation here if cancel action needs reason, confirmation, etc.
+        }
+
+        console.log('Submitting order data:', {
+            ...submitData,
+            file: submitData.file ? { ...submitData.file, base64: submitData.file.base64.substring(0, 50) + '...' } : undefined
+        });
+
+        await postDataL2(submitData); // Post data using L2's postData function
+
+        showSuccessNotification('Order submitted successfully!'); // Show success notification
+
+        // Reset form fields
+        fileInput.value = '';
+        document.getElementById(`file-selected-l2-${orderIndex}`).style.display = 'none';
+        if (ownersInformedRadio) ownersInformedRadio.checked = false;
+        holdUntilInput.value = '';
+        document.getElementById(`hold-until-section-l2-${orderIndex}`).style.display = 'none';
+        document.getElementById(`file-upload-section-l2-${orderIndex}`).style.display = 'block';
+
+    } catch (error) {
+        console.error('Error submitting order:', error); // Log error
+        errorMessage.textContent = `Error: ${error.message}`; // Set error message
+        errorMessage.style.display = 'block'; // Show error message
+        setTimeout(() => {
+            errorMessage.style.display = 'none';
+        }, 5000);
+    } finally {
+        approveBtn.disabled = false; // Enable buttons
+        holdBtn.disabled = false;
+        cancelBtn.disabled = false;
+        approveBtn.textContent = 'Approve'; // Reset button text
+        holdBtn.textContent = 'Hold';
+        cancelBtn.textContent = 'Cancel';
+    }
+}
+
+async function postDataL2(data) {
+    try {
+        await fetch(API_URL_L2, { // Use L2's API URL
+            method: 'POST',
+            mode: 'no-cors',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data) // Send data
+        });
+
+        console.log('Data submitted successfully (no-cors mode) for L2'); // Log success
+
+        setTimeout(() => {
+            fetchOrdersL2(); // Refresh L2 orders after a short delay
+        }, 1000);
+
+    } catch (error) {
+        console.error('Network error during submission for L2:', error); // Log network error
+        throw error;
+    }
+}
+
+function refreshDataL2() {
+    const refreshIcon = document.getElementById('refreshIconL2'); // Get refresh icon for L2
+    refreshIcon.classList.add('loading-spinner'); // Add loading spinner class
+    
+    fetchOrdersL2(); // Fetch orders for L2
+    
+    setTimeout(() => {
+        refreshIcon.classList.remove('loading-spinner'); // Remove loading spinner after delay
     }, 500);
 }
