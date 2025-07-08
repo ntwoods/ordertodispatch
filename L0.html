@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Sales Order Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script>
         tailwind.config = {
             theme: {
@@ -86,173 +85,59 @@
         .notification.show {
             transform: translateX(0);
         }
-        /* Styles for login and restriction screens */
-        #loginScreen, #restrictionScreen {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            background: linear-gradient(to bottom right, #4c51bf, #6b46c1); /* Adjusted background */
-            color: white;
-            text-align: center;
-            flex-direction: column;
-        }
-        #loginScreen h2, #restrictionScreen h2 {
-            font-size: 2.5rem;
-            margin-bottom: 1.5rem;
-            font-weight: bold;
-        }
-        #restrictionScreen p {
-            font-size: 1.2rem;
-            margin-top: 1rem;
-        }
     </style>
 </head>
 <body class="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-800 relative overflow-x-hidden">
+    <div class="absolute inset-0 overflow-hidden pointer-events-none">
+        <div class="absolute -top-40 -right-40 w-80 h-80 bg-purple-500 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-float"></div>
+        <div class="absolute -bottom-40 -left-40 w-80 h-80 bg-blue-500 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-float" style="animation-delay: 1s;"></div>
+        <div class="absolute top-40 left-40 w-60 h-60 bg-pink-500 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-float" style="animation-delay: 2s;"></div>
+    </div>
 
-    <div id="loginScreen" class="absolute inset-0 z-50"
-         data-client_id="360849757137-agopfs0m8rgmcj541ucpg22btep5olt3.apps.googleusercontent.com">
-        <h2>Please Sign In to Access the Dashboard</h2>
-        <div id="g_id_onload"
-             data-client_id="360849757137-agopfs0m8rgmcj541ucpg22btep5olt3.apps.googleusercontent.com"
-             data-context="signin"
-             data-ux_mode="popup"
-             data-callback="onSignIn"
-             data-auto_prompt="false">
-        </div>
-
-        <div class="g_id_signin"
-             data-type="standard"
-             data-shape="rectangular"
-             data-theme="dark"
-             data-text="signin_with"
-             data-size="large"
-             data-logo_alignment="left">
+    <div id="notification" class="notification">
+        <div class="bg-green-500 text-white px-6 py-4 rounded-lg shadow-lg flex items-center space-x-3">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+            <span id="notificationText">CRM assigned successfully!</span>
         </div>
     </div>
 
-    <div id="restrictionScreen" class="absolute inset-0 z-50 hidden">
-        <h2>Access Denied</h2>
-        <p>You do not have permission to view this page. Please sign in with an authorized account.</p>
-        <button onclick="signOut()" class="mt-4 px-6 py-3 bg-red-600 text-white rounded-lg shadow-md hover:bg-red-700 transition-all">Sign Out</button>
-    </div>
-
-    <div id="mainContent" class="hidden">
-        <div class="absolute inset-0 overflow-hidden pointer-events-none">
-            <div class="absolute -top-40 -right-40 w-80 h-80 bg-purple-500 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-float"></div>
-            <div class="absolute -bottom-40 -left-40 w-80 h-80 bg-blue-500 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-float" style="animation-delay: 1s;"></div>
-            <div class="absolute top-40 left-40 w-60 h-60 bg-pink-500 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-float" style="animation-delay: 2s;"></div>
-        </div>
-
-        <div id="notification" class="notification">
-            <div class="bg-green-500 text-white px-6 py-4 rounded-lg shadow-lg flex items-center space-x-3">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+    <div class="relative z-10 p-6">
+        <div class="text-center mb-12 animate-fade-in">
+            <h1 class="text-6xl font-black bg-gradient-to-r from-white via-blue-200 to-purple-200 bg-clip-text text-transparent mb-4 animate-pulse-slow">
+                Sales Orders
+            </h1>
+            <div class="inline-flex items-center px-8 py-3 bg-gradient-to-r from-orange-500 to-red-500 rounded-full text-white font-bold text-xl shadow-lg animate-bounce-slow">
+                <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                 </svg>
-                <span id="notificationText">CRM assigned successfully!</span>
+                Pending Orders
+            </div>
+            <p class="text-blue-200 mt-4 text-lg font-medium">Real-time order tracking with smart deadline management</p>
+        </div>
+
+        <div id="loadingSpinner" class="flex justify-center items-center h-64">
+            <div class="relative">
+                <div class="w-16 h-16 border-4 border-blue-200 border-t-blue-500 rounded-full animate-spin"></div>
+                <div class="absolute inset-0 w-16 h-16 border-4 border-transparent border-t-purple-500 rounded-full animate-spin" style="animation-direction: reverse; animation-duration: 0.8s;"></div>
             </div>
         </div>
 
-        <div class="relative z-10 p-6">
-            <div class="text-center mb-12 animate-fade-in">
-                <h1 class="text-6xl font-black bg-gradient-to-r from-white via-blue-200 to-purple-200 bg-clip-text text-transparent mb-4 animate-pulse-slow">
-                    Sales Orders
-                </h1>
-                <div class="inline-flex items-center px-8 py-3 bg-gradient-to-r from-orange-500 to-red-500 rounded-full text-white font-bold text-xl shadow-lg animate-bounce-slow">
-                    <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
-                    Pending Orders
-                </div>
-                <p class="text-blue-200 mt-4 text-lg font-medium">Real-time order tracking with smart deadline management</p>
-            </div>
+        <div id="ordersContainer" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 opacity-0 transition-opacity duration-500"></div>
 
-            <div id="loadingSpinner" class="flex justify-center items-center h-64">
-                <div class="relative">
-                    <div class="w-16 h-16 border-4 border-blue-200 border-t-blue-500 rounded-full animate-spin"></div>
-                    <div class="absolute inset-0 w-16 h-16 border-4 border-transparent border-t-purple-500 rounded-full animate-spin" style="animation-direction: reverse; animation-duration: 0.8s;"></div>
-                </div>
+        <div id="emptyState" class="text-center py-20 hidden">
+            <div class="animate-float">
+                <svg class="w-24 h-24 mx-auto text-blue-300 mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2M4 13h2m0 0V9a2 2 0 012-2h2m0 0V6a2 2 0 012-2h2a2 2 0 012 2v1m0 0h2"></path>
+                </svg>
             </div>
-
-            <div id="ordersContainer" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 opacity-0 transition-opacity duration-500"></div>
-
-            <div id="emptyState" class="text-center py-20 hidden">
-                <div class="animate-float">
-                    <svg class="w-24 h-24 mx-auto text-blue-300 mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2M4 13h2m0 0V9a2 2 0 012-2h2m0 0V6a2 2 0 012-2h2a2 2 0 012 2v1m0 0h2"></path>
-                    </svg>
-                </div>
-                <h3 class="text-2xl font-bold text-white mb-2">No Pending Orders</h3>
-                <p class="text-blue-200">All orders have been processed successfully!</p>
-            </div>
+            <h3 class="text-2xl font-bold text-white mb-2">No Pending Orders</h3>
+            <p class="text-blue-200">All orders have been processed successfully!</p>
         </div>
     </div>
 
     <script>
-        const allowedEmails = ["deo01@ntwoods.com", "mis01@ntwoods.com"];
-        const loginScreen = document.getElementById('loginScreen');
-        const restrictionScreen = document.getElementById('restrictionScreen');
-        const mainContent = document.getElementById('mainContent');
-
-        // Helper function to decode JWT
-        function parseJwt(token) {
-            try {
-                const base64Url = token.split('.')[1];
-                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-                const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
-                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-                }).join(''));
-                return JSON.parse(jsonPayload);
-            } catch (e) {
-                console.error("Error parsing JWT:", e);
-                return null;
-            }
-        }
-
-        // Modified onSignIn for Google Identity Services
-        function onSignIn(response) {
-            if (response.credential) {
-                const profile = parseJwt(response.credential);
-                const userEmail = profile.email;
-
-                if (allowedEmails.includes(userEmail)) {
-                    loginScreen.classList.add('hidden');
-                    restrictionScreen.classList.add('hidden');
-                    mainContent.classList.remove('hidden');
-                    loadSalesOrders(); // Load the sales order data after successful login
-                } else {
-                    loginScreen.classList.add('hidden');
-                    mainContent.classList.add('hidden');
-                    restrictionScreen.classList.remove('hidden');
-                    // No direct signOut for GIS with automatic sign-out, simply deny access
-                    console.log('Unauthorized user attempted to sign in.');
-                }
-            } else {
-                console.error("No credential received from Google Sign-In.");
-                // Ensure login screen is visible if no credential
-                loginScreen.classList.remove('hidden');
-                mainContent.classList.add('hidden');
-                restrictionScreen.classList.add('hidden');
-            }
-        }
-
-        function signOut() {
-            // For Google Identity Services, signing out means clearing the session
-            // and often just redirecting to a page where re-authentication is required.
-            // A simple way to "sign out" from the client side is to remove the active session
-            // or redirect to a specific logout endpoint if your backend supports it.
-            // For a purely client-side solution:
-            google.accounts.id.disableAutoSelect(); // Prevents automatic re-login
-            loginScreen.classList.remove('hidden');
-            restrictionScreen.classList.add('hidden');
-            mainContent.classList.add('hidden');
-            console.log('User signed out.');
-            // You might want to refresh the page or redirect after signOut
-            // window.location.reload();
-        }
-
-        // Removed the window.onload function that was manipulating display
-
         const apiUrl = "https://script.google.com/macros/s/AKfycbwWKHlGOSpQ5Jcof9bqCDQp-Tnl8J4lCZZT7DnGIEg75DjXYjVrvRbbjefyjdKDDPpi/exec";
 
         const isSunday = date => date.getDay() === 0;
@@ -513,7 +398,7 @@
                                 <option value="Km Kalpana" class="text-gray-800">Km Kalpana</option>
                                 <option value="Priyam Dixit" class="text-gray-800">Priyam Dixit</option>
                                 <option value="Akansha Jain" class="text-gray-800">Akansha Jain</option>
-                                <option value="Mahima Agarwal" class="text-gray-800">Mahima Agarwal</option>
+                                <option value="Mahima Agarwal" class="text-gray-800">Mahima Agarwal</option>                                
                             </select>
                             <select class="owner-select flex-1 bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                                 <option value="" class="text-gray-800">Concerned Owner...</option>
@@ -522,9 +407,8 @@
                                 <option value="Parakh Sir" class="text-gray-800">Parakh Sir</option>
                             </select>
                             <button onclick="assignCRM('${order.timestamp}')" class="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-300 font-semibold shadow-lg hover:shadow-xl transform hover:scale-105">
-                                <svg class="w-4 h-4 mr-1 inline" fill="none" viewBox="0 0 24 24">
-                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                <svg class="w-4 h-4 mr-1 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                                 </svg>
                                 Assign
                             </button>
@@ -545,37 +429,35 @@
             return card;
         }
 
-        // Function to load data and initialize
-        function loadSalesOrders() {
-            fetch(apiUrl)
-                .then(response => response.json())
-                .then(data => {
-                    const container = document.getElementById("ordersContainer");
-                    const loadingSpinner = document.getElementById("loadingSpinner");
-                    const emptyState = document.getElementById("emptyState");
+        // Load data and initialize
+        fetch(apiUrl)
+            .then(response => response.json())
+            .then(data => {
+                const container = document.getElementById("ordersContainer");
+                const loadingSpinner = document.getElementById("loadingSpinner");
+                const emptyState = document.getElementById("emptyState");
 
-                    loadingSpinner.style.display = "none";
+                loadingSpinner.style.display = "none";
 
-                    if (data.data && data.data.length > 0) {
-                        data.data.forEach((order, index) => {
-                            const card = createCard(order, index);
-                            container.appendChild(card);
-                        });
+                if (data.data && data.data.length > 0) {
+                    data.data.forEach((order, index) => {
+                        const card = createCard(order, index);
+                        container.appendChild(card);
+                    });
 
-                        container.style.opacity = "1";
-                        updateTimers();
-                        setInterval(updateTimers, 1000);
-                    } else {
-                        emptyState.classList.remove("hidden");
-                        container.style.opacity = "1";
-                    }
-                })
-                .catch(err => {
-                    console.error("Failed to load data:", err);
-                    document.getElementById("loadingSpinner").style.display = "none";
-                    showNotification("Failed to load orders. Please refresh the page.", "error");
-                });
-        }
+                    container.style.opacity = "1";
+                    updateTimers();
+                    setInterval(updateTimers, 1000);
+                } else {
+                    emptyState.classList.remove("hidden");
+                    container.style.opacity = "1";
+                }
+            })
+            .catch(err => {
+                console.error("Failed to load data:", err);
+                document.getElementById("loadingSpinner").style.display = "none";
+                showNotification("Failed to load orders. Please refresh the page.", "error");
+            });
     </script>
 </body>
 </html>
