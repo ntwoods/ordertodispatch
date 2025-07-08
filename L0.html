@@ -251,15 +251,7 @@
             // window.location.reload();
         }
 
-        // Initialize display state on page load
-        // This ensures that the login screen is shown initially.
-        // The Google Identity Services library will automatically render the button
-        // and handle auto-login if a session exists.
-        window.onload = function() {
-            loginScreen.classList.remove('hidden');
-            restrictionScreen.classList.add('hidden');
-            mainContent.classList.add('hidden');
-        };
+        // Removed the window.onload function that was manipulating display
 
         const apiUrl = "https://script.google.com/macros/s/AKfycbwWKHlGOSpQ5Jcof9bqCDQp-Tnl8J4lCZZT7DnGIEg75DjXYjVrvRbbjefyjdKDDPpi/exec";
 
