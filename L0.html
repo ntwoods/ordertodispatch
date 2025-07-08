@@ -5,8 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Sales Order Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://apis.google.com/js/platform.js" async defer></script>
-    <meta name="google-signin-client_id" content="360849757137-agopfs0m8rgmcj541ucpg22btep5olt3.apps.googleusercontent.com">
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script>
         tailwind.config = {
             theme: {
@@ -107,16 +106,29 @@
             font-size: 1.2rem;
             margin-top: 1rem;
         }
-        .g_id_signin {
-            margin-top: 2rem;
-        }
     </style>
 </head>
 <body class="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-800 relative overflow-x-hidden">
 
-    <div id="loginScreen" class="absolute inset-0 z-50">
+    <div id="loginScreen" class="absolute inset-0 z-50"
+         data-client_id="YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com">
         <h2>Please Sign In to Access the Dashboard</h2>
-        <div class="g-signin2" data-onsuccess="onSignIn" data-theme="dark"></div>
+        <div id="g_id_onload"
+             data-client_id="YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com"
+             data-context="signin"
+             data-ux_mode="popup"
+             data-callback="onSignIn"
+             data-auto_prompt="false">
+        </div>
+
+        <div class="g_id_signin"
+             data-type="standard"
+             data-shape="rectangular"
+             data-theme="dark"
+             data-text="signin_with"
+             data-size="large"
+             data-logo_alignment="left">
+        </div>
     </div>
 
     <div id="restrictionScreen" class="absolute inset-0 z-50 hidden">
@@ -182,53 +194,72 @@
         const restrictionScreen = document.getElementById('restrictionScreen');
         const mainContent = document.getElementById('mainContent');
 
-        function onSignIn(googleUser) {
-            const profile = googleUser.getBasicProfile();
-            const userEmail = profile.getEmail();
+        // Helper function to decode JWT
+        function parseJwt(token) {
+            try {
+                const base64Url = token.split('.')[1];
+                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                }).join(''));
+                return JSON.parse(jsonPayload);
+            } catch (e) {
+                console.error("Error parsing JWT:", e);
+                return null;
+            }
+        }
 
-            if (allowedEmails.includes(userEmail)) {
-                loginScreen.classList.add('hidden');
-                restrictionScreen.classList.add('hidden');
-                mainContent.classList.remove('hidden');
-                loadSalesOrders(); // Load the sales order data after successful login
+        // Modified onSignIn for Google Identity Services
+        function onSignIn(response) {
+            if (response.credential) {
+                const profile = parseJwt(response.credential);
+                const userEmail = profile.email;
+
+                if (allowedEmails.includes(userEmail)) {
+                    loginScreen.classList.add('hidden');
+                    restrictionScreen.classList.add('hidden');
+                    mainContent.classList.remove('hidden');
+                    loadSalesOrders(); // Load the sales order data after successful login
+                } else {
+                    loginScreen.classList.add('hidden');
+                    mainContent.classList.add('hidden');
+                    restrictionScreen.classList.remove('hidden');
+                    // No direct signOut for GIS with automatic sign-out, simply deny access
+                    console.log('Unauthorized user attempted to sign in.');
+                }
             } else {
-                loginScreen.classList.add('hidden');
+                console.error("No credential received from Google Sign-In.");
+                // Ensure login screen is visible if no credential
+                loginScreen.classList.remove('hidden');
                 mainContent.classList.add('hidden');
-                restrictionScreen.classList.remove('hidden');
-                signOut(); // Automatically sign out unauthorized users
+                restrictionScreen.classList.add('hidden');
             }
         }
 
         function signOut() {
-            const auth2 = gapi.auth2.getAuthInstance();
-            auth2.signOut().then(function () {
-                console.log('User signed out.');
-                loginScreen.classList.remove('hidden');
-                restrictionScreen.classList.add('hidden');
-                mainContent.classList.add('hidden');
-            });
+            // For Google Identity Services, signing out means clearing the session
+            // and often just redirecting to a page where re-authentication is required.
+            // A simple way to "sign out" from the client side is to remove the active session
+            // or redirect to a specific logout endpoint if your backend supports it.
+            // For a purely client-side solution:
+            google.accounts.id.disableAutoSelect(); // Prevents automatic re-login
+            loginScreen.classList.remove('hidden');
+            restrictionScreen.classList.add('hidden');
+            mainContent.classList.add('hidden');
+            console.log('User signed out.');
+            // You might want to refresh the page or redirect after signOut
+            // window.location.reload();
         }
 
-        // Initialize Google Sign-In when the page loads
-        window.onload = function () {
-            gapi.load('auth2', function() {
-                gapi.auth2.init({
-                    client_id: '360849757137-agopfs0m8rgmcj541ucpg22btep5olt3.apps.googleusercontent.com'
-                }).then(function() {
-                    // Check if the user is already signed in
-                    const auth2 = gapi.auth2.getAuthInstance();
-                    if (auth2.isSignedIn.get()) {
-                        onSignIn(auth2.currentUser.get());
-                    } else {
-                        // If not signed in, show the login screen
-                        loginScreen.classList.remove('hidden');
-                        mainContent.classList.add('hidden');
-                        restrictionScreen.classList.add('hidden');
-                    }
-                });
-            });
+        // Initialize display state on page load
+        // This ensures that the login screen is shown initially.
+        // The Google Identity Services library will automatically render the button
+        // and handle auto-login if a session exists.
+        window.onload = function() {
+            loginScreen.classList.remove('hidden');
+            restrictionScreen.classList.add('hidden');
+            mainContent.classList.add('hidden');
         };
-
 
         const apiUrl = "https://script.google.com/macros/s/AKfycbwWKHlGOSpQ5Jcof9bqCDQp-Tnl8J4lCZZT7DnGIEg75DjXYjVrvRbbjefyjdKDDPpi/exec";
 
@@ -490,7 +521,7 @@
                                 <option value="Km Kalpana" class="text-gray-800">Km Kalpana</option>
                                 <option value="Priyam Dixit" class="text-gray-800">Priyam Dixit</option>
                                 <option value="Akansha Jain" class="text-gray-800">Akansha Jain</option>
-                                <option value="Mahima Agarwal" class="text-gray-800">Mahima Agarwal</option>                                
+                                <option value="Mahima Agarwal" class="text-gray-800">Mahima Agarwal</option>
                             </select>
                             <select class="owner-select flex-1 bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                                 <option value="" class="text-gray-800">Concerned Owner...</option>
@@ -499,8 +530,9 @@
                                 <option value="Parakh Sir" class="text-gray-800">Parakh Sir</option>
                             </select>
                             <button onclick="assignCRM('${order.timestamp}')" class="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-300 font-semibold shadow-lg hover:shadow-xl transform hover:scale-105">
-                                <svg class="w-4 h-4 mr-1 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                <svg class="w-4 h-4 mr-1 inline" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                 </svg>
                                 Assign
                             </button>
