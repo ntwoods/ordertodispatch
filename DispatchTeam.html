@@ -381,22 +381,19 @@ async function markDone(orderIndex) {
             }
             noOrdersMessage.style.display = 'none';
 
-orders.forEach((order, index) => {
-                const orderCard = document.createElement('div');
-                
-                // --- START ADDITION FOR OVERDUE HIGHLIGHT ---
+		orders.forEach((order, index) => {
                 const today = new Date();
                 today.setHours(0, 0, 0, 0); // Normalize today's date to start of day
 
                 let isOverdue = false;
                 if (order.dispatchDate) {
                     try {
-                        // Parse the dispatchDate string (e.g., "2024/07/10")
                         const parts = order.dispatchDate.split('/');
-                        // Note: Month is 0-indexed in JavaScript Date (0 for January, 11 for December)
-                        const dispatchDateObj = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]) + 1); // +1 for day to account for timezone issues
+                        // Ensure proper parsing: year, month-1 (0-indexed), day
+                        const dispatchDateObj = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
                         dispatchDateObj.setHours(0, 0, 0, 0); // Normalize dispatch date to start of day
 
+                        // Compare the normalized dates
                         if (dispatchDateObj < today) {
                             isOverdue = true;
                         }
@@ -410,8 +407,6 @@ orders.forEach((order, index) => {
                     cardClasses += ' overdue-card'; // Add the new class if overdue
                 }
                 orderCard.className = cardClasses;
-                // --- END ADDITION FOR OVERDUE HIGHLIGHT ---
-
                 orderCard.setAttribute('data-order-index', index);
                 orderCard.innerHTML = `
                     <div class="mb-4">
