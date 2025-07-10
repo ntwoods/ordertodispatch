@@ -173,7 +173,7 @@
 
                 const year = parseInt(parts[0], 10);
                 const month = parseInt(parts[1], 10);
-                const day = parseInt(parts[2], 10);
+                const day = parseInt(parts[2], 10) + 1;
 
                 if (isNaN(year) || isNaN(month) || isNaN(day)) return dateString;
 
