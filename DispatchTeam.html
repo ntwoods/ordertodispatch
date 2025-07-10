@@ -56,6 +56,10 @@
         .order-card:hover {
             transform: translateY(-2px);
         }
+	.overdue-card {
+            border: 2px solid #ef4444; /* Red border */
+            box-shadow: 0 4px 10px rgba(239, 68, 68, 0.2); /* Red shadow */
+        }	    
     </style>
 </head>
 <body class="min-h-screen flex flex-col bg-gray-50">
@@ -377,11 +381,38 @@ async function markDone(orderIndex) {
             }
             noOrdersMessage.style.display = 'none';
 
-            orders.forEach((order, index) => {
+orders.forEach((order, index) => {
                 const orderCard = document.createElement('div');
-                orderCard.className = 'order-card bg-white rounded-lg shadow-md p-6 flex flex-col justify-between hover:shadow-xl';
-                orderCard.setAttribute('data-order-index', index);
+                
+                // --- START ADDITION FOR OVERDUE HIGHLIGHT ---
+                const today = new Date();
+                today.setHours(0, 0, 0, 0); // Normalize today's date to start of day
 
+                let isOverdue = false;
+                if (order.dispatchDate) {
+                    try {
+                        // Parse the dispatchDate string (e.g., "2024/07/10")
+                        const parts = order.dispatchDate.split('/');
+                        // Note: Month is 0-indexed in JavaScript Date (0 for January, 11 for December)
+                        const dispatchDateObj = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]) + 1); // +1 for day to account for timezone issues
+                        dispatchDateObj.setHours(0, 0, 0, 0); // Normalize dispatch date to start of day
+
+                        if (dispatchDateObj < today) {
+                            isOverdue = true;
+                        }
+                    } catch (e) {
+                        console.error("Error parsing dispatch date for overdue check:", order.dispatchDate, e);
+                    }
+                }
+
+                let cardClasses = 'order-card bg-white rounded-lg shadow-md p-6 flex flex-col justify-between hover:shadow-xl';
+                if (isOverdue) {
+                    cardClasses += ' overdue-card'; // Add the new class if overdue
+                }
+                orderCard.className = cardClasses;
+                // --- END ADDITION FOR OVERDUE HIGHLIGHT ---
+
+                orderCard.setAttribute('data-order-index', index);
                 orderCard.innerHTML = `
                     <div class="mb-4">
                         <h3 class="text-xl font-semibold text-blue-700 mb-2">${order.dealerName || 'N/A'}</h3>
