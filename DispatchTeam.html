@@ -372,7 +372,30 @@ async function markDone(orderIndex) {
             }
         }
 
-        // Function to render order cards
+
+	function isPastDate(dateStr) {
+	    try {
+	        const today = new Date();
+	        today.setHours(0, 0, 0, 0); // Remove time portion
+	
+	        const standardized = dateStr.replace(/\//g, '-');
+	        const parts = standardized.split('-');
+	        if (parts.length !== 3) return false;
+	
+	        const year = parseInt(parts[0], 10);
+	        const month = parseInt(parts[1], 10) - 1;
+	        const day = parseInt(parts[2], 10);
+	
+	        const dispatchDate = new Date(year, month, day);
+	        return dispatchDate < today;
+	    } catch (e) {
+	        console.error("Error checking past date:", dateStr, e);
+	        return false;
+	    }
+	}
+	    
+	    
+	    // Function to render order cards
         function renderOrders(orders) {
             ordersGrid.innerHTML = '';
             if (orders.length === 0) {
@@ -405,11 +428,9 @@ orders.forEach((order, index) => {
                     }
                 }
 
-                let cardClasses = 'order-card bg-white rounded-lg shadow-md p-6 flex flex-col justify-between hover:shadow-xl';
-                if (isOverdue) {
-                    cardClasses += ' overdue-card'; // Add the new class if overdue
-                }
-                orderCard.className = cardClasses;
+		const isLate = isPastDate(order.dispatchDate);
+		orderCard.className = `order-card rounded-lg shadow-md p-6 flex flex-col justify-between hover:shadow-xl ${isLate ? 'bg-red-100' : 'bg-white'}`;
+
                 // --- END ADDITION FOR OVERDUE HIGHLIGHT ---
 
                 orderCard.setAttribute('data-order-index', index);
