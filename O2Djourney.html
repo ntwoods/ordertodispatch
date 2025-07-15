@@ -103,6 +103,37 @@
         const tableBody = document.getElementById('tableBody');
 
         /**
+         * Formats an ISO date string to 'dd-mmm-yy' format.
+         * @param {string} isoDateString - The date string in ISO 8601 format (e.g., "2025-06-03T12:02:53.000Z").
+         * @returns {string} The formatted date string (e.g., "03-Jun-25") or an empty string if invalid.
+         */
+        function formatGoodsDeliveredDate(isoDateString) {
+            if (!isoDateString) {
+                return '';
+            }
+            try {
+                const date = new Date(isoDateString);
+
+                // Check if the date is valid
+                if (isNaN(date.getTime())) {
+                    console.warn('Invalid date string provided:', isoDateString);
+                    return ''; // Return empty string for invalid dates
+                }
+
+                const day = String(date.getDate()).padStart(2, '0');
+                const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                                    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+                const month = monthNames[date.getMonth()];
+                const year = String(date.getFullYear()).slice(-2); // Get last two digits of the year
+
+                return `${day}-${month}-${year}`;
+            } catch (e) {
+                console.error('Error formatting date:', e);
+                return ''; // Return empty string on error
+            }
+        }
+
+        /**
          * Fetches data from the API and populates the table.
          */
         async function fetchData() {
@@ -130,8 +161,8 @@
                         // Determine content for the Status column based on new logic
                         let statusContent = '';
                         if (item.goodsDelivered) {
-                            // If goodsDelivered has a value, display it
-                            statusContent = item.goodsDelivered;
+                            // If goodsDelivered has a value, format and display it
+                            statusContent = formatGoodsDeliveredDate(item.goodsDelivered);
                         } else if (item.level) {
                             // If goodsDelivered is empty, but level has a value, display the Status button
                             // Placeholder URL: In a real scenario, this URL should come from the API response
