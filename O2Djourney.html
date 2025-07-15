@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dealer Data Dashboard</title>
+    <!-- Tailwind CSS CDN for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles to ensure Inter font and responsive table behavior */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6; /* Light gray background */
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb; /* Light gray border */
+        }
+        th {
+            background-color: #e0e7ff; /* Light blue header */
+            color: #1f2937; /* Dark text for header */
+            font-weight: 600;
+        }
+        tr:nth-child(even) {
+            background-color: #f9fafb; /* Slightly darker for even rows */
+        }
+        tr:hover {
+            background-color: #eef2ff; /* Hover effect */
+        }
+        /* Responsive table behavior for smaller screens */
+        @media (max-width: 768px) {
+            table, thead, tbody, th, td, tr {
+                display: block;
+            }
+            thead tr {
+                position: absolute;
+                top: -9999px;
+                left: -9999px;
+            }
+            tr {
+                border: 1px solid #e5e7eb;
+                margin-bottom: 10px;
+                border-radius: 8px; /* Rounded corners for rows on mobile */
+            }
+            td {
+                border: none;
+                position: relative;
+                padding-left: 50%;
+                text-align: right;
+            }
+            td:before {
+                position: absolute;
+                top: 0;
+                left: 6px;
+                width: 45%;
+                padding-right: 10px;
+                white-space: nowrap;
+                text-align: left;
+                font-weight: 600;
+                content: attr(data-label); /* Use data-label for column names */
+            }
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8 flex items-center justify-center min-h-screen">
+    <div class="container mx-auto bg-white shadow-lg rounded-lg p-6 md:p-8 max-w-6xl w-full">
+        <h1 class="text-3xl font-bold text-gray-800 mb-6 text-center">Dealer Information Dashboard</h1>
+
+        <div id="loading" class="text-center text-blue-600 text-lg mb-4 hidden">Loading data...</div>
+        <div id="error" class="text-center text-red-600 text-lg mb-4 hidden"></div>
+
+        <div class="overflow-x-auto rounded-lg shadow-md">
+            <table id="dataTable" class="min-w-full bg-white rounded-lg">
+                <thead>
+                    <tr>
+                        <th class="py-3 px-4 text-xs sm:text-sm">Dealer Name</th>
+                        <th class="py-3 px-4 text-xs sm:text-sm">Marketing Person</th>
+                        <th class="py-3 px-4 text-xs sm:text-sm">Location</th>
+                        <th class="py-3 px-4 text-xs sm:text-sm">CRM</th>
+                        <th class="py-3 px-4 text-xs sm:text-sm">View Final Order</th>
+                        <th class="py-3 px-4 text-xs sm:text-sm">Status</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <!-- Data will be inserted here by JavaScript -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // API URL provided by the user
+        const API_URL = 'https://script.google.com/macros/s/AKfycbxsuZ7LEZkhC7qzxXvUDFxa76K5OXY2sPJ5yjYhI5X63dzO7WeUerQXhT_wQAXzbk1xEQ/exec';
+
+        // Get references to HTML elements
+        const loadingElement = document.getElementById('loading');
+        const errorElement = document.getElementById('error');
+        const tableBody = document.getElementById('tableBody');
+
+        /**
+         * Fetches data from the API and populates the table.
+         */
+        async function fetchData() {
+            loadingElement.classList.remove('hidden'); // Show loading indicator
+            errorElement.classList.add('hidden');     // Hide any previous error
+
+            try {
+                const response = await fetch(API_URL);
+
+                // Check if the response is OK (status code 200-299)
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+
+                // Clear existing table rows
+                tableBody.innerHTML = '';
+
+                // Check if data array exists and has content
+                if (result.data && Array.isArray(result.data) && result.data.length > 0) {
+                    result.data.forEach(item => {
+                        const row = document.createElement('tr');
+
+                        // Create table cells for each data point
+                        // Using data-label for responsive table on mobile
+                        row.innerHTML = `
+                            <td data-label="Dealer Name" class="py-2 px-4 text-sm sm:text-base">${item.dealerName || ''}</td>
+                            <td data-label="Marketing Person" class="py-2 px-4 text-sm sm:text-base">${item.marketingPerson || ''}</td>
+                            <td data-label="Location" class="py-2 px-4 text-sm sm:text-base">${item.location || ''}</td>
+                            <td data-label="CRM" class="py-2 px-4 text-sm sm:text-base">${item.crmName || ''}</td>
+                            <td data-label="View Final Order" class="py-2 px-4 text-sm sm:text-base">
+                                ${item.finalOrder === 'Yes' ?
+                                    // Placeholder URL: In a real scenario, this URL should come from the API response
+                                    // e.g., item.finalOrderUrl or be constructed based on an ID.
+                                    `<button onclick="window.open('https://example.com/orders/${item.dealerName || 'unknown-dealer'}', '_blank')"
+                                             class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
+                                        View Order
+                                    </button>`
+                                    : ''
+                                }
+                            </td>
+                            <td data-label="Status" class="py-2 px-4 text-sm sm:text-base">
+                                ${item.level ?
+                                    // Placeholder URL: In a real scenario, this URL should come from the API response
+                                    // e.g., item.statusUrl or be constructed based on the level.
+                                    `<button onclick="window.open('https://example.com/status/${item.level}', '_blank')"
+                                             class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50">
+                                        Status
+                                    </button>`
+                                    : ''
+                                }
+                            </td>
+                        `;
+                        tableBody.appendChild(row);
+                    });
+                } else {
+                    // Display a message if no data is found
+                    const noDataRow = document.createElement('tr');
+                    noDataRow.innerHTML = `<td colspan="6" class="text-center py-4 text-gray-500">No data available.</td>`;
+                    tableBody.appendChild(noDataRow);
+                }
+
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                errorElement.textContent = `Failed to load data: ${error.message}. Please try again later.`;
+                errorElement.classList.remove('hidden'); // Show error message
+            } finally {
+                loadingElement.classList.add('hidden'); // Hide loading indicator
+            }
+        }
+
+        // Fetch data when the page loads
+        window.onload = fetchData;
+    </script>
+</body>
+</html>
