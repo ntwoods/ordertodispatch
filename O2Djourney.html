@@ -127,6 +127,24 @@
                     result.data.forEach(item => {
                         const row = document.createElement('tr');
 
+                        // Determine content for the Status column based on new logic
+                        let statusContent = '';
+                        if (item.goodsDelivered) {
+                            // If goodsDelivered has a value, display it
+                            statusContent = item.goodsDelivered;
+                        } else if (item.level) {
+                            // If goodsDelivered is empty, but level has a value, display the Status button
+                            // Placeholder URL: In a real scenario, this URL should come from the API response
+                            // e.g., item.statusUrl or be constructed based on the level.
+                            statusContent = `
+                                <button onclick="window.open('https://example.com/status/${item.level}', '_blank')"
+                                         class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50">
+                                    Status
+                                </button>
+                            `;
+                        }
+                        // If both goodsDelivered and level are empty, statusContent remains blank
+
                         // Create table cells for each data point
                         // Using data-label for responsive table on mobile
                         row.innerHTML = `
@@ -146,15 +164,7 @@
                                 }
                             </td>
                             <td data-label="Status" class="py-2 px-4 text-sm sm:text-base">
-                                ${item.level ?
-                                    // Placeholder URL: In a real scenario, this URL should come from the API response
-                                    // e.g., item.statusUrl or be constructed based on the level.
-                                    `<button onclick="window.open('https://example.com/status/${item.level}', '_blank')"
-                                             class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50">
-                                        Status
-                                    </button>`
-                                    : ''
-                                }
+                                ${statusContent}
                             </td>
                         `;
                         tableBody.appendChild(row);
