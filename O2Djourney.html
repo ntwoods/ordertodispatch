@@ -82,7 +82,6 @@
                         <th class="py-3 px-4 text-xs sm:text-sm">Marketing Person</th>
                         <th class="py-3 px-4 text-xs sm:text-sm">Location</th>
                         <th class="py-3 px-4 text-xs sm:text-sm">CRM</th>
-                        /* <th class="py-3 px-4 text-xs sm:text-sm">View Final Order</th> */                        
                         <th class="py-3 px-4 text-xs sm:text-sm">Status</th>
                     </tr>
                 </thead>
@@ -183,17 +182,6 @@
                             <td data-label="Marketing Person" class="py-2 px-4 text-sm sm:text-base">${item.marketingPerson || ''}</td>
                             <td data-label="Location" class="py-2 px-4 text-sm sm:text-base">${item.location || ''}</td>
                             <td data-label="CRM" class="py-2 px-4 text-sm sm:text-base">${item.crmName || ''}</td>
-                            <td data-label="View Final Order" class="py-2 px-4 text-sm sm:text-base">
-                                ${item.finalOrder === 'Yes' ?
-                                    // Placeholder URL: In a real scenario, this URL should come from the API response
-                                    // e.g., item.finalOrderUrl or be constructed based on an ID.
-                                    `<button onclick="window.open('https://example.com/orders/${item.dealerName || 'unknown-dealer'}', '_blank')"
-                                             class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
-                                        View Order
-                                    </button>`
-                                    : ''
-                                }
-                            </td>
                             <td data-label="Status" class="py-2 px-4 text-sm sm:text-base">
                                 ${statusContent}
                             </td>
