@@ -329,52 +329,52 @@
                 return;
             }
 
-            orders.forEach(order => {
-                const orderCard = document.createElement('div');
-                orderCard.classList.add('order-card');
+orders.forEach((order, index) => { // Added 'index' here
+    const orderCard = document.createElement('div');
+    orderCard.classList.add('order-card');
 
-                // Extract relevant data
-                const dealerName = order.dealerName || 'N/A';
-                const marketingPersonName = order.marketingPersonName || 'N/A';
-                const crmName = order.crmName || 'N/A';
-                const fileUploadLink = order.fileUploadLink || '#';
-                const markedHoldOn = formatDate(order.markedHoldOn);
-                const holdUntil = order.holdUntil; // Keep original for countdown
-                const formattedHoldUntil = formatDate(holdUntil);
+    // Extract relevant data
+    const dealerName = order.dealerName || 'N/A';
+    const marketingPersonName = order.marketingPersonName || 'N/A';
+    const crmName = order.crmName || 'N/A';
+    // fileUploadLink is used directly in the onclick attribute, no need to define here if not used elsewhere
+    const markedHoldOn = formatDate(order.markedHoldOn);
+    const holdUntil = order.holdUntil; // Keep original for countdown
+    const formattedHoldUntil = formatDate(holdUntil);
 
 
-                orderCard.innerHTML = `
-                    <div class="order-details">
-                        <p><strong>Dealer Name:</strong> ${dealerName}</p>
-                        <p><strong>Marketing Person:</strong> ${marketingPersonName}</p>
-                        <p><strong>CRM Name:</strong> ${crmName}</p>
-                        <button onclick="openMultipleDocuments('${order.fileUploadLink.replace(/'/g, "\\'")}', ${index})">View File</button>
-                        <p><strong>Hold Remark:</strong> ${order.holdRemark}</p>                        
-                    </div>
-                    <div class="date-info">
-                        <p><strong>Marked Hold On:</strong> ${markedHoldOn}</p>
-                        <p><strong>Hold Until:</strong> ${formattedHoldUntil}</p>
-                    </div>
-                    <div class="countdown-timer" id="countdown-${order.timestamp}">
-                        Calculating...
-                    </div>
-                    <div class="editable">		
-                    <div class="card-actions">
-                        <button class="approve-btn" data-timestamp="${order.timestamp}">Approve</button>
-                    </div>
-                    </div>
-                `;
+    orderCard.innerHTML = `
+        <div class="order-details">
+            <p><strong>Dealer Name:</strong> ${dealerName}</p>
+            <p><strong>Marketing Person:</strong> ${marketingPersonName}</p>
+            <p><strong>CRM Name:</strong> ${crmName}</p>
+            <button onclick="openMultipleDocuments('${order.fileUploadLink.replace(/'/g, "\\'")}', ${index})">View File</button>
+            <p><strong>Hold Remark:</strong> ${order.holdRemark}</p>                        
+        </div>
+        <div class="date-info">
+            <p><strong>Marked Hold On:</strong> ${markedHoldOn}</p>
+            <p><strong>Hold Until:</strong> ${formattedHoldUntil}</p>
+        </div>
+        <div class="countdown-timer" id="countdown-${order.timestamp}">
+            Calculating...
+        </div>
+        <div class="editable">		
+        <div class="card-actions">
+            <button class="approve-btn" data-timestamp="${order.timestamp}">Approve</button>
+        </div>
+        </div>
+    `;
 
-                orderCardsContainer.appendChild(orderCard);
+    orderCardsContainer.appendChild(orderCard);
 
-                // Start countdown for each card
-                const countdownElement = document.getElementById(`countdown-${order.timestamp}`);
-                startCountdown(holdUntil, countdownElement);
+    // Start countdown for each card
+    const countdownElement = document.getElementById(`countdown-${order.timestamp}`);
+    startCountdown(holdUntil, countdownElement);
 
-                // Add event listener to the Approve button
-                const approveButton = orderCard.querySelector('.approve-btn');
-                approveButton.addEventListener('click', () => handleApprove(approveButton.dataset.timestamp));
-            });
+    // Add event listener to the Approve button
+    const approveButton = orderCard.querySelector('.approve-btn');
+    approveButton.addEventListener('click', () => handleApprove(approveButton.dataset.timestamp));
+});
         }
 
         // Function to fetch data from the API
