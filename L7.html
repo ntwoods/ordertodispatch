@@ -348,7 +348,7 @@
                         <p><strong>Dealer Name:</strong> ${dealerName}</p>
                         <p><strong>Marketing Person:</strong> ${marketingPersonName}</p>
                         <p><strong>CRM Name:</strong> ${crmName}</p>
-                        <p><strong>File Link:</strong><button>onclick="openMultipleDocuments('${order.finalOrder.replace(/'/g, "\\'")}', ${index})"</button></p>
+                        <button onclick="openMultipleDocuments('${order.finalOrder.replace(/'/g, "\\'")}', ${index})">View File</button>
                         <p><strong>Hold Remark:</strong> ${order.holdRemark}</p>                        
                     </div>
                     <div class="date-info">
@@ -423,6 +423,31 @@
                 loadingIndicator.style.display = 'none'; // Hide loading
             }
         }
+    function openMultipleDocuments(urlString, index) {
+        // Split the URLs by comma and trim whitespace
+        const urls = urlString.split(',').map(url => url.trim()).filter(url => url.length > 0);
+        
+        if (urls.length === 0) {
+            alert('No valid URLs found');
+            return;
+        }
+        
+        // Show a confirmation if there are multiple URLs
+        if (urls.length > 1) {
+            const confirmed = confirm(`This will open ${urls.length} documents in separate tabs. Continue?`);
+            if (!confirmed) {
+                return;
+            }
+        }
+        
+        // Open each URL in a new tab with a small delay to prevent popup blocker
+        urls.forEach((url, urlIndex) => {
+            setTimeout(() => {
+                window.open(url, '_blank');
+            }, urlIndex * 100); // 100ms delay between each tab opening
+        });
+    }
+        
 
         // Initial fetch on page load
         document.addEventListener('DOMContentLoaded', fetchData);
