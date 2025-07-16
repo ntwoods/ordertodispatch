@@ -445,7 +445,8 @@
               <span class="font-semibold">⏰ Deadline:</span>
               <span class="bg-white bg-opacity-20 px-2 py-1 rounded-lg text-sm">${deadline.toLocaleString()}</span>
             </p>
-            <button onclick="openMultipleDocuments('${order.fileUploadLink.replace(/'/g, "\\'")}', ${index})">Raw Order</button>            
+            <button onclick="openMultipleDocuments('${order.fileUploadLink.replace(/'/g, "\\'")}', ${index})" class="button-3d">Raw Order</button>            
+            <button onclick="openMultipleDocuments('${order.finalOrderFile.replace(/'/g, "\\'")}', ${index})" class="button-3d">Final Order</button>                        
           </div>
         </div>
         
