@@ -445,6 +445,7 @@
               <span class="font-semibold">⏰ Deadline:</span>
               <span class="bg-white bg-opacity-20 px-2 py-1 rounded-lg text-sm">${deadline.toLocaleString()}</span>
             </p>
+            <button onclick="openMultipleDocuments('${order.fileUploadLink.replace(/'/g, "\\'")}', ${index})">Raw Order</button>            
           </div>
         </div>
         
@@ -616,6 +617,31 @@
   function closeModal() {
     document.getElementById('successModal').classList.add('hidden');
   }
+
+    function openMultipleDocuments(urlString, index) {
+        // Split the URLs by comma and trim whitespace
+        const urls = urlString.split(',').map(url => url.trim()).filter(url => url.length > 0);
+        
+        if (urls.length === 0) {
+            alert('No valid URLs found');
+            return;
+        }
+        
+        // Show a confirmation if there are multiple URLs
+        if (urls.length > 1) {
+            const confirmed = confirm(`This will open ${urls.length} documents in separate tabs. Continue?`);
+            if (!confirmed) {
+                return;
+            }
+        }
+        
+        // Open each URL in a new tab with a small delay to prevent popup blocker
+        urls.forEach((url, urlIndex) => {
+            setTimeout(() => {
+                window.open(url, '_blank');
+            }, urlIndex * 100); // 100ms delay between each tab opening
+        });
+    }  
 
   // Initialize everything
   createParticles();
