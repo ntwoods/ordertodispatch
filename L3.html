@@ -259,13 +259,10 @@
   </style>
 </head>
 <body>
-  <!-- Container for particles -->
   <div id="particles" class="absolute inset-0 pointer-events-none z-0"></div>
 
-  <!-- Header -->
   <div class="relative z-10 pt-8 pb-6">
     <div class="text-center" data-aos="fade-down" data-aos-duration="1000">
-      <!-- Adjusted font size for the main header -->
       <h1 class="text-3xl md:text-5xl font-black gradient-text mb-4 floating">
         ⚡ Assign a tentative dispatch date ⚡
       </h1>
@@ -283,7 +280,6 @@
     </div>
   </div>
 
-  <!-- Loader -->
   <div id="loader" class="flex flex-col justify-center items-center h-64 relative z-10">
     <div class="relative">
       <div class="spinner"></div>
@@ -293,10 +289,8 @@
     <p class="text-xl font-semibold mt-6 animate-pulse neon-text">Loading orders...</p>
   </div>
 
-  <!-- Orders Container -->
   <div id="ordersContainer" class="grid gap-8 md:grid-cols-2 lg:grid-cols-3 px-6 pb-12 relative z-10 hidden"></div>
 
-  <!-- Success Modal -->
   <div id="successModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
     <div class="glassmorphism rounded-3xl p-8 m-4 text-center max-w-md animate__animated animate__bounceIn">
       <div class="text-6xl mb-4">🎉</div>
@@ -445,8 +439,8 @@
               <span class="font-semibold">⏰ Deadline:</span>
               <span class="bg-white bg-opacity-20 px-2 py-1 rounded-lg text-sm">${deadline.toLocaleString()}</span>
             </p>
-            <button onclick="openMultipleDocuments('${order.fileUploadLink.replace(/'/g, "\\'")}', ${index})" class="button-3d">Raw Order</button>            
-            <button onclick="openMultipleDocuments('${order.finalOrderFile.replace(/'/g, "\\'")}', ${index})" class="button-3d">Final Order</button>                        
+            <button onclick="openMultipleDocuments('${order.fileUploadLink ? order.fileUploadLink.replace(/'/g, "\\'") : ''}', ${index})" class="button-3d">Raw Order</button>            
+            <button onclick="openMultipleDocuments('${order.finalOrderFile ? order.finalOrderFile.replace(/'/g, "\\'") : ''}', ${index})" class="button-3d">Final Order</button>                        
           </div>
         </div>
         
