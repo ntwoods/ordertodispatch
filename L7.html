@@ -348,7 +348,7 @@
                         <p><strong>Dealer Name:</strong> ${dealerName}</p>
                         <p><strong>Marketing Person:</strong> ${marketingPersonName}</p>
                         <p><strong>CRM Name:</strong> ${crmName}</p>
-                        <button onclick="openMultipleDocuments('${order.finalOrder.replace(/'/g, "\\'")}', ${index})">View File</button>
+                        <button onclick="openMultipleDocuments('${order.fileUploadLink.replace(/'/g, "\\'")}', ${index})">View File</button>
                         <p><strong>Hold Remark:</strong> ${order.holdRemark}</p>                        
                     </div>
                     <div class="date-info">
