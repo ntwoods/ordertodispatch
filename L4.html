@@ -501,6 +501,17 @@
                 <div class="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
                   <i class="fas fa-clock text-blue-700 text-sm"></i>
                 </div>
+              <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
+                <button onclick="openMultipleDocuments('${order.fileUploadLink.replace(/'/g, "\\'")}', ${index})">View File</button>
+              </div>
+              </div>
+              <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
+                <button onclick="openMultipleDocuments('${order.fileUploadLink.replace(/'/g, "\\'")}', ${index})">View File</button>
+              </div>
+              </div>              
+                
                 <div>
                   <div class="text-blue-600 text-sm">Dispatch Time</div>
                   <div class="text-blue-800 font-semibold">
