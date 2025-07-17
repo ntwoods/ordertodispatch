@@ -218,7 +218,7 @@
             }
         }
 
-        // Function to handle file selection
+        // Function to handle file selection for invoice
         function handleFileSelect1(orderIndex) {
             const fileInput = document.getElementById(`file1-${orderIndex}`);
             const fileSelectedDiv = document.getElementById(`file-selected1-${orderIndex}`);
@@ -232,104 +232,128 @@
             }
         }
 
-// Function to mark order as done
-// Function to mark order as done
-async function markDone(orderIndex) {
-    const order = allOrdersData[orderIndex];
-    if (!order) {
-        alert('Order data not found');
-        return;
-    }
+        // Function to mark order as done
+        async function markDone(orderIndex) {
+            const order = allOrdersData[orderIndex];
+            if (!order) {
+                // Using a custom message box instead of alert()
+                showMessageBox('Order data not found', 'error');
+                return;
+            }
 
-    const deliveryDate = document.getElementById(`delivery-${orderIndex}`).value;
-    const remark = document.getElementById(`remark-${orderIndex}`).value;
-    const fileInput = document.getElementById(`file-${orderIndex}`);
-    const fileInput1 = document.getElementById(`file1-${orderIndex}`);
+            const deliveryDate = document.getElementById(`delivery-${orderIndex}`).value;
+            const generalRemark = document.getElementById(`generalRemark-${orderIndex}`).value;
+            const vehicleNo = document.getElementById(`vehicleNo-${orderIndex}`).value;
+            const freight = document.getElementById(`freight-${orderIndex}`).value;
+            const driverName = document.getElementById(`driverName-${orderIndex}`).value;
+            const driverMob = document.getElementById(`driverMob-${orderIndex}`).value;
+            const fileInput = document.getElementById(`file-${orderIndex}`);
+            const fileInput1 = document.getElementById(`file1-${orderIndex}`);
 
 
-    if (!deliveryDate) {
-        alert('Please select an expected delivery date');
-        return;
-    }
+            if (!deliveryDate) {
+                showMessageBox('Please select an expected delivery date', 'warning');
+                return;
+            }
 
-    const markDoneButton = document.querySelector(`button[onclick="markDone(${orderIndex})"]`);
-    markDoneButton.disabled = true;
-    markDoneButton.textContent = 'Processing...';
-    markDoneButton.classList.add('opacity-50', 'cursor-not-allowed');
+            // Basic validation for driver mobile number
+            if (driverMob && !/^\d{10}$/.test(driverMob)) {
+                showMessageBox('Driver Mobile number must be 10 digits', 'warning');
+                return;
+            }
+            
+            // Basic validation for freight to be numeric
+            if (freight && isNaN(freight)) {
+                showMessageBox('Freight must be a numeric value', 'warning');
+                return;
+            }
 
-    try {
-	let fileArray = [];
-	let file1Array = [];
 
-	if (fileInput.files.length > 0) {
-	    for (let i = 0; i < fileInput.files.length; i++) {
-	        const file = fileInput.files[i];
-	        const base64 = await fileToBase64(file);
-	        fileArray.push({
-	            name: file.name,
-	            type: file.type,
-	            size: file.size,
-	            base64: base64
-	        });
-	    }
-	}
+            const markDoneButton = document.querySelector(`button[onclick="markDone(${orderIndex})"]`);
+            markDoneButton.disabled = true;
+            markDoneButton.textContent = 'Processing...';
+            markDoneButton.classList.add('opacity-50', 'cursor-not-allowed');
 
-	if (fileInput1.files.length > 0) {
-	    for (let i = 0; i < fileInput1.files.length; i++) {
-	        const file1 = fileInput1.files[i];
-	        const base64 = await fileToBase64(file1);
-	        file1Array.push({
-	            name: file1.name,
-	            type: file1.type,
-	            size: file1.size,
-	            base64: base64
-	        });
-	    }
-	}
-		const payload = {
-		    action: 'markDone',
-		    timestamp: order.timestamp,
-		    dealerName: order.dealerName,
-		    marketingPersonName: order.marketingPersonName,
-		    crmName: order.crmName,
-		    location: order.location,
-		    dispatchDate: order.dispatchDate,
-		    fileUploadLink: order.fileUploadLink,
-		    expectedDeliveryDate: deliveryDate,
-		    dispatchTeamRemark: remark,
-		    fileArray: fileArray,
-		    file1Array: file1Array
-		};
+            try {
+                let fileArray = [];
+                let file1Array = [];
 
-        await fetch(API_URL, {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(payload)
-        });
+                if (fileInput.files.length > 0) {
+                    for (let i = 0; i < fileInput.files.length; i++) {
+                        const file = fileInput.files[i];
+                        const base64 = await fileToBase64(file);
+                        fileArray.push({
+                            name: file.name,
+                            type: file.type,
+                            size: file.size,
+                            base64: base64
+                        });
+                    }
+                }
 
-        // Assume success due to no-cors limitation
-        alert('Order marked as done successfully!');
-        
-        const orderCard = document.querySelector(`[data-order-index="${orderIndex}"]`);
-        if (orderCard) {
-            orderCard.remove();
+                if (fileInput1.files.length > 0) {
+                    for (let i = 0; i < fileInput1.files.length; i++) {
+                        const file1 = fileInput1.files[i];
+                        const base64 = await fileToBase64(file1);
+                        file1Array.push({
+                            name: file1.name,
+                            type: file1.type,
+                            size: file1.size,
+                            base64: base64
+                        });
+                    }
+                }
+                
+                // Construct the payload with new fields
+                const payload = {
+                    action: 'markDone',
+                    timestamp: order.timestamp,
+                    dealerName: order.dealerName,
+                    marketingPersonName: order.marketingPersonName,
+                    crmName: order.crmName,
+                    location: order.location,
+                    dispatchDate: order.dispatchDate,
+                    fileUploadLink: order.fileUploadLink,
+                    expectedDeliveryDate: deliveryDate,
+                    // New fields for dispatch details
+                    generalRemark: generalRemark,
+                    vehicleNo: vehicleNo,
+                    freight: freight,
+                    driverName: driverName,
+                    driverMob: driverMob,
+                    fileArray: fileArray,
+                    file1Array: file1Array
+                };
+
+                await fetch(API_URL, {
+                    method: 'POST',
+                    mode: 'no-cors', // Keep no-cors mode as requested
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                // Assume success due to no-cors limitation
+                showMessageBox('Order marked as done successfully!', 'success');
+                
+                const orderCard = document.querySelector(`[data-order-index="${orderIndex}"]`);
+                if (orderCard) {
+                    orderCard.remove();
+                }
+
+                allOrdersData.splice(orderIndex, 1);
+                renderOrders(allOrdersData);
+
+            } catch (error) {
+                console.error('Error marking order as done:', error);
+                showMessageBox(`Error: ${error.message}`, 'error');
+            } finally {
+                markDoneButton.disabled = false;
+                markDoneButton.textContent = 'Mark Done';
+                markDoneButton.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
         }
-
-        allOrdersData.splice(orderIndex, 1);
-        renderOrders(allOrdersData);
-
-    } catch (error) {
-        console.error('Error marking order as done:', error);
-        alert(`Error: ${error.message}`);
-    } finally {
-        markDoneButton.disabled = false;
-        markDoneButton.textContent = 'Mark Done';
-        markDoneButton.classList.remove('opacity-50', 'cursor-not-allowed');
-    }
-}
 
         async function fetchOrders() {
             loadingSpinner.style.display = 'flex';
@@ -474,23 +498,42 @@ orders.forEach((order, index) => {
                             <input type="date" id="delivery-${index}" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required/>
                         </div>
                         
-                        <div class="mb-3">
-                            <label class="block text-sm font-medium mb-1 text-gray-700">Dispatch Team Remark:</label>
-                            <input type="text" id="remark-${index}" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter any remarks..."/>
+                        <!-- New sub-section for Dispatch Team Remark -->
+                        <div class="mb-3 p-4 border border-gray-200 rounded-md bg-gray-50">
+                            <h4 class="text-md font-semibold text-gray-700 mb-3">Dispatch Details</h4>
+                            <div class="mb-2">
+                                <label class="block text-sm font-medium mb-1 text-gray-700">General Remark:</label>
+                                <input type="text" id="generalRemark-${index}" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter general remarks..."/>
+                            </div>
+                            <div class="mb-2">
+                                <label class="block text-sm font-medium mb-1 text-gray-700">Vehicle No.:</label>
+                                <input type="text" id="vehicleNo-${index}" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g., UP16AB1234"/>
+                            </div>
+                            <div class="mb-2">
+                                <label class="block text-sm font-medium mb-1 text-gray-700">Freight:</label>
+                                <input type="number" id="freight-${index}" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter freight amount"/>
+                            </div>
+                            <div class="mb-2">
+                                <label class="block text-sm font-medium mb-1 text-gray-700">Driver Name:</label>
+                                <input type="text" id="driverName-${index}" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter driver's name"/>
+                            </div>
+                            <div class="mb-2">
+                                <label class="block text-sm font-medium mb-1 text-gray-700">Driver Mob:</label>
+                                <input type="tel" id="driverMob-${index}" pattern="[0-9]{10}" maxlength="10" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter 10-digit mobile number"/>
+                            </div>
                         </div>
                         
-<div class="mb-4">
-    <label class="file-upload-label">Attach Dispatch Receipt:</label>
-    <input type="file" class="file-input" id="file-${index}" multiple onchange="handleFileSelect(${index})" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.xlsx,.xls">
-    <div class="file-selected" id="file-selected-${index}">✓ File selected</div>
-</div>
+                        <div class="mb-4">
+                            <label class="file-upload-label">Attach LR Receipt:</label> <!-- Changed label -->
+                            <input type="file" class="file-input" id="file-${index}" multiple onchange="handleFileSelect(${index})" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.xlsx,.xls">
+                            <div class="file-selected" id="file-selected-${index}">✓ File selected</div>
+                        </div>
 
-<div class="mb-4">
-    <label class="file-upload-label">Attach Invoice:</label>
-    <input type="file" class="file-input" id="file1-${index}" multiple onchange="handleFileSelect1(${index})" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.xlsx,.xls">
-    <div class="file-selected" id="file-selected1-${index}">✓ File selected</div>
-</div>
-
+                        <div class="mb-4">
+                            <label class="file-upload-label">Attach Invoice:</label>
+                            <input type="file" class="file-input" id="file1-${index}" multiple onchange="handleFileSelect1(${index})" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.xlsx,.xls">
+                            <div class="file-selected" id="file-selected1-${index}">✓ File selected</div>
+                        </div>
                         
                         <button onclick="markDone(${index})" class="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition duration-200 font-medium">
                             Mark Done
@@ -513,7 +556,7 @@ orders.forEach((order, index) => {
 	    const urls = urlString.split(',').map(url => url.trim()).filter(url => url.length > 0);
 	    
 	    if (urls.length === 0) {
-		alert('No valid URLs found');
+		showMessageBox('No valid URLs found', 'warning');
 		return;
 	    }
 	    
@@ -551,7 +594,7 @@ orders.forEach((order, index) => {
                     ${order.fileUploadLink ? `<a href="${order.fileUploadLink}" target="_blank" class="ml-2 text-blue-500 hover:underline flex items-center">
                         View File
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                         </svg>
                     </a>` : '<span class="ml-2 text-gray-500">N/A</span>'}
                 </p>
@@ -576,6 +619,33 @@ orders.forEach((order, index) => {
                 orderDetailModal.classList.add('invisible');
             }, 300);
         }
+
+        // Custom message box function instead of alert()
+        function showMessageBox(message, type = 'info') {
+            const messageBox = document.createElement('div');
+            messageBox.className = `fixed top-4 right-4 p-4 rounded-md shadow-lg text-white z-50`;
+            
+            let bgColor = 'bg-blue-500'; // info
+            if (type === 'success') bgColor = 'bg-green-500';
+            else if (type === 'error') bgColor = 'bg-red-500';
+            else if (type === 'warning') bgColor = 'bg-yellow-500';
+
+            messageBox.classList.add(bgColor);
+            messageBox.innerHTML = `
+                <div class="flex items-center justify-between">
+                    <span>${message}</span>
+                    <button class="ml-4 text-white font-bold" onclick="this.parentElement.parentElement.remove()">
+                        &times;
+                    </button>
+                </div>
+            `;
+            document.body.appendChild(messageBox);
+
+            setTimeout(() => {
+                messageBox.remove();
+            }, 3000); // Message disappears after 3 seconds
+        }
+
 
         // Close modal on escape key
         document.addEventListener('keydown', (e) => {
