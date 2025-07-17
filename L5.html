@@ -114,12 +114,10 @@ orders.forEach((order, index) => {
   const deadlineLabel = overdue ? "Overdue" : "Active";
 
   card.innerHTML = `
-    <!-- Deadline Badge -->
     <div class="absolute top-2 right-2 text-sm font-semibold px-3 py-1 rounded-full ${overdue ? 'bg-red-200 text-red-800' : 'bg-green-200 text-green-800'}">
       ${deadlineLabel}
     </div>
 
-    <!-- Missing Invoice Label -->
     ${!hasInvoice ? `<div class="absolute top-2 left-2 text-xs font-semibold px-2 py-1 rounded-full bg-red-200 text-red-800">Missing Invoice</div>` : ""}
 
     <div class="text-xl font-bold mb-2">${order.dealerName}</div>
@@ -131,6 +129,10 @@ orders.forEach((order, index) => {
     <p><strong>Dispatch Date & Time:</strong> ${formatDateToDDMMMYYYY(order.timestamp)}</p>
     <p><strong>Deadline:</strong> ${formatDateToDDMMMYYYY(deadline)}</p>
     <p><strong>Time Left:</strong> <span id="countdown-${index}" class="font-mono text-blue-700"></span></p>
+    <p><strong>Vehicle No:</strong> ${order.vehicleNo || 'N/A'}</p>
+    <p><strong>Freight:</strong> ${order.freight || 'N/A'}</p>
+    <p><strong>Driver Name:</strong> ${order.driverName || 'N/A'}</p>
+    <p><strong>Driver Mobile:</strong> ${order.driverMob || 'N/A'}</p>
     <div class="editable">
     <span class="text-m text-black-600">Dispatch Receipt:</span>
     <button onclick="openMultipleDocuments('${order.dispatchDetailUrl.replace(/'/g, "\\'")}', ${index})" class="text-sm text-blue-600 hover:text-blue-800 underline bg-transparent border-none cursor-pointer">View Dispatch Receipts</button>
@@ -166,7 +168,6 @@ orders.forEach((order, index) => {
   startCountdown(deadline, index);
 });
 }
-
     function startCountdown(deadline, index) {
       const el = document.getElementById(`countdown-${index}`);
       function update() {
