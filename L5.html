@@ -161,6 +161,10 @@ orders.forEach((order, index) => {
       class="mt-4 w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
       Submit
     </button>
+    <button onclick="copyDispatchDetails(${index})"
+      class="mt-2 w-full bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition">
+      Copy Dispatch Details
+    </button>
     </div>
   `;
 
@@ -229,6 +233,25 @@ orders.forEach((order, index) => {
     fetchOrders();      
   }
 }
+
+    function copyDispatchDetails(index) {
+      const order = globalOrders[index];
+      const details = `Expected Delivery Date: ${formatDateToDDMMMYYYY(order.expectedDeliveryDate)}
+Dispatch Date & Time: ${formatDateToDDMMMYYYY(order.timestamp)}
+Vehicle No: ${order.vehicleNo || 'N/A'}
+Freight Amt: ${order.freight || 'N/A'}
+Driver Name: ${order.driverName || 'N/A'}
+Driver Mobile: ${order.driverMob || 'N/A'}`;
+
+      navigator.clipboard.writeText(details)
+        .then(() => {
+          alert('Dispatch details copied to clipboard!');
+        })
+        .catch(err => {
+          console.error('Failed to copy dispatch details:', err);
+          alert('Failed to copy dispatch details. Please try again or copy manually.');
+        });
+    }
 
     fetchOrders();
   </script>
