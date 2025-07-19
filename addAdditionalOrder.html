@@ -135,9 +135,10 @@
         };
 
         // Handler for file uploads (POST request)
-        const handleFileUpload = async (orderId, postData) => {
+        const handleFileUpload = async (orderId, postData, fileType) => {
             const uploadButton = document.getElementById(`submit-button-${orderId}`);
-            const fileInput = document.getElementById(`file-input-${orderId}`);
+            const additionalFileInput = document.getElementById(`additional-file-input-${orderId}`);
+            const finalFileInput = document.getElementById(`final-file-input-${orderId}`);
             const messageDiv = document.getElementById(`message-div-${orderId}`);
 
             // Show uploading state
@@ -148,10 +149,10 @@
             messageDiv.innerHTML = '';
             messageDiv.className = 'mt-3 p-3 rounded-lg text-sm flex items-center justify-center hidden';
 
-
             try {
-                // Note: "no-cors" means we cannot read the response,
-                // but the request will still be sent successfully to the server.
+                // Add a field to indicate which file type is being sent
+                postData.fileType = fileType;
+
                 await fetch(API_URL, {
                     method: 'POST',
                     mode: 'no-cors', // Essential for cross-origin requests to Apps Script
@@ -160,12 +161,12 @@
                     },
                     body: JSON.stringify(postData),
                 });
-                // Assuming success if fetch completes without throwing an error in no-cors mode
                 console.log('File submission initiated (no-cors mode).');
                 messageDiv.innerHTML = `${getCheckCircleIcon()} File uploaded successfully!`;
                 messageDiv.classList.remove('hidden');
                 messageDiv.classList.add('bg-green-100', 'text-green-700');
-                fileInput.value = ''; // Clear selected file
+                additionalFileInput.value = ''; // Clear selected file
+                finalFileInput.value = ''; // Clear selected file
 
             } catch (error) {
                 console.error("Error sending POST request:", error);
@@ -235,11 +236,20 @@
                 </div>
 
                 <div class="mt-4 pt-4 border-t border-gray-200">
-                    <label for="file-input-${orderId}" class="block text-sm font-medium text-gray-700 mb-2">
+                    <label for="additional-file-input-${orderId}" class="block text-sm font-medium text-gray-700 mb-2">
                         Additional Order File:
                     </label>
                     <input
-                        id="file-input-${orderId}"
+                        id="additional-file-input-${orderId}"
+                        type="file"
+                        class="block w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 cursor-pointer focus:outline-none file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                    />
+
+                    <label for="final-file-input-${orderId}" class="block text-sm font-medium text-gray-700 mt-4 mb-2">
+                        Final Order After Removal File:
+                    </label>
+                    <input
+                        id="final-file-input-${orderId}"
                         type="file"
                         class="block w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 cursor-pointer focus:outline-none file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                     />
@@ -259,33 +269,64 @@
             `;
 
             // Attach event listeners after the element is added to the DOM (or ensure it's referenced correctly)
-            const fileInput = cardDiv.querySelector(`#file-input-${orderId}`);
+            const additionalFileInput = cardDiv.querySelector(`#additional-file-input-${orderId}`);
+            const finalFileInput = cardDiv.querySelector(`#final-file-input-${orderId}`);
             const submitButton = cardDiv.querySelector(`#submit-button-${orderId}`);
+            const messageDiv = cardDiv.querySelector(`#message-div-${orderId}`);
 
-            fileInput.addEventListener('change', (event) => {
-                // Enable/disable button based on file selection
-                submitButton.disabled = !event.target.files.length;
-                if (event.target.files.length) {
+            // Function to update button state based on file selections
+            const updateSubmitButtonState = () => {
+                const isAdditionalFileSelected = additionalFileInput.files.length > 0;
+                const isFinalFileSelected = finalFileInput.files.length > 0;
+
+                if (isAdditionalFileSelected || isFinalFileSelected) {
+                    submitButton.disabled = false;
                     submitButton.classList.remove('bg-gray-400', 'cursor-not-allowed');
                     submitButton.classList.add('bg-blue-600', 'hover:bg-blue-700');
                 } else {
+                    submitButton.disabled = true;
                     submitButton.classList.add('bg-gray-400', 'cursor-not-allowed');
                     submitButton.classList.remove('bg-blue-600', 'hover:bg-blue-700');
                 }
+            };
+
+            // Event listeners for file input changes
+            additionalFileInput.addEventListener('change', (event) => {
+                if (event.target.files.length > 0) {
+                    // If a file is selected in additional, clear final file input
+                    finalFileInput.value = '';
+                }
+                updateSubmitButtonState();
             });
 
+            finalFileInput.addEventListener('change', (event) => {
+                if (event.target.files.length > 0) {
+                    // If a file is selected in final, clear additional file input
+                    additionalFileInput.value = '';
+                }
+                updateSubmitButtonState();
+            });
+
+
             submitButton.addEventListener('click', async () => {
-                if (!fileInput.files.length) {
-                    const msgDiv = cardDiv.querySelector(`#message-div-${orderId}`);
-                    msgDiv.innerHTML = `${getAlertCircleIcon()} Please select a file first.`;
-                    msgDiv.classList.remove('hidden');
-                    msgDiv.classList.add('bg-red-100', 'text-red-700');
-                    setTimeout(() => msgDiv.classList.add('hidden'), 5000);
+                let selectedFile = null;
+                let fileType = '';
+
+                if (additionalFileInput.files.length > 0) {
+                    selectedFile = additionalFileInput.files[0];
+                    fileType = 'additionalOrder';
+                } else if (finalFileInput.files.length > 0) {
+                    selectedFile = finalFileInput.files[0];
+                    fileType = 'finalOrderAfterRemoval';
+                } else {
+                    messageDiv.innerHTML = `${getAlertCircleIcon()} Please select either an Additional Order File or a Final Order After Removal File.`;
+                    messageDiv.classList.remove('hidden');
+                    messageDiv.classList.add('bg-red-100', 'text-red-700');
+                    setTimeout(() => messageDiv.classList.add('hidden'), 5000);
                     return;
                 }
 
                 try {
-                    const selectedFile = fileInput.files[0];
                     const fileBase64String = await fileToBase64(selectedFile);
 
                     const postData = {
@@ -296,14 +337,13 @@
                         fileMimeType: selectedFile.type,
                         timeStamp: order.timeStamp,
                     };
-                    await handleFileUpload(orderId, postData);
+                    await handleFileUpload(orderId, postData, fileType);
                 } catch (error) {
                     console.error('Error during file preparation for upload:', error);
-                    const msgDiv = cardDiv.querySelector(`#message-div-${orderId}`);
-                    msgDiv.innerHTML = `${getAlertCircleIcon()} File preparation failed: ${error.message}`;
-                    msgDiv.classList.remove('hidden');
-                    msgDiv.classList.add('bg-red-100', 'text-red-700');
-                    setTimeout(() => msgDiv.classList.add('hidden'), 5000);
+                    messageDiv.innerHTML = `${getAlertCircleIcon()} File preparation failed: ${error.message}`;
+                    messageDiv.classList.remove('hidden');
+                    messageDiv.classList.add('bg-red-100', 'text-red-700');
+                    setTimeout(() => messageDiv.classList.add('hidden'), 5000);
                 }
             });
 
