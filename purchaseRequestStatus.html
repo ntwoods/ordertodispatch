@@ -66,7 +66,7 @@
         .success-message {
             color: #28a745;
         }
-        .cancel-button {
+        .cancel-button, .view-file-button {
             background-color: #dc3545;
             color: white;
             border: none;
@@ -74,9 +74,16 @@
             border-radius: 5px;
             cursor: pointer;
             font-size: 0.9em;
+            margin-right: 5px; /* Add some spacing if needed */
         }
         .cancel-button:hover {
             background-color: #c82333;
+        }
+        .view-file-button {
+            background-color: #007bff;
+        }
+        .view-file-button:hover {
+            background-color: #0056b3;
         }
     </style>
 </head>
@@ -90,8 +97,7 @@
                 <tr>
                     <th>Request ID</th>
                     <th>Dealer Name</th>
-                    <th>Product</th>
-                    <th>Quantity</th>
+                    <th>Request Files</th> <th>Quantity</th>
                     <th>Priority</th>
                     <th>CRM Remark</th>
                     <th>Request Date</th>
@@ -140,9 +146,8 @@
             statusMessage.className = 'loading-message';
 
             try {
-                // Removed response.ok check as requested
                 const response = await fetch(`${API_URL}?crm=${encodeURIComponent(crmName)}`);
-                const result = await response.json(); // Still need to parse JSON to display data
+                const result = await response.json();
 
                 if (result.status === "success" && result.data && result.data.length > 0) {
                     statusMessage.style.display = 'none';
@@ -153,7 +158,20 @@
                         const row = tableBody.insertRow();
                         row.insertCell().textContent = request.requestId || '';
                         row.insertCell().textContent = request.dealername || '';
-                        row.insertCell().textContent = request.product || '';
+
+                        // New: "Request Files" column with "View File" button
+                        const fileCell = row.insertCell();
+                        if (request.product) { // Assuming 'product' key holds the file URL
+                            const viewFileButton = document.createElement('button');
+                            viewFileButton.textContent = 'View File';
+                            viewFileButton.className = 'view-file-button';
+                            viewFileButton.onclick = () => window.open(request.product, '_blank');
+                            fileCell.appendChild(viewFileButton);
+                        } else {
+                            fileCell.textContent = 'No file';
+                        }
+                        // End New
+
                         row.insertCell().textContent = request.quantity || '';
                         row.insertCell().textContent = request.priority || '';
                         row.insertCell().textContent = request.crmRemark || '';
@@ -192,10 +210,9 @@
             statusMessage.textContent = `Attempting to cancel request ${requestId}... (Response will not be read in no-cors mode)`;
 
             try {
-                // Added mode: 'no-cors' and removed response.ok check
                 await fetch(API_URL, {
                     method: 'POST',
-                    mode: 'no-cors', // This makes the response opaque
+                    mode: 'no-cors',
                     headers: {
                         'Content-Type': 'application/json',
                     },
@@ -206,12 +223,9 @@
                     }),
                 });
 
-                // In no-cors mode, we cannot read the actual success/failure from the server response.
-                // We assume success if the fetch operation itself doesn't throw a network error.
                 statusMessage.className = 'success-message';
                 statusMessage.textContent = `Cancel request for ID ${requestId} sent. Please refresh to confirm status. (Cannot verify server response in no-cors mode)`;
-                // Optionally, refresh after a delay or just inform the user
-                setTimeout(fetchRequests, 2000); // Refresh after 2 seconds to see if change reflects
+                setTimeout(fetchRequests, 2000);
 
             } catch (error) {
                 console.error("Failed to send cancel request:", error);
@@ -222,7 +236,7 @@
                     if (statusMessage.className !== 'loading-message') {
                         statusMessage.style.display = 'none';
                     }
-                }, 5000); // Give more time for the 'no-cors' message
+                }, 5000);
             }
         }
 
