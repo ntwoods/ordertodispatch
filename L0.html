@@ -20,24 +20,24 @@
                     },
                     keyframes: {
                         float: {
-                            '0%, 100%': { transform: 'translateY(0px)' },
-                            '50%': { transform: 'translateY(-10px)' }
+                            '0%, 100': { transform: 'translateY(0px)' },
+                            '50': { transform: 'translateY(-10px)' }
                         },
                         glow: {
-                            '0%': { boxShadow: '0 0 5px #3b82f6, 0 0 10px #3b82f6, 0 0 15px #3b82f6' },
-                            '100%': { boxShadow: '0 0 10px #3b82f6, 0 0 20px #3b82f6, 0 0 30px #3b82f6' }
+                            '0': { boxShadow: '0 0 5px #3b82f6, 0 0 10px #3b82f6, 0 0 15px #3b82f6' },
+                            '100': { boxShadow: '0 0 10px #3b82f6, 0 0 20px #3b82f6, 0 0 30px #3b82f6' }
                         },
                         fadeIn: {
-                            '0%': { opacity: '0' },
-                            '100%': { opacity: '1' }
+                            '0': { opacity: '0' },
+                            '100': { opacity: '1' }
                         },
                         slideUp: {
-                            '0%': { transform: 'translateY(20px)', opacity: '0' },
-                            '100%': { transform: 'translateY(0)', opacity: '1' }
+                            '0': { transform: 'translateY(20px)', opacity: '0' },
+                            '100': { transform: 'translateY(0)', opacity: '1' }
                         },
                         scaleIn: {
-                            '0%': { transform: 'scale(0.9)', opacity: '0' },
-                            '100%': { transform: 'scale(1)', opacity: '1' }
+                            '0': { transform: 'scale(0.9)', opacity: '0' },
+                            '100': { transform: 'scale(1)', opacity: '1' }
                         }
                     },
                     backgroundImage: {
@@ -236,9 +236,11 @@
             const cardElement = document.querySelector(`.order-card .crm-assignment[data-timestamp="${timestamp}"]`);
             const crmSelectElement = cardElement.querySelector('.crm-select');
             const ownerSelectElement = cardElement.querySelector('.owner-select');
+            const typeSelectElement = cardElement.querySelector('.type-select'); // Get the new type select element
 
             const selectedCRM = crmSelectElement.value;
             const concernedOwner = ownerSelectElement.value;
+            const selectedType = typeSelectElement.value; // Get the selected type
 
             if (!selectedCRM) {
                 showNotification('Please select a CRM first!', 'error');
@@ -246,6 +248,10 @@
             }
             if (!concernedOwner) {
                 showNotification('Please select a Concerned Owner first!', 'error');
+                return;
+            }
+            if (!selectedType) { // Validate if a type is selected
+                showNotification('Please select a Type first!', 'error');
                 return;
             }
 
@@ -268,7 +274,8 @@
                 body: JSON.stringify({
                     timestamp: timestamp,
                     crmName: selectedCRM,
-                    concernedOwner: concernedOwner, // Added concerned owner to payload
+                    concernedOwner: concernedOwner,
+                    type: selectedType, // Include the selected type in the payload
                     action: 'assignCRM'
                 }),
                 headers: { "Content-Type": "application/json" }
@@ -276,7 +283,7 @@
             .then(() => {
                 // Since we're using no-cors, we can't read the response
                 // But we assume success if no error is thrown
-                showNotification(`Successfully assigned to ${selectedCRM} with owner ${concernedOwner}!`, 'success');
+                showNotification(`Successfully assigned to ${selectedCRM} with owner ${concernedOwner} and type ${selectedType}!`, 'success');
 
                 // Update the UI to show assignment
                 const card = button.closest('.order-card');
@@ -291,6 +298,9 @@
                         </div>
                         <div class="flex items-center space-x-2">
                             <span class="text-green-400 font-semibold">Owner: ${concernedOwner}</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <span class="text-green-400 font-semibold">Type: ${selectedType}</span>
                         </div>
                         <span class="text-green-300 text-xs mt-2">${new Date().toLocaleTimeString()}</span>
                     </div>
@@ -309,7 +319,7 @@
                 button.disabled = false;
             });
 
-            console.log(`Assigning order ${timestamp} to CRM: ${selectedCRM}, Concerned Owner: ${concernedOwner}`);
+            console.log(`Assigning order ${timestamp} to CRM: ${selectedCRM}, Concerned Owner: ${concernedOwner}, Type: ${selectedType}`);
         }
 
         function createCard(order, index) {
@@ -391,8 +401,8 @@
 
                 <div class="space-y-3">
                     <div class="crm-assignment bg-black/30 rounded-xl p-4" data-timestamp="${order.timestamp}">
-                        <label class="block text-white/90 text-sm font-semibold mb-2">Assign CRM & Owner</label>
-                        <div class="flex space-x-2">
+                        <label class="block text-white/90 text-sm font-semibold mb-2">Assign CRM & Owner & Type</label>
+                        <div class="grid grid-cols-3 gap-2 mb-2">
                             <select class="crm-select flex-1 bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                                 <option value="" class="text-gray-800">Choose CRM...</option>
                                 <option value="Km Kalpana" class="text-gray-800">Km Kalpana</option>
@@ -406,13 +416,19 @@
                                 <option value="Nitish Sir" class="text-gray-800">Nitish Sir</option>
                                 <option value="Parakh Sir" class="text-gray-800">Parakh Sir</option>
                             </select>
-                            <button onclick="assignCRM('${order.timestamp}')" class="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-300 font-semibold shadow-lg hover:shadow-xl transform hover:scale-105">
+                            <select class="type-select flex-1 bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <option value="" class="text-gray-800">Choose Type...</option>
+                                <option value="Red" class="text-red-500">Red</option>
+                                <option value="Yellow" class="text-yellow-500">Yellow</option>
+                                <option value="Green" class="text-green-500">Green</option>
+                            </select>
+                        </div>
+                        <button onclick="assignCRM('${order.timestamp}')" class="flex items-center justify-center w-full px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-300 font-semibold shadow-lg hover:shadow-xl transform hover:scale-105">
                                 <svg class="w-4 h-4 mr-1 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                                 </svg>
                                 Assign
                             </button>
-                        </div>
                     </div>
 
                     <a href="${order.fileUploadLink}" target="_blank"
