@@ -208,7 +208,7 @@
             statusMessage.textContent = `Attempting to cancel request ${requestId}... (Response will not be read in no-cors mode)`;
 
             try {
-                await fetch(API_URL, {
+                await fetch('https://script.google.com/a/macros/ntwoods.com/s/AKfycbw1_bZWqemtFfCn3Kq_DMf6QsKXhJHV1zhMuS_-rpn7MSA4jlVl2p2S9wvYJyOT03bh/exec', {
                     method: 'POST',
                     mode: 'no-cors',
                     headers: {
