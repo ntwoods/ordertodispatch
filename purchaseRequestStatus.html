@@ -97,7 +97,7 @@
                 <tr>
                     <th>Request ID</th>
                     <th>Dealer Name</th>
-                    <th>Request Files</th> <th>Quantity</th>
+                    <th>Request Files</th>
                     <th>Priority</th>
                     <th>CRM Remark</th>
                     <th>Request Date</th>
@@ -159,9 +159,8 @@
                         row.insertCell().textContent = request.requestId || '';
                         row.insertCell().textContent = request.dealername || '';
 
-                        // New: "Request Files" column with "View File" button
                         const fileCell = row.insertCell();
-                        if (request.product) { // Assuming 'product' key holds the file URL
+                        if (request.product) {
                             const viewFileButton = document.createElement('button');
                             viewFileButton.textContent = 'View File';
                             viewFileButton.className = 'view-file-button';
@@ -170,9 +169,8 @@
                         } else {
                             fileCell.textContent = 'No file';
                         }
-                        // End New
-
-                        row.insertCell().textContent = request.quantity || '';
+                        
+                        // Removed request.quantity from here
                         row.insertCell().textContent = request.priority || '';
                         row.insertCell().textContent = request.crmRemark || '';
                         row.insertCell().textContent = formatDate(request.requestDate);
