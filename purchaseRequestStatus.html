@@ -85,6 +85,77 @@
         .view-file-button:hover {
             background-color: #0056b3;
         }
+
+        /* Modal specific styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+            padding-top: 60px;
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 500px;
+            border-radius: 8px;
+            position: relative;
+        }
+        .close-button {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .close-button:hover,
+        .close-button:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .modal-buttons {
+            text-align: right;
+            margin-top: 20px;
+        }
+        .modal-buttons button {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            margin-left: 10px;
+        }
+        .modal-buttons .confirm-cancel {
+            background-color: #007bff;
+            color: white;
+        }
+        .modal-buttons .confirm-cancel:hover {
+            background-color: #0056b3;
+        }
+        .modal-buttons .close-modal {
+            background-color: #6c757d;
+            color: white;
+        }
+        .modal-buttons .close-modal:hover {
+            background-color: #5a6268;
+        }
+        textarea {
+            width: 100%;
+            min-height: 80px;
+            padding: 10px;
+            margin-top: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box; /* Ensures padding doesn't expand the element */
+        }
     </style>
 </head>
 <body>
@@ -111,12 +182,35 @@
         </table>
     </div>
 
+    <div id="cancellationRemarkModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2>Enter Cancellation Remark</h2>
+            <p>Please provide a reason for cancelling Request ID: <strong id="modalRequestId"></strong></p>
+            <textarea id="cancellationRemark" placeholder="Enter remark here..." rows="4"></textarea>
+            <div class="modal-buttons">
+                <button class="close-modal">Cancel</button>
+                <button class="confirm-cancel">Confirm Cancellation</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         const API_URL = "https://script.google.com/macros/s/AKfycbyffY1_V3ap0VOnFJ8tIPP5bR9_gy_cVQ8_WmLpu0Q6E_dzHOUDPbdXnP4Db5gXRyxl/exec";
         const crmNameDisplay = document.getElementById('crmNameDisplay');
         const statusMessage = document.getElementById('statusMessage');
         const requestsTable = document.getElementById('requestsTable');
         const tableBody = requestsTable.querySelector('tbody');
+
+        // Modal elements
+        const cancellationRemarkModal = document.getElementById('cancellationRemarkModal');
+        const closeButton = cancellationRemarkModal.querySelector('.close-button');
+        const modalRequestId = document.getElementById('modalRequestId');
+        const cancellationRemarkInput = document.getElementById('cancellationRemark');
+        const confirmCancelButton = cancellationRemarkModal.querySelector('.confirm-cancel');
+        const closeModalButton = cancellationRemarkModal.querySelector('.close-modal');
+
+        let currentRequestIdToCancel = null; // Variable to store the request ID when the modal opens
 
         // Function to format date to dd-mmm-yy
         function formatDate(dateString) {
@@ -198,11 +292,7 @@
             }
         }
 
-        async function cancelRequest(requestId) {
-            if (!confirm(`Are you sure you want to cancel request ID: ${requestId}?`)) {
-                return;
-            }
-
+        async function cancelRequest(requestId, cancellationRemark) {
             statusMessage.style.display = 'block';
             statusMessage.className = 'loading-message';
             statusMessage.textContent = `Attempting to cancel request ${requestId}... `;
@@ -217,7 +307,8 @@
                     body: JSON.stringify({
                         action: 'cancel',
                         requestId: requestId,
-                        crm: new URLSearchParams(window.location.search).get('crmName')
+                        crm: new URLSearchParams(window.location.search).get('crmName'),
+                        cancellationRemark: cancellationRemark // Send the remark
                     }),
                 });
 
@@ -238,12 +329,47 @@
             }
         }
 
+        // Event listener for the table body to catch cancel button clicks
         tableBody.addEventListener('click', (event) => {
             if (event.target.classList.contains('cancel-button')) {
-                const requestId = event.target.getAttribute('data-request-id');
-                if (requestId) {
-                    cancelRequest(requestId);
+                currentRequestIdToCancel = event.target.getAttribute('data-request-id');
+                if (currentRequestIdToCancel) {
+                    modalRequestId.textContent = currentRequestIdToCancel;
+                    cancellationRemarkInput.value = ''; // Clear previous remark
+                    cancellationRemarkModal.style.display = 'block';
                 }
+            }
+        });
+
+        // Event listeners for the modal
+        closeButton.addEventListener('click', () => {
+            cancellationRemarkModal.style.display = 'none';
+            currentRequestIdToCancel = null;
+        });
+
+        closeModalButton.addEventListener('click', () => {
+            cancellationRemarkModal.style.display = 'none';
+            currentRequestIdToCancel = null;
+        });
+
+        confirmCancelButton.addEventListener('click', () => {
+            const remark = cancellationRemarkInput.value.trim();
+            if (remark) {
+                if (currentRequestIdToCancel) {
+                    cancelRequest(currentRequestIdToCancel, remark);
+                    cancellationRemarkModal.style.display = 'none';
+                    currentRequestIdToCancel = null;
+                }
+            } else {
+                alert('Cancellation remark is required to proceed with cancellation.');
+            }
+        });
+
+        // Close the modal if the user clicks anywhere outside of it
+        window.addEventListener('click', (event) => {
+            if (event.target === cancellationRemarkModal) {
+                cancellationRemarkModal.style.display = 'none';
+                currentRequestIdToCancel = null;
             }
         });
 
