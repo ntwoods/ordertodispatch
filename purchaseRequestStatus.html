@@ -54,7 +54,7 @@
         tr:hover {
             background-color: #ddd;
         }
-        .loading-message, .error-message, .no-data-message {
+        .loading-message, .error-message, .no-data-message, .success-message {
             text-align: center;
             margin-top: 20px;
             font-size: 1.1em;
@@ -62,6 +62,21 @@
         }
         .error-message {
             color: #dc3545;
+        }
+        .success-message {
+            color: #28a745;
+        }
+        .cancel-button {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+        .cancel-button:hover {
+            background-color: #c82333;
         }
     </style>
 </head>
@@ -82,6 +97,7 @@
                     <th>Request Date</th>
                     <th>Expected Delivery</th>
                     <th>Remark Purchase</th>
+                    <th>Action</th>
                 </tr>
             </thead>
             <tbody>
@@ -102,16 +118,14 @@
             try {
                 const date = new Date(dateString);
                 const options = { day: '2-digit', month: 'short', year: '2-digit' };
-                // Use 'en-GB' locale for 'dd-mmm-yy' like formatting (e.g., 07-Jul-25)
                 return date.toLocaleDateString('en-GB', options).replace(/ /g, '-');
             } catch (e) {
                 console.error("Error formatting date:", dateString, e);
-                return dateString; // Return original if parsing fails
+                return dateString;
             }
         }
 
         async function fetchRequests() {
-            // Get CRM name from URL parameter
             const urlParams = new URLSearchParams(window.location.search);
             const crmName = urlParams.get('crmName');
 
@@ -123,18 +137,17 @@
 
             crmNameDisplay.textContent = `Requests for CRM: ${crmName}`;
             statusMessage.textContent = 'Loading requests...';
+            statusMessage.className = 'loading-message';
 
             try {
+                // Removed response.ok check as requested
                 const response = await fetch(`${API_URL}?crm=${encodeURIComponent(crmName)}`);
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                const result = await response.json();
+                const result = await response.json(); // Still need to parse JSON to display data
 
                 if (result.status === "success" && result.data && result.data.length > 0) {
                     statusMessage.style.display = 'none';
                     requestsTable.style.display = 'table';
-                    tableBody.innerHTML = ''; // Clear existing rows
+                    tableBody.innerHTML = '';
 
                     result.data.forEach(request => {
                         const row = tableBody.insertRow();
@@ -147,6 +160,13 @@
                         row.insertCell().textContent = formatDate(request.requestDate);
                         row.insertCell().textContent = formatDate(request.expectedDelivery);
                         row.insertCell().textContent = request.remarkPurchase || '';
+
+                        const actionCell = row.insertCell();
+                        const cancelButton = document.createElement('button');
+                        cancelButton.textContent = 'Cancel';
+                        cancelButton.className = 'cancel-button';
+                        cancelButton.setAttribute('data-request-id', request.requestId);
+                        actionCell.appendChild(cancelButton);
                     });
                 } else {
                     statusMessage.className = 'no-data-message';
@@ -162,7 +182,59 @@
             }
         }
 
-        // Fetch requests when the page loads
+        async function cancelRequest(requestId) {
+            if (!confirm(`Are you sure you want to cancel request ID: ${requestId}?`)) {
+                return;
+            }
+
+            statusMessage.style.display = 'block';
+            statusMessage.className = 'loading-message';
+            statusMessage.textContent = `Attempting to cancel request ${requestId}... (Response will not be read in no-cors mode)`;
+
+            try {
+                // Added mode: 'no-cors' and removed response.ok check
+                await fetch(API_URL, {
+                    method: 'POST',
+                    mode: 'no-cors', // This makes the response opaque
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'cancel',
+                        requestId: requestId,
+                        crm: new URLSearchParams(window.location.search).get('crmName')
+                    }),
+                });
+
+                // In no-cors mode, we cannot read the actual success/failure from the server response.
+                // We assume success if the fetch operation itself doesn't throw a network error.
+                statusMessage.className = 'success-message';
+                statusMessage.textContent = `Cancel request for ID ${requestId} sent. Please refresh to confirm status. (Cannot verify server response in no-cors mode)`;
+                // Optionally, refresh after a delay or just inform the user
+                setTimeout(fetchRequests, 2000); // Refresh after 2 seconds to see if change reflects
+
+            } catch (error) {
+                console.error("Failed to send cancel request:", error);
+                statusMessage.className = 'error-message';
+                statusMessage.textContent = `Error sending cancel request: ${error.message}.`;
+            } finally {
+                setTimeout(() => {
+                    if (statusMessage.className !== 'loading-message') {
+                        statusMessage.style.display = 'none';
+                    }
+                }, 5000); // Give more time for the 'no-cors' message
+            }
+        }
+
+        tableBody.addEventListener('click', (event) => {
+            if (event.target.classList.contains('cancel-button')) {
+                const requestId = event.target.getAttribute('data-request-id');
+                if (requestId) {
+                    cancelRequest(requestId);
+                }
+            }
+        });
+
         document.addEventListener('DOMContentLoaded', fetchRequests);
     </script>
 </body>
