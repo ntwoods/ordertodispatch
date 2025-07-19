@@ -205,7 +205,7 @@
 
             statusMessage.style.display = 'block';
             statusMessage.className = 'loading-message';
-            statusMessage.textContent = `Attempting to cancel request ${requestId}... (Response will not be read in no-cors mode)`;
+            statusMessage.textContent = `Attempting to cancel request ${requestId}... `;
 
             try {
                 await fetch('https://script.google.com/a/macros/ntwoods.com/s/AKfycbw1_bZWqemtFfCn3Kq_DMf6QsKXhJHV1zhMuS_-rpn7MSA4jlVl2p2S9wvYJyOT03bh/exec', {
@@ -222,7 +222,7 @@
                 });
 
                 statusMessage.className = 'success-message';
-                statusMessage.textContent = `Cancel request for ID ${requestId} sent. Please refresh to confirm status. (Cannot verify server response in no-cors mode)`;
+                statusMessage.textContent = `Cancel request for ID ${requestId} sent. Please refresh to confirm status.`;
                 setTimeout(fetchRequests, 2000);
 
             } catch (error) {
