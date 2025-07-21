@@ -237,11 +237,12 @@ orders.forEach((order, index) => {
     function copyDispatchDetails(index) {
       const order = globalOrders[index];
       const details = `Expected Delivery Date: ${formatDateToDDMMMYYYY(order.expectedDeliveryDate)}
-Dispatch Date & Time: ${formatDateToDDMMMYYYY(order.timestamp)}
-Vehicle No: ${order.vehicleNo || 'N/A'}
-Freight Amt: ${order.freight || 'N/A'}
-Driver Name: ${order.driverName || 'N/A'}
-Driver Mobile: ${order.driverMob || 'N/A'}`;
+      Dispatch Date & Time: ${formatDateToDDMMMYYYY(order.timestamp)}
+      Vehicle No: ${order.vehicleNo || 'N/A'}
+      Freight Amt: ${order.freight || 'N/A'}
+      Driver Name: ${order.driverName || 'N/A'}
+      Driver Mobile: ${order.driverMob || 'N/A'}
+      Invoice URL: ${order.invoiceUrl || 'N/A'}`;
 
       navigator.clipboard.writeText(details)
         .then(() => {
