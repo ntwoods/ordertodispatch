@@ -104,12 +104,36 @@ function createOrderCard(order, index) {
     
     const deadline = calculateDeadline(new Date(order.timestamp));
     const countdownId = `countdown-${index}`;
+
+    // --- NEW: Dealer Type Badge HTML ---
+    let dealerTypeBadge = '';
+    if (order.dealerType) {
+        let badgeColorClass = '';
+        switch (order.dealerType.toLowerCase()) {
+            case 'red':
+                badgeColorClass = 'bg-red-500';
+                break;
+            case 'yellow':
+                badgeColorClass = 'bg-yellow-500'; // You might need to add this to your tailwind config or style.css
+                break;
+            case 'green':
+                badgeColorClass = 'bg-green-500';
+                break;
+            default:
+                badgeColorClass = 'bg-gray-500'; // Default if none of the above
+        }
+        dealerTypeBadge = `
+            <div class="dealer-type-badge ${badgeColorClass} text-white text-xs font-semibold px-3 py-1 rounded-full flex items-center justify-center ml-2">
+                ${order.dealerType}
+            </div>
+        `;
+    }
+    // --- END NEW ---
     
     card.innerHTML = `
         <div class="flex justify-between items-start mb-4">
-            <div>
-                <h3 class="text-lg font-bold text-gray-900">${order.dealerName}</h3>
-            </div>
+            <div class="flex items-center"> <h3 class="text-lg font-bold text-gray-900">${order.dealerName}</h3>
+                ${dealerTypeBadge} </div>
             <div class="text-right">
                 <div id="${countdownId}" class="text-sm font-mono bg-white px-2 py-1 rounded"></div>
             </div>
@@ -135,7 +159,7 @@ function createOrderCard(order, index) {
             
             <div class="flex justify-between">
                 <span class="text-sm text-gray-600">File:</span>
-<button onclick="openMultipleDocuments('${order.fileUploadLink.replace(/'/g, "\\'")}', ${index})" class="text-sm text-blue-600 hover:text-blue-800 underline bg-transparent border-none cursor-pointer">View Document</button>                    </div>
+                <button onclick="openMultipleDocuments('${order.fileUploadLink.replace(/'/g, "\\'")}', ${index})" class="text-sm text-blue-600 hover:text-blue-800 underline bg-transparent border-none cursor-pointer">View Document</button>                    </div>
         </div>
 
         <div class="editable">
@@ -195,7 +219,6 @@ function createOrderCard(order, index) {
     
     return card;
 }
-
 const isSunday = date => date.getDay() === 0;
 
 function calculateDeadline(timestamp) {
