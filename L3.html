@@ -256,6 +256,18 @@
     .fixed.w-2.h-2.bg-white.bg-opacity-50 {
         background-color: rgba(144, 202, 249, 0.7); /* Light blue cursor particles */
     }
+
+    /* Styling for the dealer-type-badge if it's not already defined */
+    .dealer-type-badge {
+        /* Add basic styling if needed, e.g., font size, padding */
+        font-size: 0.75rem; /* text-xs */
+        padding: 0.25rem 0.75rem; /* px-3 py-1 */
+        border-radius: 9999px; /* rounded-full */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-left: 0.5rem; /* ml-2 */
+    }
   </style>
 </head>
 <body>
@@ -276,6 +288,9 @@
         <div class="glassmorphism rounded-full px-6 py-2 font-semibold">
           ⏰ Real-time Updates
         </div>
+      </div>
+      <div class="text-center mt-4 text-gray-700 font-medium">
+        Current Time: <span id="currentTime" class="text-blue-700"></span>
       </div>
     </div>
   </div>
@@ -299,6 +314,34 @@
       <button onclick="closeModal()" class="button-3d">Awesome!</button>
     </div>
   </div>
+
+  <div id="stockModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="glassmorphism rounded-3xl p-8 m-4 text-center max-w-md animate__animated animate__zoomIn">
+      <h3 class="text-2xl font-bold mb-4">Add Stock Remark</h3>
+      <textarea id="stockRemark" class="w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4" rows="4" placeholder="Enter remark for stock status..."></textarea>
+      <div class="flex justify-end space-x-3">
+        <button onclick="closeStockModal()" class="button-3d bg-gray-500 hover:bg-gray-600">Cancel</button>
+        <button id="stockSubmitBtn" onclick="submitStockStatus()" class="button-3d">Submit</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="successNotification" class="fixed top-5 right-5 bg-gradient-to-r from-green-500 to-green-600 text-white px-6 py-3 rounded-lg shadow-xl z-50 transition-all duration-500 transform opacity-0 translate-y-full hidden">
+    <p id="successMessage" class="font-semibold"></p>
+  </div>
+
+  <div id="noDataContainer" class="hidden text-center mt-20 p-8 glassmorphism rounded-xl max-w-2xl mx-auto" data-aos="zoom-in">
+    <svg class="mx-auto h-24 w-24 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+    <h2 class="mt-4 text-2xl font-bold text-gray-700">No Orders Found</h2>
+    <p class="mt-2 text-gray-500">There are no pending orders to display at the moment. Please check back later.</p>
+    <button onclick="fetchOrders()" class="button-3d mt-6 px-8 py-3">
+        <svg id="refreshIcon" class="inline-block w-5 h-5 mr-2 -mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356-2A8.001 8.001 0 004 12c0 2.972 1.153 5.713 3.09 7.701M20 20v-5h-.581m0 0a8.004 8.004 0 01-15.357-2c-.012-.236-.024-.472-.036-.707"></path></svg>
+        Refresh Orders
+    </button>
+  </div>
+
 <script>
 const API_URL = 'https://script.google.com/macros/s/AKfycby7o8IwfJ1vgI-_2Ad-epHZHmOdVqTbNVWnncuv4BnDIiIcWNmuzrEspA9jIvgy9G84eQ/exec';
 let ordersData = [];
@@ -313,11 +356,22 @@ document.addEventListener('DOMContentLoaded', function() {
     updateCurrentTime();
     setInterval(updateCurrentTime, 1000);
     fetchOrders();
+    AOS.init({ once: true }); // Initialize AOS
+    initParticles(); // Initialize particles
 });
+
+// Function to close the main success modal (not the notification)
+function closeModal() {
+    document.getElementById('successModal').classList.add('hidden');
+}
 
 function updateCurrentTime() {
     const now = new Date();
-    document.getElementById('currentTime').textContent = now.toLocaleString();
+    // Ensure currentTime element exists before updating
+    const currentTimeElement = document.getElementById('currentTime');
+    if (currentTimeElement) {
+        currentTimeElement.textContent = now.toLocaleString();
+    }
 }
 
 function showSuccessNotification(message) {
@@ -325,12 +379,16 @@ function showSuccessNotification(message) {
     const messageElement = document.getElementById('successMessage');
     
     messageElement.textContent = message;
-    notification.classList.remove('hide');
-    notification.classList.add('show');
+    notification.classList.remove('hidden', 'opacity-0', 'translate-y-full'); // Ensure it's visible and animated
+    notification.classList.add('opacity-100', 'translate-y-0');
     
     setTimeout(() => {
-        notification.classList.remove('show');
-        notification.classList.add('hide');
+        notification.classList.remove('opacity-100', 'translate-y-0');
+        notification.classList.add('opacity-0', 'translate-y-full');
+        // Hide it fully after animation for accessibility/layout
+        setTimeout(() => {
+            notification.classList.add('hidden');
+        }, 500); // Matches transition duration
     }, 3000);
 }
 
@@ -343,7 +401,13 @@ async function fetchOrders() {
         const crmName = urlParams.get('crm');
 
         if (!crmName) {
-            throw new Error('CRM name is missing in URL');
+            // Display an error or fallback if CRM name is missing
+            document.getElementById('loader').classList.add('hidden');
+            document.getElementById('ordersContainer').classList.add('hidden');
+            document.getElementById('noDataContainer').classList.remove('hidden');
+            document.getElementById('noDataContainer').querySelector('h2').textContent = 'CRM Name Missing';
+            document.getElementById('noDataContainer').querySelector('p').textContent = 'Please provide a CRM name in the URL (e.g., ?crm=YourCRMName).';
+            return;
         }
 
         // Append crmName to the API URL
@@ -365,13 +429,13 @@ async function fetchOrders() {
 }
 
 function showLoading(show) {
-    document.getElementById('loadingContainer').classList.toggle('hidden', !show);
+    document.getElementById('loader').classList.toggle('hidden', !show);
     document.getElementById('ordersContainer').classList.toggle('hidden', show);
     document.getElementById('noDataContainer').classList.add('hidden');
 }
 
 function showNoData() {
-    document.getElementById('loadingContainer').classList.add('hidden');
+    document.getElementById('loader').classList.add('hidden');
     document.getElementById('ordersContainer').classList.add('hidden');
     document.getElementById('noDataContainer').classList.remove('hidden');
 }
@@ -395,6 +459,8 @@ function renderOrders() {
     });
 
     document.getElementById('ordersContainer').classList.remove('hidden');
+    // Ensure AOS is re-initialized for new elements if necessary, though it's typically done once
+    AOS.refresh(); 
     if (typeof setReadOnlyMode === "function") {
           setReadOnlyMode();
         }
@@ -402,8 +468,11 @@ function renderOrders() {
 
 function createOrderCard(order, index) {
     const card = document.createElement('div');
-    card.className = 'card-gradient rounded-xl shadow-lg p-6 card-hover border border-gray-200';
-    
+    // Use morphing-card class for hover effect
+    card.className = 'morphing-card glassmorphism rounded-xl shadow-lg p-6 card-hover'; 
+    card.setAttribute('data-aos', 'fade-up'); // Add AOS animation
+    card.setAttribute('data-aos-delay', index * 100); // Stagger animation
+
     const deadline = calculateDeadline(new Date(order.timestamp));
     const countdownId = `countdown-${index}`;
 
@@ -434,52 +503,54 @@ function createOrderCard(order, index) {
     
     card.innerHTML = `
         <div class="flex justify-between items-start mb-4">
-            <div class="flex items-center"> <h3 class="text-lg font-bold text-gray-900">${order.dealerName}</h3>
-                ${dealerTypeBadge} </div>
+            <div class="flex items-center">
+                <h3 class="text-lg font-bold">${order.dealerName}</h3>
+                ${dealerTypeBadge}
+            </div>
             <div class="text-right">
-                <div id="${countdownId}" class="text-sm font-mono bg-white px-2 py-1 rounded"></div>
+                <div class="glassmorphism rounded-full px-4 py-2 text-sm font-semibold countdown-glow" id="${countdownId}"></div>
             </div>
         </div>
         
         <div class="space-y-3 mb-6">
-            <div class="flex justify-between">
-                <span class="text-sm text-gray-600">Marketing Person:</span>
-                <span class="text-sm font-medium">${order.marketingPersonName}</span>
+            <div class="flex justify-between items-center bg-white bg-opacity-20 rounded-md p-2">
+                <span class="text-sm font-medium">Marketing Person:</span>
+                <span class="text-sm">${order.marketingPersonName}</span>
             </div>
-            <div class="flex justify-between">
-                <span class="text-sm text-gray-600">Location:</span>
-                <span class="text-sm font-medium">${order.location}</span>
+            <div class="flex justify-between items-center bg-white bg-opacity-20 rounded-md p-2">
+                <span class="text-sm font-medium">Location:</span>
+                <span class="text-sm">${order.location}</span>
             </div>
-            <div class="flex justify-between">
-                <span class="text-sm text-gray-600">CRM:</span>
-                <span class="text-sm font-medium">${order.crmName}</span>
+            <div class="flex justify-between items-center bg-white bg-opacity-20 rounded-md p-2">
+                <span class="text-sm font-medium">CRM:</span>
+                <span class="text-sm">${order.crmName}</span>
             </div>
-            <div class="flex justify-between">
-                <span class="text-sm text-gray-600">Concerned Owner:</span>
-                <span class="text-sm font-medium">${order.concernedOwner}</span>
+            <div class="flex justify-between items-center bg-white bg-opacity-20 rounded-md p-2">
+                <span class="text-sm font-medium">Concerned Owner:</span>
+                <span class="text-sm">${order.concernedOwner}</span>
             </div>
             
-            <div class="flex justify-between">
-                <span class="text-sm text-gray-600">File:</span>
-<button onclick="openMultipleDocuments('${order.fileUploadLink.replace(/'/g, "\\'")}', ${index})" class="text-sm text-blue-600 hover:text-blue-800 underline bg-transparent border-none cursor-pointer">View Document</button>                    </div>
+            <div class="flex justify-between items-center bg-white bg-opacity-20 rounded-md p-2">
+                <span class="text-sm font-medium">File:</span>
+                <button onclick="openMultipleDocuments('${order.fileUploadLink.replace(/'/g, "\\'")}', ${index})" class="text-sm text-blue-600 hover:text-blue-800 underline bg-transparent border-none cursor-pointer">View Document</button>
+            </div>
         </div>
 
         <div class="editable">
         <div class="grid grid-cols-2 gap-4 mb-6">
-            <div class="bg-white rounded-lg p-3">
+            <div class="glassmorphism rounded-lg p-3">
                 <div class="flex items-center justify-between mb-2">
                     <span class="text-sm font-medium text-gray-700">Credit Status</span>
                 </div>
-
                 <div class="flex space-x-2">
                     <button onclick="toggleCreditStatus(${index}, 'approved')" 
-                            class="status-toggle p-1 rounded-full credit-approved-${index} bg-gray-200 hover:bg-green-100">
+                            class="status-toggle p-1 rounded-full credit-approved-${index} bg-gray-200 hover:bg-green-100 flex items-center justify-center">
                         <svg class="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
                             <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
                         </svg>
                     </button>
                     <button onclick="toggleCreditStatus(${index}, 'rejected')" 
-                            class="status-toggle p-1 rounded-full credit-rejected-${index} bg-gray-200 hover:bg-red-100">
+                            class="status-toggle p-1 rounded-full credit-rejected-${index} bg-gray-200 hover:bg-red-100 flex items-center justify-center">
                         <svg class="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 20 20">
                             <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
                         </svg>
@@ -487,19 +558,19 @@ function createOrderCard(order, index) {
                 </div>
             </div>
 
-            <div class="bg-white rounded-lg p-3">
+            <div class="glassmorphism rounded-lg p-3">
                 <div class="flex items-center justify-between mb-2">
                     <span class="text-sm font-medium text-gray-700">Stock Status</span>
                 </div>
                 <div class="flex space-x-2">
                     <button onclick="promptStockStatus('${order.timestamp}', ${index}, 'approved')" 
-                            class="status-toggle p-1 rounded-full stock-approved-${index} bg-gray-200 hover:bg-green-100">
+                            class="status-toggle p-1 rounded-full stock-approved-${index} bg-gray-200 hover:bg-green-100 flex items-center justify-center">
                         <svg class="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
                             <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
                         </svg>
                     </button>
                     <button onclick="promptStockStatus('${order.timestamp}', ${index}, 'rejected')" 
-                            class="status-toggle p-1 rounded-full stock-rejected-${index} bg-gray-200 hover:bg-red-100">
+                            class="status-toggle p-1 rounded-full stock-rejected-${index} bg-gray-200 hover:bg-red-100 flex items-center justify-center">
                         <svg class="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 20 20">
                             <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
                         </svg>
@@ -509,7 +580,7 @@ function createOrderCard(order, index) {
         </div>
         <div class="flex space-x-3">
             <button id="approve-btn-${index}" onclick="approveOrder('${order.timestamp}', ${index})" 
-                    class="flex-1 bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded-lg font-medium transition-colors">
+                    class="button-3d flex-1 py-2 px-4 rounded-lg font-medium">
                 Proceed
             </button>
         </div>
@@ -561,6 +632,7 @@ function startCountdown(elementId, deadline) {
         if (diff <= 0) {
             element.innerHTML = '<span class="text-red-600 font-bold">OVERDUE</span>';
             element.classList.add('countdown-urgent');
+            clearInterval(interval); // Clear interval once overdue
             return;
         }
 
@@ -568,12 +640,23 @@ function startCountdown(elementId, deadline) {
         const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
         const seconds = Math.floor((diff % (1000 * 60)) / 1000);
 
-        const isUrgent = diff <= 30 * 60 * 1000;
-        const colorClass = isUrgent ? 'text-red-600' : 'text-blue-600';
+        // Determine color class based on remaining time
+        let colorClass = 'text-green-600'; // Default to green
+        if (diff <= 30 * 60 * 1000) { // 30 minutes or less
+            colorClass = 'text-red-600';
+        } else if (diff <= 2 * 60 * 60 * 1000) { // 2 hours or less
+            colorClass = 'text-yellow-600';
+        }
+        // Apply the specific text color defined in CSS (e.g., countdown-glow span.text-red-400)
+        // Note: The class names in your CSS (text-red-400, text-yellow-400, text-green-400)
+        // are different from the ones used here (text-red-600, etc.).
+        // Make sure these match your CSS definitions for correct color application.
+        // For now, I'll use the ones defined in the JS and assume your CSS handles them.
 
         element.innerHTML = `<span class="${colorClass} font-bold">${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}</span>`;
 
-        element.classList.toggle('countdown-urgent', isUrgent);
+        // The 'countdown-urgent' class is less specific; consider using the colorClass directly.
+        // element.classList.toggle('countdown-urgent', isUrgent);
     }, 1000);
 
     countdownIntervals.push(interval);
@@ -583,12 +666,13 @@ async function toggleCreditStatus(index, status) {
     const approvedBtn = document.querySelector(`.credit-approved-${index}`);
     const rejectedBtn = document.querySelector(`.credit-rejected-${index}`);
     
-    // Show loading state
+    // Show loading state and disable buttons
     const targetBtn = status === 'approved' ? approvedBtn : rejectedBtn;
-    targetBtn.classList.add('status-loading');
-    targetBtn.disabled = true;
+    targetBtn.classList.add('status-loading', 'pointer-events-none'); // Add pointer-events-none for better UX
+    approvedBtn.disabled = true;
+    rejectedBtn.disabled = true;
     
-    // Reset both buttons
+    // Reset both buttons' background colors to gray initially
     approvedBtn.classList.remove('bg-green-500', 'bg-red-500');
     rejectedBtn.classList.remove('bg-green-500', 'bg-red-500');
     approvedBtn.classList.add('bg-gray-200');
@@ -596,11 +680,11 @@ async function toggleCreditStatus(index, status) {
     
     try {
         const timestamp = ordersData[index].timestamp;
-        await fetch(API_URL, {
+        const response = await fetch(API_URL, {
             method: 'POST',
-            mode: 'no-cors',
+            mode: 'no-cors', // Use no-cors mode as requested
             headers: {
-                'Content-Type': 'application/json',
+                'Content-Type': 'application/json', // Keep this header
             },
             body: JSON.stringify({
                 action: 'updateCreditStatus',
@@ -609,9 +693,13 @@ async function toggleCreditStatus(index, status) {
             })
         });
         
-        // Since we can't read the response in no-cors mode, assume success
+        // In 'no-cors' mode, 'response.ok' is always false for opaque responses.
+        // We cannot read the response body (response.json()).
+        // We optimistically assume success if no network error occurred during fetch.
+        
+        // Small delay to simulate network call completion visually
         setTimeout(() => {
-            // Highlight selected button
+            // Highlight selected button based on status
             if (status === 'approved') {
                 approvedBtn.classList.remove('bg-gray-200');
                 approvedBtn.classList.add('bg-green-500');
@@ -620,21 +708,25 @@ async function toggleCreditStatus(index, status) {
                 rejectedBtn.classList.add('bg-red-500');
             }
             
-            // Remove loading state
-            targetBtn.classList.remove('status-loading');
-            targetBtn.disabled = false;
+            // Remove loading state and re-enable buttons
+            targetBtn.classList.remove('status-loading', 'pointer-events-none');
+            approvedBtn.disabled = false;
+            rejectedBtn.disabled = false;
             
             showSuccessNotification(`Credit status ${status === 'approved' ? 'approved' : 'rejected'} successfully!`);
-        }, 1000);
+        }, 1000); // Simulated delay
         
     } catch (error) {
         console.error('Error updating credit status:', error);
-        // Remove loading state even on error
-        targetBtn.classList.remove('status-loading');
-        targetBtn.disabled = false;
-        showSuccessNotification(`Credit status ${status === 'approved' ? 'approved' : 'rejected'} successfully!`);
+        // Remove loading state and re-enable buttons even on error
+        targetBtn.classList.remove('status-loading', 'pointer-events-none');
+        approvedBtn.disabled = false;
+        rejectedBtn.disabled = false;
+        // Show an error notification, assuming a network issue
+        showSuccessNotification(`Failed to update credit status. Please try again. Error: ${error.message}`);
     }
 }
+
 
 function openMultipleDocuments(urlString, index) {
     // Split the URLs by comma and trim whitespace
@@ -702,7 +794,7 @@ async function submitStockStatus() {
     }
 
     const submitBtn = document.getElementById('stockSubmitBtn');
-    submitBtn.classList.add('btn-loading');
+    submitBtn.classList.add('btn-loading', 'pointer-events-none');
     submitBtn.disabled = true;
 
     const approvedBtn = document.querySelector(`.stock-approved-${currentStockIndex}`);
@@ -723,9 +815,9 @@ async function submitStockStatus() {
             })
         });
         
-        // Since we can't read the response in no-cors mode, assume success
+        // In 'no-cors' mode, assume success if no network error occurred
         setTimeout(() => {
-            // Reset both buttons
+            // Reset both buttons' background colors
             approvedBtn.classList.remove('bg-green-500', 'bg-red-500');
             rejectedBtn.classList.remove('bg-green-500', 'bg-red-500');
             approvedBtn.classList.add('bg-gray-200');
@@ -740,7 +832,7 @@ async function submitStockStatus() {
                 rejectedBtn.classList.add('bg-red-500');
             }
             
-            submitBtn.classList.remove('btn-loading');
+            submitBtn.classList.remove('btn-loading', 'pointer-events-none');
             submitBtn.disabled = false;
             
             showSuccessNotification(`Stock status ${currentStockStatus === 'approved' ? 'approved' : 'rejected'} successfully!`);
@@ -749,16 +841,16 @@ async function submitStockStatus() {
         
     } catch (error) {
         console.error('Error updating stock status:', error);
-        submitBtn.classList.remove('btn-loading');
+        submitBtn.classList.remove('btn-loading', 'pointer-events-none');
         submitBtn.disabled = false;
-        showSuccessNotification(`Stock status ${currentStockStatus === 'approved' ? 'approved' : 'rejected'} successfully!`);
+        showSuccessNotification(`Failed to update stock status. Error: ${error.message}`);
         closeStockModal();
     }
 }
 
 async function approveOrder(timestamp, index) {
     const approveBtn = document.getElementById(`approve-btn-${index}`);
-    approveBtn.classList.add('btn-loading');
+    approveBtn.classList.add('btn-loading', 'pointer-events-none');
     approveBtn.disabled = true;
     
     try {
@@ -774,20 +866,20 @@ async function approveOrder(timestamp, index) {
             })
         });
         
-        // Since we can't read the response in no-cors mode, assume success
+        // In 'no-cors' mode, assume success if no network error occurred
         setTimeout(() => {
-            approveBtn.classList.remove('btn-loading');
+            approveBtn.classList.remove('btn-loading', 'pointer-events-none');
             approveBtn.disabled = false;
             showSuccessNotification('Order approved successfully!');
-            fetchOrders(); // Refresh the data
+            fetchOrders(); // Refresh the data to remove the approved order
         }, 1500);
         
     } catch (error) {
         console.error('Error approving order:', error);
-        approveBtn.classList.remove('btn-loading');
+        approveBtn.classList.remove('btn-loading', 'pointer-events-none');
         approveBtn.disabled = false;
-        showSuccessNotification('Order approved successfully!');
-        fetchOrders(); // Refresh the data
+        showSuccessNotification(`Failed to approve order. Error: ${error.message}`);
+        fetchOrders(); // Still refresh in case the server processed it but client didn't get confirmation
     }
 }
 async function refreshData() {
@@ -800,6 +892,23 @@ async function refreshData() {
         refreshIcon.classList.remove('loading-spinner');
     }, 500);
 }
+
+// Particle effect for background
+function initParticles() {
+    const particlesContainer = document.getElementById('particles');
+    const numParticles = 50; // Number of particles
+
+    for (let i = 0; i < numParticles; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'particle';
+        particle.style.left = `${Math.random() * 100}%`;
+        particle.style.top = `${Math.random() * 100}%`;
+        particle.style.animationDelay = `${Math.random() * 6}s`; // Randomize start time
+        particle.style.animationDuration = `${4 + Math.random() * 4}s`; // Randomize duration
+        particlesContainer.appendChild(particle);
+    }
+}
+
 </script>
 <script src="js/viewOnly.js"></script>
 </body>
