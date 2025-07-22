@@ -497,3 +497,27 @@ async function refreshData() {
         refreshIcon.classList.remove('loading-spinner');
     }, 500);
 }
+// --- NEW: Dealer Type Badge HTML Logic ---
+let dealerTypeBadge = '';
+if (order.dealerType) {
+    let badgeColorClass = '';
+    switch (order.dealerType.toLowerCase()) {
+        case 'red':
+            badgeColorClass = 'bg-red-500';
+            break;
+        case 'yellow':
+            badgeColorClass = 'bg-yellow-500';
+            break;
+        case 'green':
+            badgeColorClass = 'bg-green-500';
+            break;
+        default:
+            badgeColorClass = 'bg-gray-500'; // Fallback color
+    }
+    dealerTypeBadge = `
+        <div class="dealer-type-badge ${badgeColorClass}">
+            ${order.dealerType}
+        </div>
+    `;
+}
+// --- END NEW ---
