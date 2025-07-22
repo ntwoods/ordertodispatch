@@ -39,6 +39,24 @@ body {
     animation: spin 1s linear infinite;
 }
 
+/* Styles for the dealer type badge */
+.dealer-type-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem 0.75rem; /* px-3 py-1 */
+  border-radius: 9999px; /* rounded-full */
+  font-size: 0.75rem; /* text-xs */
+  font-weight: 600; /* font-semibold */
+  color: white; /* text-white */
+  margin-left: 0.5rem; /* ml-2 */
+  white-space: nowrap; /* Prevent text wrapping */
+}
+.bg-red-500 { background-color: #ef4444; }
+.bg-yellow-500 { background-color: #f59e0b; }
+.bg-green-500 { background-color: #22c55e; }
+.bg-gray-500 { background-color: #6b7280; }
+
 @keyframes spin {
     from { transform: rotate(0deg); }
     to { transform: rotate(360deg); }
