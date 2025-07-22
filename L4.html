@@ -228,34 +228,34 @@
     .text-white {
       color: #212121; /* Dark gray for general text on light background */
     }
-    .text-white/80 {
+    .text-white\/80 {
       color: rgba(33, 33, 33, 0.8); /* Darker gray for slightly faded text */
     }
-    .text-white/70 {
+    .text-white\/70 {
       color: rgba(33, 33, 33, 0.7); /* Medium gray for faded text */
     }
-    .text-white/60 {
+    .text-white\/60 {
       color: rgba(33, 33, 33, 0.6); /* Lighter gray for faded text */
     }
-    .text-white/10 {
+    .text-white\/10 {
       background-color: rgba(144, 202, 249, 0.2); /* Light blue background for specific elements */
     }
     .loader-container .text-white {
         color: #1976d2; /* Blue for loader text */
     }
-    .loader-container .text-white/60 {
+    .loader-container .text-white\/60 {
         color: rgba(25, 118, 210, 0.6); /* Faded blue for loader subtext */
     }
     .metric-card .text-white {
         color: #1976d2; /* Blue for metric card numbers */
     }
-    .metric-card .text-white/70 {
+    .metric-card .text-white\/70 {
         color: rgba(25, 118, 210, 0.7); /* Faded blue for metric card labels */
     }
     .no-orders .text-white {
         color: #1976d2; /* Blue for no orders text */
     }
-    .no-orders .text-white/70 {
+    .no-orders .text-white\/70 {
         color: rgba(25, 118, 210, 0.7); /* Faded blue for no orders subtext */
     }
     .radio-custom + span.text-white {
@@ -264,17 +264,32 @@
     .radio-custom + span.group-hover\:text-white\/80 {
         color: rgba(33, 33, 33, 0.8); /* Darker gray on hover for radio label */
     }
+    /* Styles for the dealer type badge */
+    .dealer-type-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.25rem 0.75rem; /* px-3 py-1 */
+      border-radius: 9999px; /* rounded-full */
+      font-size: 0.75rem; /* text-xs */
+      font-weight: 600; /* font-semibold */
+      color: white; /* text-white */
+      margin-left: 0.5rem; /* ml-2 */
+      white-space: nowrap; /* Prevent text wrapping */
+    }
+    .bg-red-500 { background-color: #ef4444; }
+    .bg-yellow-500 { background-color: #f59e0b; }
+    .bg-green-500 { background-color: #22c55e; }
+    .bg-gray-500 { background-color: #6b7280; }
   </style>
 </head>
 <body class="min-h-screen p-4">
-  <!-- Header Section -->
   <div class="text-center mb-8">
     <div class="glass-morphism rounded-3xl p-8 max-w-4xl mx-auto">
       <div class="flex items-center justify-center mb-4">
         <div class="relative">
           <div class="absolute inset-0 pulse-ring bg-white opacity-20 rounded-full"></div>
-          <i class="fas fa-truck-fast text-5xl text-blue-700 icon-glow"></i> <!-- Blue icon -->
-        </div>
+          <i class="fas fa-truck-fast text-5xl text-blue-700 icon-glow"></i> </div>
       </div>
       <h1 class="text-4xl md:text-5xl font-bold text-blue-800 mb-2 gradient-text">
         Our Dispatch Team Needs Some Reminders 
@@ -285,7 +300,6 @@
     </div>
   </div>
 
-  <!-- Metrics Dashboard -->
   <div id="metricsContainer" class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 max-w-6xl mx-auto hidden">
     <div class="metric-card rounded-2xl p-6 text-center">
       <div class="text-3xl mb-2 text-blue-500">📊</div>
@@ -304,12 +318,10 @@
     </div>
   </div>
 
-  <!-- Loading State -->
   <div id="loader" class="text-center">
     <div class="loader-container rounded-3xl p-12 max-w-md mx-auto">
       <div class="mb-6">
-        <i class="fas fa-sync-alt text-4xl text-blue-500 animate-spin"></i> <!-- Blue spinner -->
-      </div>
+        <i class="fas fa-sync-alt text-4xl text-blue-500 animate-spin"></i> </div>
       <div class="text-2xl text-blue-700 font-semibold">
         Loading orders<span class="loading-dots"></span>
       </div>
@@ -317,7 +329,6 @@
     </div>
   </div>
 
-  <!-- Orders Container -->
   <div id="ordersContainer" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 max-w-7xl mx-auto hidden"></div>
 
   <script>
@@ -427,6 +438,31 @@
         const deadline = getDeadline(order.timestamp);
         const overdue = new Date() > deadline;
 
+        // --- NEW: Dealer Type Badge HTML Logic ---
+        let dealerTypeBadge = '';
+        if (order.dealerType) {
+            let badgeColorClass = '';
+            switch (order.dealerType.toLowerCase()) {
+                case 'red':
+                    badgeColorClass = 'bg-red-500';
+                    break;
+                case 'yellow':
+                    badgeColorClass = 'bg-yellow-500';
+                    break;
+                case 'green':
+                    badgeColorClass = 'bg-green-500';
+                    break;
+                default:
+                    badgeColorClass = 'bg-gray-500'; // Fallback color
+            }
+            dealerTypeBadge = `
+                <div class="dealer-type-badge ${badgeColorClass}">
+                    ${order.dealerType}
+                </div>
+            `;
+        }
+        // --- END NEW ---
+
         const card = document.createElement("div");
         card.className = "glass-morphism rounded-3xl p-8 card-hover stagger-animation";
         card.style.animationDelay = `${index * 0.1}s`;
@@ -450,7 +486,9 @@
                   <i class="fas fa-building text-white text-lg"></i>
                 </div>
                 <div>
-                  <div class="text-2xl font-bold text-blue-800">${order.dealerName}</div>
+                  <div class="text-2xl font-bold text-blue-800 flex items-center">
+                    ${order.dealerName}
+                    ${dealerTypeBadge} </div>
                   <div class="text-blue-600 text-sm">Dealer Information</div>
                 </div>
               </div>
