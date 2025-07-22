@@ -137,6 +137,9 @@ orders.forEach((order, index) => {
     <span class="text-m text-black-600">Dispatch Receipt:</span>
     <button onclick="openMultipleDocuments('${order.dispatchDetailUrl.replace(/'/g, "\\'")}', ${index})" class="text-sm text-blue-600 hover:text-blue-800 underline bg-transparent border-none cursor-pointer">View Dispatch Receipts</button>
 
+    <span class="text-m text-black-600">Raw File:</span>
+    <button onclick="openMultipleDocuments('${order.fileUploadLink.replace(/'/g, "\\'")}', ${index})" class="text-sm text-blue-600 hover:text-blue-800 underline bg-transparent border-none cursor-pointer">Final Order File</button>
+
     <span class="text-m text-black-600">Final Order:</span>
     <button onclick="openMultipleDocuments('${order.finalOrder.replace(/'/g, "\\'")}', ${index})" class="text-sm text-blue-600 hover:text-blue-800 underline bg-transparent border-none cursor-pointer">Final Order File</button>   
 
