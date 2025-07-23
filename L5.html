@@ -188,81 +188,107 @@ function showConfirmationBox(message, onConfirm) {
           <div class="absolute top-2 right-2 text-sm font-semibold px-3 py-1 rounded-full ${overdue ? 'bg-red-200 text-red-800' : 'bg-green-200 text-green-800'}">
             ${deadlineLabel}
           </div>
-          ${!hasInvoice ? `<div class="absolute top-2 left-2 text-sm font-semibold px-3 py-1 rounded-full bg-red-200 text-red-800">
-            Invoice Missing
-          </div>` : ''}
-          <h3 class="text-xl font-bold text-gray-800 mb-2">${order.dealerName}</h3>
-          <p class="text-gray-600 mb-1">Marketing Person: <span class="font-medium">${order.marketingPersonName}</span></p>
-          <p class="text-gray-600 mb-1">Location: <span class="font-medium">${order.location}</span></p>
-          <p class="text-gray-600 mb-1">CRM: <span class="font-medium">${order.crmName}</span></p>
-          <p class="text-gray-600 mb-4">Concerned Owner: <span class="font-medium">${order.concernedOwner}</span></p>
+          ${!hasInvoice ? `<div class="absolute top-2 left-2 text-xs font-semibold px-2 py-1 rounded-full bg-red-200 text-red-800">Missing Invoice</div>` : ""}
 
-          <div class="flex justify-between items-center mb-4">
-            <span class="text-gray-700 font-semibold">File Upload:</span>
-            <button onclick="openMultipleDocuments('${order.fileUploadLink.replace(/'/g, "\\'")}', ${index})" class="bg-blue-500 hover:bg-blue-600 text-white text-sm font-bold py-2 px-4 rounded-full transition duration-300">
-              View Document
+          <div class="text-xl font-bold mb-2">${order.dealerName}</div>
+          <p><strong>Marketing:</strong> ${order.marketingPersonName}</p>
+          <p><strong>Location:</strong> ${order.location}</p>
+          <p><strong>CRM:</strong> ${order.crmName}</p>
+          <p><strong>Con. Owner:</strong> ${order.concernedOwner}</p>    
+          <p><strong>Expected Delivery:</strong> ${formatDateToDDMMMYYYY(order.expectedDeliveryDate)}</p>
+          <p><strong>Dispatch Date & Time:</strong> ${formatDateToDDMMMYYYY(order.timestamp)}</p>
+          <p><strong>Deadline:</strong> ${formatDateToDDMMMYYYY(deadline)}</p>
+          <p><strong>Time Left:</strong> <span id="countdown-${index}" class="font-mono text-blue-700"></span></p>
+          <p><strong>Vehicle No:</strong> ${order.vehicleNo || 'N/A'}</p>
+          <p><strong>Freight:</strong> ${order.freight || 'N/A'}</p>
+          <p><strong>Driver Name:</strong> ${order.driverName || 'N/A'}</p>
+          <p><strong>Driver Mobile:</strong> ${order.driverMob || 'N/A'}</p>
+          <div class="editable">
+          <span class="text-m text-black-600">Dispatch Receipt:</span>
+          <button onclick="openMultipleDocuments('${order.dispatchDetailUrl.replace(/'/g, "\\'")}', ${index})" class="text-sm text-blue-600 hover:text-blue-800 underline bg-transparent border-none cursor-pointer">View Dispatch Receipts</button>
+
+          <span class="text-m text-black-600">Raw File:</span>
+          <button onclick="openMultipleDocuments('${order.fileUploadLink.replace(/'/g, "\\'")}', ${index})" class="text-sm text-blue-600 hover:text-blue-800 underline bg-transparent border-none cursor-pointer">Raw File</button>
+
+          <span class="text-m text-black-600">Final Order:</span>
+          <button onclick="openMultipleDocuments('${order.finalOrder.replace(/'/g, "\\'")}', ${index})" class="text-sm text-blue-600 hover:text-blue-800 underline bg-transparent border-none cursor-pointer">Final File</button>   
+
+          ${order.additionalOrder ? `
+            <span class="text-m text-red-600">Additional Order:</span>
+            <button onclick="openMultipleDocuments('${order.additionalOrder.replace(/'/g, "\\'")}', ${index})" 
+                    class="text-sm text-blue-600 hover:text-blue-800 underline bg-transparent border-none cursor-pointer">
+              Additional Order File
             </button>
-          </div>
+          ` : ''}
 
-          <div class="bg-white p-4 rounded-lg shadow-inner mb-4">
-            <p class="text-gray-700 text-lg font-semibold mb-2">Dispatch Details:</p>
-            <p class="text-gray-600 text-sm mb-1">Expected Delivery Date: <span class="font-medium">${formatDateToDDMMMYYYY(order.expectedDeliveryDate)}</span></p>
-            <p class="text-gray-600 text-sm mb-1">Dispatch Date & Time: <span class="font-medium">${formatDateToDDMMMYYYY(order.timestamp)}</span></p>
-            <p class="text-gray-600 text-sm mb-1">Vehicle No: <span class="font-medium">${order.vehicleNo || 'N/A'}</span></p>
-            <p class="text-gray-600 text-sm mb-1">Freight Amt: <span class="font-medium">${order.freight || 'N/A'}</span></p>
-            <p class="text-gray-600 text-sm mb-1">Driver Name: <span class="font-medium">${order.driverName || 'N/A'}</span></p>
-            <p class="text-gray-600 text-sm mb-4">Driver Mobile: <span class="font-medium">${order.driverMob || 'N/A'}</span></p>
-            <p class="text-gray-600 text-sm">Invoice URL: <a href="${order.invoiceUrl}" target="_blank" class="text-blue-500 hover:underline">${order.invoiceUrl || 'N/A'}</a></p>
-          </div>
+          <span class="text-m text-black-600">Invoices:</span>
+          <button onclick="openMultipleDocuments('${order.invoiceUrl.replace(/'/g, "\\'")}', ${index})" class="text-sm text-blue-600 hover:text-blue-800 underline bg-transparent border-none cursor-pointer">View Invoices</button>
 
-          <div class="flex justify-center">
-            <button onclick="submitOrder(this, ${index})" class="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-full shadow-lg transition duration-300 ease-in-out transform hover:scale-105">
-              Inform Dealer
-            </button>
+          <div class="mt-4">
+            <label class="inline-flex items-center">
+              <input type="radio" name="confirm-${index}" id="radio-${index}" class="form-radio h-4 w-4 text-blue-600">
+              <span class="ml-2 text-sm">Dispatch Details Sent To Dealer</span>
+            </label>
+          </div>
+          <button id="submit-${index}" onclick="submitConfirmation(${index})"
+            class="mt-4 w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
+            Submit
+          </button>
+          <button onclick="copyDispatchDetails(${index})"
+            class="mt-2 w-full bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition">
+            Copy Dispatch Details
+          </button>
           </div>
         `;
+
         container.appendChild(card);
+        startCountdown(deadline, index);
       });
     }
 
-    async function submitOrder(button, index) {
-  const originalText = button.textContent;
-  button.textContent = "Submitting...";
-  button.disabled = true;
-  button.classList.add('btn-loading'); // Add loading class
+    async function submitConfirmation(index) {
+      const radio = document.getElementById(`radio-${index}`);
+      if (!radio.checked) {
+        showMessageBox("Please confirm that the Dispatch Department is informed."); // Using custom message box
+        return;
+      }
+    const button = document.getElementById(`submit-${index}`);
+    // Show loading state
+    const originalText = button.textContent;
+    button.textContent = "Submitting...";
+    button.disabled = true;
+    button.classList.add('btn-loading'); // Add loading class
 
-  try {
-    const order = globalOrders[index];
-    const response = await fetch(API_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ action: "informDealer", orderId: order.orderId, crmName: order.crmName }),
-    });
+ 
+     const payload = {
+        timestampForMap: globalOrders[index].timestampForMap
+      };
+      try {
+        const res = await fetch(API_URL, {
+          method: "POST",
+          mode: "no-cors",
+          body: JSON.stringify(payload),
+          headers: { "Content-Type": "application/json" }
+        });
 
-    const result = await response.json();
+    setTimeout(() => {
+      showMessageBox("Submitted successfully!"); // Using custom message box
+      button.textContent = "Submitted ✓";
+      button.style.backgroundColor = "#10B981"; // Green color
+      fetchOrders();
+      
+      // Optional: Remove the card or disable further submissions
+      // button.disabled = true;
+    }, 1000);
 
-    if (result.status === "success") {
-        // Using custom message box instead of alert()
-        showMessageBox("Submitted successfully!");
-        button.textContent = "Submitted ✓";
-        button.style.backgroundColor = "#10B981"; // Green color
-        // Optionally, remove the card or disable further submissions
-        // button.disabled = true;
-        fetchOrders(); // Refresh the data to reflect changes
-    } else {
-        throw new Error(result.message || "Submission failed.");
-    }
   } catch (err) {
     console.error('Submit error:', err);
-    // Using custom message box instead of alert()
-    showMessageBox("Submission failed. Please try again.");
     button.textContent = originalText;
     button.disabled = false;
+    showMessageBox("Submission failed. Please try again."); // Using custom message box
+    fetchOrders();      
   } finally {
-    button.classList.remove('btn-loading'); // Remove loading class
-    fetchOrders(); // Always refresh data in finally
+    button.classList.remove('btn-loading'); // Ensure loading class is removed
   }
 }
 
@@ -278,18 +304,17 @@ function showConfirmationBox(message, onConfirm) {
 
       navigator.clipboard.writeText(details)
         .then(() => {
-          // Using custom message box instead of alert()
-          showMessageBox('Dispatch details copied to clipboard!');
+          showMessageBox('Dispatch details copied to clipboard!'); // Using custom message box
         })
         .catch(err => {
           console.error('Failed to copy dispatch details:', err);
-          // Using custom message box instead of alert()
-          showMessageBox('Failed to copy dispatch details.');
+          showMessageBox('Failed to copy dispatch details. Please try again or copy manually.'); // Using custom message box
         });
     }
 
     // Initial fetch of orders when the page loads
     document.addEventListener("DOMContentLoaded", fetchOrders);
   </script>
+  <script src="js/viewOnly.js"></script>
 </body>
 </html>
