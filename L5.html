@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <title>Inform The Dealer About Dispatch Details</title>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
-<link rel="stylesheet" href="style.css"> <!-- Link to your custom style.css -->
 </head>
 <body class="bg-gray-100 min-h-screen p-4">
   <div id="loader" class="text-center text-xl text-blue-600 font-semibold">Loading orders...</div>
@@ -26,78 +25,30 @@ function openMultipleDocuments(urlString, index) {
     const urls = urlString.split(',').map(url => url.trim()).filter(url => url.length > 0);
     
     if (urls.length === 0) {
-        // Using a custom message box instead of alert()
-        showMessageBox('No valid URLs found');
+        alert('No valid URLs found');
         return;
     }
     
     // Show a confirmation if there are multiple URLs
     if (urls.length > 1) {
-        showConfirmationBox(`This will open ${urls.length} documents in separate tabs. Continue?`, () => {
-            // Open each URL in a new tab with a small delay to prevent popup blocker
-            urls.forEach((url, urlIndex) => {
-                setTimeout(() => {
-                    window.open(url, '_blank');
-                }, urlIndex * 100); // 100ms delay between each tab opening
-            });
-        });
-    } else {
-        // Open single URL directly
-        window.open(urls[0], '_blank');
+        const confirmed = confirm(`This will open ${urls.length} documents in separate tabs. Continue?`);
+        if (!confirmed) {
+            return;
+        }
     }
+    
+    // Open each URL in a new tab with a small delay to prevent popup blocker
+    urls.forEach((url, urlIndex) => {
+        setTimeout(() => {
+            window.open(url, '_blank');
+        }, urlIndex * 100); // 100ms delay between each tab opening
+    });
 }
-
-// Custom message box function
-function showMessageBox(message) {
-    const modalOverlay = document.createElement('div');
-    modalOverlay.className = 'modal-overlay fixed inset-0 flex items-center justify-center z-50';
-    modalOverlay.innerHTML = `
-        <div class="bg-white p-6 rounded-lg shadow-xl max-w-sm mx-auto text-center">
-            <p class="text-gray-800 text-lg mb-4">${message}</p>
-            <button onclick="this.closest('.modal-overlay').remove()" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-full">
-                OK
-            </button>
-        </div>
-    `;
-    document.body.appendChild(modalOverlay);
-}
-
-// Custom confirmation box function
-function showConfirmationBox(message, onConfirm) {
-    const modalOverlay = document.createElement('div');
-    modalOverlay.className = 'modal-overlay fixed inset-0 flex items-center justify-center z-50';
-    modalOverlay.innerHTML = `
-        <div class="bg-white p-6 rounded-lg shadow-xl max-w-sm mx-auto text-center">
-            <p class="text-gray-800 text-lg mb-4">${message}</p>
-            <div class="flex justify-center space-x-4">
-                <button id="confirmYes" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-full">
-                    Yes
-                </button>
-                <button id="confirmNo" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-full">
-                    No
-                </button>
-            </div>
-        </div>
-    `;
-    document.body.appendChild(modalOverlay);
-
-    document.getElementById('confirmYes').onclick = () => {
-        onConfirm();
-        modalOverlay.remove();
-    };
-    document.getElementById('confirmNo').onclick = () => {
-        modalOverlay.remove();
-    };
-}
-
-
     async function fetchOrders() {
       try {
         const urlParams = new URLSearchParams(window.location.search);
         const crmName = urlParams.get('crm');
         if (!crmName) {
-            // Using custom message box instead of alert()
-            showMessageBox('CRM name is missing in URL');
             throw new Error('CRM name is missing in URL');
         }
         // Append crmName to the API URL
@@ -150,114 +101,110 @@ function showConfirmationBox(message, onConfirm) {
     return;
   }
 
-      orders.forEach((order, index) => {
-        const deadline = getDeadline(order.timestamp);
-        const hasInvoice = order.invoiceUrl && order.invoiceUrl.trim() !== "";
-        const bgColor = hasInvoice ? "bg-green-100 border border-green-300" : "bg-red-100 border border-red-300";
-        const card = document.createElement("div");
-        card.className = `${bgColor} p-6 rounded-2xl shadow-md relative transition hover:scale-[1.02]`;
-        const overdue = new Date() > deadline;
-        const deadlineLabel = overdue ? "Overdue" : "Active";
+orders.forEach((order, index) => {
+  const deadline = getDeadline(order.timestamp);
 
-        // Determine dealerType badge class
-        let dealerTypeBadgeHtml = '';
-        if (order.dealerType) {
-            let badgeColorClass = '';
-            switch (order.dealerType.toLowerCase()) {
-                case 'red':
-                    badgeColorClass = 'bg-red-600'; // Darker red for better contrast
-                    break;
-                case 'yellow':
-                    badgeColorClass = 'bg-yellow-500';
-                    break;
-                case 'green':
-                    badgeColorClass = 'bg-green-600'; // Darker green for better contrast
-                    break;
-                default:
-                    badgeColorClass = 'bg-gray-500';
-            }
-            dealerTypeBadgeHtml = `
-                <div class="dealer-type-badge ${badgeColorClass}">
-                    ${order.dealerType}
-                </div>
-            `;
+  const hasInvoice = order.invoiceUrl && order.invoiceUrl.trim() !== "";
+  const bgColor = hasInvoice ? "bg-green-100 border border-green-300" : "bg-red-100 border border-red-300";
+
+  const card = document.createElement("div");
+  card.className = `${bgColor} p-6 rounded-2xl shadow-md relative transition hover:scale-[1.02]`;
+
+  const overdue = new Date() > deadline;
+  const deadlineLabel = overdue ? "Overdue" : "Active";
+
+  card.innerHTML = `
+    <div class="absolute top-2 right-2 text-sm font-semibold px-3 py-1 rounded-full ${overdue ? 'bg-red-200 text-red-800' : 'bg-green-200 text-green-800'}">
+      ${deadlineLabel}
+    </div>
+
+    ${!hasInvoice ? `<div class="absolute top-2 left-2 text-xs font-semibold px-2 py-1 rounded-full bg-red-200 text-red-800">Missing Invoice</div>` : ""}
+
+    <div class="text-xl font-bold mb-2">${order.dealerName}</div>
+    <p><strong>Marketing:</strong> ${order.marketingPersonName}</p>
+    <p><strong>Location:</strong> ${order.location}</p>
+    <p><strong>CRM:</strong> ${order.crmName}</p>
+    <p><strong>Con. Owner:</strong> ${order.concernedOwner}</p>    
+    <p><strong>Expected Delivery:</strong> ${formatDateToDDMMMYYYY(order.expectedDeliveryDate)}</p>
+    <p><strong>Dispatch Date & Time:</strong> ${formatDateToDDMMMYYYY(order.timestamp)}</p>
+    <p><strong>Deadline:</strong> ${formatDateToDDMMMYYYY(deadline)}</p>
+    <p><strong>Time Left:</strong> <span id="countdown-${index}" class="font-mono text-blue-700"></span></p>
+    <p><strong>Vehicle No:</strong> ${order.vehicleNo || 'N/A'}</p>
+    <p><strong>Freight:</strong> ${order.freight || 'N/A'}</p>
+    <p><strong>Driver Name:</strong> ${order.driverName || 'N/A'}</p>
+    <p><strong>Driver Mobile:</strong> ${order.driverMob || 'N/A'}</p>
+    <div class="editable">
+    <span class="text-m text-black-600">Dispatch Receipt:</span>
+    <button onclick="openMultipleDocuments('${order.dispatchDetailUrl.replace(/'/g, "\\'")}', ${index})" class="text-sm text-blue-600 hover:text-blue-800 underline bg-transparent border-none cursor-pointer">View Dispatch Receipts</button>
+
+    <span class="text-m text-black-600">Raw File:</span>
+    <button onclick="openMultipleDocuments('${order.fileUploadLink.replace(/'/g, "\\'")}', ${index})" class="text-sm text-blue-600 hover:text-blue-800 underline bg-transparent border-none cursor-pointer">Raw File</button>
+
+    <span class="text-m text-black-600">Final Order:</span>
+    <button onclick="openMultipleDocuments('${order.finalOrder.replace(/'/g, "\\'")}', ${index})" class="text-sm text-blue-600 hover:text-blue-800 underline bg-transparent border-none cursor-pointer">Final File</button>   
+
+    ${order.additionalOrder ? `
+      <span class="text-m text-red-600">Additional Order:</span>
+      <button onclick="openMultipleDocuments('${order.additionalOrder.replace(/'/g, "\\'")}', ${index})" 
+              class="text-sm text-blue-600 hover:text-blue-800 underline bg-transparent border-none cursor-pointer">
+        Additional Order File
+      </button>
+    ` : ''}
+
+    <span class="text-m text-black-600">Invoices:</span>
+    <button onclick="openMultipleDocuments('${order.invoiceUrl.replace(/'/g, "\\'")}', ${index})" class="text-sm text-blue-600 hover:text-blue-800 underline bg-transparent border-none cursor-pointer">View Invoices</button>
+
+    <div class="mt-4">
+      <label class="inline-flex items-center">
+        <input type="radio" name="confirm-${index}" id="radio-${index}" class="form-radio h-4 w-4 text-blue-600">
+        <span class="ml-2 text-sm">Dispatch Details Sent To Dealer</span>
+      </label>
+    </div>
+    <button id="submit-${index}" onclick="submitConfirmation(${index})"
+      class="mt-4 w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
+      Submit
+    </button>
+    <button onclick="copyDispatchDetails(${index})"
+      class="mt-2 w-full bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition">
+      Copy Dispatch Details
+    </button>
+    </div>
+  `;
+
+  container.appendChild(card);
+  startCountdown(deadline, index);
+});
+}
+    function startCountdown(deadline, index) {
+      const el = document.getElementById(`countdown-${index}`);
+      function update() {
+        const now = new Date();
+        const diff = deadline - now;
+        if (diff <= 0) {
+          el.innerText = "00:00:00";
+          el.classList.add("text-red-500");
+          return;
         }
-
-        card.innerHTML = `
-          ${dealerTypeBadgeHtml} <!-- Dealer Type Badge -->
-          <div class="absolute top-2 right-2 text-sm font-semibold px-3 py-1 rounded-full ${overdue ? 'bg-red-200 text-red-800' : 'bg-green-200 text-green-800'}">
-            ${deadlineLabel}
-          </div>
-          ${!hasInvoice ? `<div class="absolute top-2 left-2 text-xs font-semibold px-2 py-1 rounded-full bg-red-200 text-red-800">Missing Invoice</div>` : ""}
-
-          <div class="text-xl font-bold mb-2">${order.dealerName}</div>
-          <p><strong>Marketing:</strong> ${order.marketingPersonName}</p>
-          <p><strong>Location:</strong> ${order.location}</p>
-          <p><strong>CRM:</strong> ${order.crmName}</p>
-          <p><strong>Con. Owner:</strong> ${order.concernedOwner}</p>    
-          <p><strong>Expected Delivery:</strong> ${formatDateToDDMMMYYYY(order.expectedDeliveryDate)}</p>
-          <p><strong>Dispatch Date & Time:</strong> ${formatDateToDDMMMYYYY(order.timestamp)}</p>
-          <p><strong>Deadline:</strong> ${formatDateToDDMMMYYYY(deadline)}</p>
-          <p><strong>Time Left:</strong> <span id="countdown-${index}" class="font-mono text-blue-700"></span></p>
-          <p><strong>Vehicle No:</strong> ${order.vehicleNo || 'N/A'}</p>
-          <p><strong>Freight:</strong> ${order.freight || 'N/A'}</p>
-          <p><strong>Driver Name:</strong> ${order.driverName || 'N/A'}</p>
-          <p><strong>Driver Mobile:</strong> ${order.driverMob || 'N/A'}</p>
-          <div class="editable">
-          <span class="text-m text-black-600">Dispatch Receipt:</span>
-          <button onclick="openMultipleDocuments('${order.dispatchDetailUrl.replace(/'/g, "\\'")}', ${index})" class="text-sm text-blue-600 hover:text-blue-800 underline bg-transparent border-none cursor-pointer">View Dispatch Receipts</button>
-
-          <span class="text-m text-black-600">Raw File:</span>
-          <button onclick="openMultipleDocuments('${order.fileUploadLink.replace(/'/g, "\\'")}', ${index})" class="text-sm text-blue-600 hover:text-blue-800 underline bg-transparent border-none cursor-pointer">Raw File</button>
-
-          <span class="text-m text-black-600">Final Order:</span>
-          <button onclick="openMultipleDocuments('${order.finalOrder.replace(/'/g, "\\'")}', ${index})" class="text-sm text-blue-600 hover:text-blue-800 underline bg-transparent border-none cursor-pointer">Final File</button>   
-
-          ${order.additionalOrder ? `
-            <span class="text-m text-red-600">Additional Order:</span>
-            <button onclick="openMultipleDocuments('${order.additionalOrder.replace(/'/g, "\\'")}', ${index})" 
-                    class="text-sm text-blue-600 hover:text-blue-800 underline bg-transparent border-none cursor-pointer">
-              Additional Order File
-            </button>
-          ` : ''}
-
-          <span class="text-m text-black-600">Invoices:</span>
-          <button onclick="openMultipleDocuments('${order.invoiceUrl.replace(/'/g, "\\'")}', ${index})" class="text-sm text-blue-600 hover:text-blue-800 underline bg-transparent border-none cursor-pointer">View Invoices</button>
-
-          <div class="mt-4">
-            <label class="inline-flex items-center">
-              <input type="radio" name="confirm-${index}" id="radio-${index}" class="form-radio h-4 w-4 text-blue-600">
-              <span class="ml-2 text-sm">Dispatch Details Sent To Dealer</span>
-            </label>
-          </div>
-          <button id="submit-${index}" onclick="submitConfirmation(${index})"
-            class="mt-4 w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
-            Submit
-          </button>
-          <button onclick="copyDispatchDetails(${index})"
-            class="mt-2 w-full bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition">
-            Copy Dispatch Details
-          </button>
-          </div>
-        `;
-
-        container.appendChild(card);
-        startCountdown(deadline, index);
-      });
+        const h = String(Math.floor(diff / (1000 * 60 * 60))).padStart(2, "0");
+        const m = String(Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))).padStart(2, "0");
+        const s = String(Math.floor((diff % (1000 * 60)) / 1000)).padStart(2, "0");
+        el.innerText = `${h}:${m}:${s}`;
+      }
+      update();
+      setInterval(update, 1000);
     }
 
     async function submitConfirmation(index) {
       const radio = document.getElementById(`radio-${index}`);
       if (!radio.checked) {
-        showMessageBox("Please confirm that the Dispatch Department is informed."); // Using custom message box
+        alert("Please confirm that the Dispatch Department is informed.");
         return;
       }
     const button = document.getElementById(`submit-${index}`);
-    // Show loading state
-    const originalText = button.textContent;
-    button.textContent = "Submitting...";
-    button.disabled = true;
-    button.classList.add('btn-loading'); // Add loading class
+ // Show loading state
+  const originalText = button.textContent;
+  button.textContent = "Submitting...";
+  button.disabled = true;
 
  
      const payload = {
@@ -272,7 +219,7 @@ function showConfirmationBox(message, onConfirm) {
         });
 
     setTimeout(() => {
-      showMessageBox("Submitted successfully!"); // Using custom message box
+      alert("Submitted successfully!");
       button.textContent = "Submitted ✓";
       button.style.backgroundColor = "#10B981"; // Green color
       fetchOrders();
@@ -285,10 +232,8 @@ function showConfirmationBox(message, onConfirm) {
     console.error('Submit error:', err);
     button.textContent = originalText;
     button.disabled = false;
-    showMessageBox("Submission failed. Please try again."); // Using custom message box
+    alert("Submission failed. Please try again.");
     fetchOrders();      
-  } finally {
-    button.classList.remove('btn-loading'); // Ensure loading class is removed
   }
 }
 
@@ -304,16 +249,15 @@ function showConfirmationBox(message, onConfirm) {
 
       navigator.clipboard.writeText(details)
         .then(() => {
-          showMessageBox('Dispatch details copied to clipboard!'); // Using custom message box
+          alert('Dispatch details copied to clipboard!');
         })
         .catch(err => {
           console.error('Failed to copy dispatch details:', err);
-          showMessageBox('Failed to copy dispatch details. Please try again or copy manually.'); // Using custom message box
+          alert('Failed to copy dispatch details. Please try again or copy manually.');
         });
     }
 
-    // Initial fetch of orders when the page loads
-    document.addEventListener("DOMContentLoaded", fetchOrders);
+    fetchOrders();
   </script>
   <script src="js/viewOnly.js"></script>
 </body>
