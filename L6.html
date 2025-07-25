@@ -574,6 +574,31 @@
             const orderCard = document.createElement('div');
             orderCard.className = 'order-card';
             orderCard.style.animationDelay = `${index * 0.1}s`;
+
+            // --- NEW: Dealer Type Badge HTML Logic ---
+            let dealerTypeBadge = '';
+            if (order.dealerType) {
+                let badgeColorClass = '';
+                switch (order.dealerType.toLowerCase()) {
+                    case 'red':
+                        badgeColorClass = 'bg-red-500';
+                        break;
+                    case 'yellow':
+                        badgeColorClass = 'bg-yellow-500';
+                        break;
+                    case 'green':
+                        badgeColorClass = 'bg-green-500';
+                        break;
+                    default:
+                        badgeColorClass = 'bg-gray-500'; // Fallback color
+                }
+                dealerTypeBadge = `
+                    <div class="dealer-type-badge ${badgeColorClass}">
+                        ${order.dealerType}
+                    </div>
+                `;
+            }
+            // --- END NEW ---
             
             orderCard.innerHTML = `
                 <div class="order-header">
@@ -595,7 +620,7 @@
                 <div class="order-details">
                     <div class="detail-row">
                         <div class="detail-label">👤 Dealer:</div>
-                        <div class="detail-value dealer-name">${order.dealerName}</div>
+                        <div class="detail-value dealer-name">${order.dealerName} ${dealerTypeBadge}</div>
                     </div>
                     <div class="detail-row">
                         <div class="detail-label">🏢 Marketing:</div>
