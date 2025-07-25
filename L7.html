@@ -439,8 +439,7 @@
 
                 if (result.status === 'success' && result.data) {
                     // Filter for "Hold" orders (assuming script returns all for the CRM, then we filter status)
-                    const holdOrders = result.data.filter(order => order.status === 'Hold');
-                    renderOrderCards(holdOrders);                   
+                    renderOrderCards(result.data);                   
                 if (typeof setReadOnlyMode === "function") {
                       setReadOnlyMode();
                     }                    
