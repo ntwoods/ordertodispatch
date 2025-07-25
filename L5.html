@@ -110,29 +110,7 @@ function openMultipleDocuments(urlString, index) {
     function renderOrders(orders) {
       const container = document.getElementById("ordersContainer");
       container.innerHTML = "";
-      // --- NEW: Dealer Type Badge HTML ---
-      let dealerTypeBadge = '';
-      if (order.dealerType) {
-          let badgeColorClass = '';
-          switch (order.dealerType.toLowerCase()) {
-              case 'red':
-                  badgeColorClass = 'bg-red-500';
-                  break;
-              case 'yellow':
-                  badgeColorClass = 'bg-yellow-500'; // You might need to add this to your tailwind config or style.css
-                  break;
-              case 'green':
-                  badgeColorClass = 'bg-green-500';
-                  break;
-              default:
-                  badgeColorClass = 'bg-gray-500'; // Default if none of the above
-          }
-          dealerTypeBadge = `
-              <div class="dealer-type-badge ${badgeColorClass} text-white text-xs font-semibold px-3 py-1 rounded-full flex items-center justify-center ml-2">
-                  ${order.dealerType}
-              </div>
-          `;
-      }      
+
         if (orders.length === 0) {
     container.innerHTML = `
       <div class="col-span-full text-center text-xl text-gray-600 font-semibold">
@@ -154,15 +132,42 @@ orders.forEach((order, index) => {
   const overdue = new Date() > deadline;
   const deadlineLabel = overdue ? "Overdue" : "Active";
 
+  // --- NEW: Dealer Type Badge HTML Logic for L5.html ---
+  let dealerTypeBadge = '';
+  if (order.dealerType) {
+      let badgeColorClass = '';
+      switch (order.dealerType.toLowerCase()) {
+          case 'red':
+              badgeColorClass = 'bg-red-500';
+              break;
+          case 'yellow':
+              badgeColorClass = 'bg-yellow-500';
+              break;
+          case 'green':
+              badgeColorClass = 'bg-green-500';
+              break;
+          default:
+              badgeColorClass = 'bg-gray-500'; // Fallback color
+      }
+      dealerTypeBadge = `
+          <div class="dealer-type-badge ${badgeColorClass} text-white text-xs font-semibold px-3 py-1 rounded-full flex items-center justify-center ml-2">
+              ${order.dealerType}
+          </div>
+      `;
+  }
+  // --- END NEW ---
+
   card.innerHTML = `
-    <div class="dealer-type-badge" ${dealerTypeBadge}</div>
     <div class="absolute top-2 right-2 text-sm font-semibold px-3 py-1 rounded-full ${overdue ? 'bg-red-200 text-red-800' : 'bg-green-200 text-green-800'}">
       ${deadlineLabel}
     </div>
 
     ${!hasInvoice ? `<div class="absolute top-2 left-2 text-xs font-semibold px-2 py-1 rounded-full bg-red-200 text-red-800">Missing Invoice</div>` : ""}
 
-    <div class="text-xl font-bold mb-2">${order.dealerName}</div>
+    <div class="flex items-center">
+        <div class="text-xl font-bold mb-2">${order.dealerName}</div>
+        ${dealerTypeBadge}
+    </div>
     <p><strong>Marketing:</strong> ${order.marketingPersonName}</p>
     <p><strong>Location:</strong> ${order.location}</p>
     <p><strong>CRM:</strong> ${order.crmName}</p>
