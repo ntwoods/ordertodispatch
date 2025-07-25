@@ -76,9 +76,12 @@
         /* Orders Grid */
         .orders-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); /* Adjusted minmax for better fit */
+            /* OLD: grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); */
+            /* NEW: Use a smaller fixed min-width and allow more columns */
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); /* Adjusted for more cards per row */
             gap: 25px; /* Consistent gap */
             margin-top: 20px;
+            justify-content: center; /* Center the grid items if they don't fill the row */
         }
 
         /* Order Card */
