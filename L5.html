@@ -6,7 +6,23 @@
 <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
 </head>
   <style>
-    d
+.dealer-type-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem 0.75rem; /* px-3 py-1 */
+  border-radius: 9999px; /* rounded-full */
+  font-size: 0.75rem; /* text-xs */
+  font-weight: 600; /* font-semibold */
+  color: white; /* text-white */
+  margin-left: 0.5rem; /* ml-2 */
+  white-space: nowrap; /* Prevent text wrapping */
+  z-index: 30;
+}
+.bg-red-500 { background-color: #ef4444; }
+.bg-yellow-500 { background-color: #f59e0b; }
+.bg-green-500 { background-color: #22c55e; }
+.bg-gray-500 { background-color: #6b7280; }
   </style>
 <body class="bg-gray-100 min-h-screen p-4">
   <div id="loader" class="text-center text-xl text-blue-600 font-semibold">Loading orders...</div>
@@ -94,7 +110,29 @@ function openMultipleDocuments(urlString, index) {
     function renderOrders(orders) {
       const container = document.getElementById("ordersContainer");
       container.innerHTML = "";
-
+      // --- NEW: Dealer Type Badge HTML ---
+      let dealerTypeBadge = '';
+      if (order.dealerType) {
+          let badgeColorClass = '';
+          switch (order.dealerType.toLowerCase()) {
+              case 'red':
+                  badgeColorClass = 'bg-red-500';
+                  break;
+              case 'yellow':
+                  badgeColorClass = 'bg-yellow-500'; // You might need to add this to your tailwind config or style.css
+                  break;
+              case 'green':
+                  badgeColorClass = 'bg-green-500';
+                  break;
+              default:
+                  badgeColorClass = 'bg-gray-500'; // Default if none of the above
+          }
+          dealerTypeBadge = `
+              <div class="dealer-type-badge ${badgeColorClass} text-white text-xs font-semibold px-3 py-1 rounded-full flex items-center justify-center ml-2">
+                  ${order.dealerType}
+              </div>
+          `;
+      }      
         if (orders.length === 0) {
     container.innerHTML = `
       <div class="col-span-full text-center text-xl text-gray-600 font-semibold">
@@ -117,6 +155,7 @@ orders.forEach((order, index) => {
   const deadlineLabel = overdue ? "Overdue" : "Active";
 
   card.innerHTML = `
+    <div class="dealer-type-badge" ${dealerTypeBadge}</div>
     <div class="absolute top-2 right-2 text-sm font-semibold px-3 py-1 rounded-full ${overdue ? 'bg-red-200 text-red-800' : 'bg-green-200 text-green-800'}">
       ${deadlineLabel}
     </div>
