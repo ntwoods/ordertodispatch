@@ -49,7 +49,6 @@ body {
   font-size: 0.75rem; /* text-xs */
   font-weight: 600; /* font-semibold */
   color: white; /* text-white */
-  position: absolute;
   margin-left: 0.5rem; /* ml-2 */
   white-space: nowrap; /* Prevent text wrapping */
   z-index: 30;
