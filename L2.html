@@ -325,11 +325,30 @@
             margin-top: 10px;
             display: none;
         }
+        /* Added for the new remark field */
+        .remark-section {
+            margin-top: 15px;
+            margin-bottom: 15px;
+        }
+
+        .remark-label {
+            display: block;
+            font-weight: bold;
+            color: #212121; /* Darker gray for label */
+            margin-bottom: 8px;
+        }
+
+        .remark-input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #90caf9; /* Lighter blue border */
+            border-radius: 5px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Sales Orders Dashboard</h1>
+        <h2>Send To Owners</h2>
         <button class="refresh-btn" onclick="fetchOrders()">Refresh Orders</button>
         <div id="content">
             <div class="loading">Loading orders...</div>
@@ -455,6 +474,10 @@
                                 <div class="file-selected" id="file-selected-${index}">✓ File selected</div>
                             </div>
 
+                            <div class="remark-section">
+                                <label class="remark-label">Remark:</label>
+                                <input type="text" class="remark-input" id="remark-${index}" placeholder="Enter remark here">
+                            </div>
                             <div class="radio-section">
                                 <label class="radio-label">Status:</label>
                                 <div class="radio-group">
@@ -616,14 +639,17 @@
             const fileUploadSection = document.getElementById(`file-upload-section-${orderIndex}`);
             const holdUntilSection = document.getElementById(`hold-until-section-${orderIndex}`);
             const ownersInformedRadioYes = document.getElementById(`owners-informed-yes-${orderIndex}`);
+            const remarkSection = document.querySelector(`#order-${orderIndex} .remark-section`); // Get the remark section
 
             if (actionType === 'Hold') {
                 holdUntilSection.style.display = 'block'; // Show hold until field
                 fileUploadSection.style.display = 'none'; // Hide file upload for Hold
                 if (ownersInformedRadioYes) ownersInformedRadioYes.checked = false; // Uncheck Owners Informed
+                if (remarkSection) remarkSection.style.display = 'none'; // Hide remark for Hold
             } else { // 'Approve' or 'Cancel'
                 holdUntilSection.style.display = 'none'; // Hide hold until field
-                fileUploadSection.style.display = 'block'; // Show file upload for Approve
+                fileUploadSection.style.display = 'block'; // Show file upload for Approve/Cancel
+                if (remarkSection) remarkSection.style.display = 'block'; // Show remark for Approve/Cancel
             }
         }
 
@@ -636,6 +662,7 @@ async function submitOrder(orderIndex, actionType) {
     const cancelBtn = document.querySelector(`#order-${orderIndex} .cancel-btn`);
     const holdUntilInput = document.getElementById(`hold-until-${orderIndex}`);
     const holdUntilRemark = document.getElementById(`hold-until-remark-${orderIndex}`);
+    const remarkInput = document.getElementById(`remark-${orderIndex}`); // Get the new remark input
     const successMessage = document.getElementById(`success-${orderIndex}`);
     const errorMessage = document.getElementById(`error-${orderIndex}`);
 
@@ -659,6 +686,7 @@ async function submitOrder(orderIndex, actionType) {
         marketingPersonName: orders[orderIndex].marketingPersonName,
         location: orders[orderIndex].location,
         holdRemark: holdUntilRemark.value,
+        remark: remarkInput.value, // Add the new remark to the payload
         crmName: orders[orderIndex].crmName,
         ownersInformed: ownersInformedRadio ? ownersInformedRadio.value : ''
     };
@@ -674,6 +702,10 @@ async function submitOrder(orderIndex, actionType) {
             if (!ownersInformedRadio) {
                 alert('Please select the owners informed status for approval.');
                 throw new Error('Owner informed status required');
+            }
+            if (!remarkInput.value.trim()) { // Validate the new remark field
+                alert('Please provide a remark for approval.');
+                throw new Error('Remark is required for approval');
             }
 
             const file = fileInput.files[0];
@@ -701,7 +733,10 @@ async function submitOrder(orderIndex, actionType) {
 
         } else if (actionType === 'Cancel') {
             cancelBtn.textContent = 'Cancelling...';
-            // You can add validation here if cancel action needs reason, confirmation, etc.
+            if (!remarkInput.value.trim()) { // Validate the new remark field for cancel
+                alert('Please provide a remark for cancellation.');
+                throw new Error('Remark is required for cancellation');
+            }
         }
 
         console.log('Submitting order data:', {
@@ -721,8 +756,12 @@ async function submitOrder(orderIndex, actionType) {
         document.getElementById(`file-selected-${orderIndex}`).style.display = 'none';
         if (ownersInformedRadio) ownersInformedRadio.checked = false;
         holdUntilInput.value = '';
+        holdUntilRemark.value = ''; // Clear hold remark
+        remarkInput.value = ''; // Clear the new remark field
         document.getElementById(`hold-until-section-${orderIndex}`).style.display = 'none';
         document.getElementById(`file-upload-section-${orderIndex}`).style.display = 'block';
+        document.querySelector(`#order-${orderIndex} .remark-section`).style.display = 'block';
+
 
     } catch (error) {
         console.error('Error submitting order:', error);
