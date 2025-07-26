@@ -228,12 +228,14 @@
         color: #2e7d32; /* Green for normal countdown */
     }
 
-    .morphing-card input[type="date"] {
+    .morphing-card input[type="date"],
+    .morphing-card input[type="text"] { /* Added text input for remark */
       background-color: #e3f2fd; /* Very light blue for input */
       border: 1px solid #90caf9; /* Lighter blue border */
       color: #212121; /* Dark gray text */
     }
-    .morphing-card input[type="date"]::placeholder {
+    .morphing-card input[type="date"]::placeholder,
+    .morphing-card input[type="text"]::placeholder { /* Added text input for remark */
       color: #64b5f6; /* Lighter blue placeholder */
     }
 
@@ -454,6 +456,14 @@
           <input type="date" id="dispatch-${index}" 
             class="w-full bg-white bg-opacity-20 border border-white border-opacity-30 rounded-xl px-4 py-3 placeholder-white placeholder-opacity-70 focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50 transition-all" />
         </div>
+        
+        <div class="mb-4">
+          <label class="block font-semibold mb-2">📝 Remark:</label>
+          <input type="text" id="remark-${index}" 
+            class="w-full bg-white bg-opacity-20 border border-white border-opacity-30 rounded-xl px-4 py-3 placeholder-white placeholder-opacity-70 focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50 transition-all" 
+            placeholder="Enter remark here" />
+        </div>
+
         <button onclick="submitOrder(${index})" id="submit-btn-${index}"
           class="w-full button-3d text-lg font-semibold relative overflow-hidden">
           <span class="relative z-10">🚀 Set Dispatch Date</span>
@@ -512,6 +522,7 @@
 
   async function submitOrder(index) {
     const dispatchDate = document.getElementById(`dispatch-${index}`).value;
+    const remark = document.getElementById(`remark-${index}`).value; // Get the remark value
     const button = document.getElementById(`submit-btn-${index}`);
     
     if (!dispatchDate) {
@@ -542,7 +553,8 @@
 
     const payload = {
       timestamp: order.timestamp,
-      dispatchDate: dispatchDate
+      dispatchDate: dispatchDate,
+      remark: remark // Add remark to the payload
     };
 
     try {
