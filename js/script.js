@@ -205,6 +205,10 @@ function createOrderCard(order, index) {
                 </div>
             </div>
         </div>
+        <div class="mb-4"> <label for="proceedRemark-${index}" class="block text-sm font-medium text-gray-700 mb-2">Remark for Proceed:</label>
+            <input type="text" id="proceedRemark-${index}" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Enter remark to proceed..." maxlength="100">
+            <div class="text-xs text-gray-500 mt-1">Maximum 100 characters</div>
+        </div>
         <div class="flex space-x-3">
             <button id="approve-btn-${index}" onclick="approveOrder('${order.timestamp}', ${index})" 
                     class="flex-1 bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded-lg font-medium transition-colors">
@@ -454,6 +458,15 @@ async function submitStockStatus() {
 }
 
 async function approveOrder(timestamp, index) {
+    const remarkInput = document.getElementById(`proceedRemark-${index}`);
+    const remark = remarkInput.value.trim();
+
+    if (!remark) {
+        alert('Please provide a remark to proceed with the order.');
+        remarkInput.focus();
+        return;
+    }
+
     const approveBtn = document.getElementById(`approve-btn-${index}`);
     approveBtn.classList.add('btn-loading');
     approveBtn.disabled = true;
@@ -467,7 +480,8 @@ async function approveOrder(timestamp, index) {
             },
             body: JSON.stringify({
                 action: 'approveOrder',
-                timestamp: timestamp
+                timestamp: timestamp,
+                proceedRemark: remark // Sending the new remark field
             })
         });
         
