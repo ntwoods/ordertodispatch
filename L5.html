@@ -23,276 +23,323 @@
 .bg-yellow-500 { background-color: #f59e0b; }
 .bg-green-500 { background-color: #22c55e; }
 .bg-gray-500 { background-color: #6b7280; }
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: #e0f2f7; /* Light blue background */
+    padding: 20px;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+h1 {
+    text-align: center;
+    color: #01579b; /* Darker blue for heading */
+    margin-bottom: 30px;
+}
+
+.loading {
+    text-align: center;
+    font-size: 18px;
+    color: #0277bd; /* Medium blue for loading */
+}
+
+.error {
+    background-color: #bbdefb; /* Light blue for error background */
+    color: #c62828; /* Red for error text */
+    padding: 15px;
+    border-radius: 5px;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.order-card {
+    background-color: #e3f2fd; /* Lighter blue for card background */
+    border: 1px solid #90caf9; /* Light blue border */
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s;
+}
+
+.order-card:hover {
+    transform: translateY(-5px);
+}
+
+.order-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.order-header h2 {
+    color: #01579b; /* Darker blue for order title */
+    margin: 0;
+}
+
+.order-header .status {
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-weight: bold;
+    color: white;
+}
+
+.order-header .status.Pending {
+    background-color: #ffb300; /* Amber for pending */
+}
+
+.order-header .status.Dispatched {
+    background-color: #43a047; /* Green for dispatched */
+}
+
+.order-details p {
+    margin-bottom: 8px;
+    color: #37474f; /* Dark grey for text */
+}
+
+.order-details p strong {
+    color: #1976d2; /* Blue for strong text */
+}
+
+.button-group {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+    justify-content: flex-end; /* Align buttons to the right */
+}
+
+.button-group button {
+    padding: 10px 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.2s;
+}
+
+.button-group button.dispatch-btn {
+    background-color: #0288d1; /* Light blue for dispatch button */
+    color: white;
+}
+
+.button-group button.dispatch-btn:hover {
+    background-color: #039be5; /* Lighter blue on hover */
+}
+
+.button-group button.copy-btn {
+    background-color: #546e7a; /* Blue-grey for copy button */
+    color: white;
+}
+
+.button-group button.copy-btn:hover {
+    background-color: #78909c; /* Lighter blue-grey on hover */
+}
+
+.button-group button:disabled {
+    background-color: #bdbdbd; /* Light grey for disabled */
+    cursor: not-allowed;
+}
   </style>
-<body class="bg-gray-100 min-h-screen p-4">
-  <div id="loader" class="text-center text-xl text-blue-600 font-semibold">Loading orders...</div>
-  <div id="ordersContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6 hidden"></div>
+<body class="bg-gray-100 min-h-screen p-8">
+  <div class="max-w-7xl mx-auto">
+    <h1 class="text-4xl font-extrabold text-gray-900 mb-10 text-center">
+      Inform The Dealer About Dispatch Details
+    </h1>
+
+    <div id="loader" class="text-center py-10">
+      <p class="text-lg text-gray-700">Loading orders...</p>
+    </div>
+
+    <div id="orders-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      </div>
+  </div>
 
   <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbwUr0UhENK6RGtdvYMC6-V0Khwb3kibKP4SLXC4nzL6Hm4idr6P-Olx4XTWvgZ_e2xk-Q/exec";
-
+    const API_URL = "https://script.google.com/macros/s/AKfycbzMxIzOQmHv3LPTh6ca6i5uuguyH615cnjA5emEGNT0rmWpJlnrcg-KWNVP1DORkkcX/exec";
     let globalOrders = [];
-function formatDateToDDMMMYYYY(dateStr) {
-  const date = new Date(dateStr);
-  const options = { day: '2-digit', month: 'short', year: 'numeric' };
-  return date.toLocaleDateString('en-GB', options).replace(/ /g, '-');
-}
 
-
-function openMultipleDocuments(urlString, index) {
-    // Split the URLs by comma and trim whitespace
-    const urls = urlString.split(',').map(url => url.trim()).filter(url => url.length > 0);
-    
-    if (urls.length === 0) {
-        alert('No valid URLs found');
-        return;
-    }
-    
-    // Show a confirmation if there are multiple URLs
-    if (urls.length > 1) {
-        const confirmed = confirm(`This will open ${urls.length} documents in separate tabs. Continue?`);
-        if (!confirmed) {
-            return;
-        }
-    }
-    
-    // Open each URL in a new tab with a small delay to prevent popup blocker
-    urls.forEach((url, urlIndex) => {
-        setTimeout(() => {
-            window.open(url, '_blank');
-        }, urlIndex * 100); // 100ms delay between each tab opening
-    });
-}
     async function fetchOrders() {
+      document.getElementById('loader').classList.remove('hidden');
+      document.getElementById('orders-container').innerHTML = ''; // Clear existing orders
+
       try {
         const urlParams = new URLSearchParams(window.location.search);
         const crmName = urlParams.get('crm');
+
         if (!crmName) {
-            throw new Error('CRM name is missing in URL');
+            console.error('CRM name is missing in URL. Please provide a CRM name (e.g., ?crm=YourCRMName).');
+            document.getElementById("loader").innerHTML = `
+                <div class="text-center py-10">
+                    <p class="text-red-600 font-bold text-xl">Error: CRM name is missing in URL!</p>
+                    <p class="text-gray-700">Please provide a CRM name in the URL (e.g., <code class="bg-gray-200 p-1 rounded">?crm=YourCRMName</code>).</p>
+                </div>
+            `;
+            return;
         }
-        // Append crmName to the API URL
+
         const response = await fetch(`${API_URL}?crm=${encodeURIComponent(crmName)}`);
         const result = await response.json();
+
         if (result.status === "success") {
-          document.getElementById("loader").classList.add("hidden");
-          document.getElementById("ordersContainer").classList.remove("hidden");
-          globalOrders = result.data;
+          globalOrders = result.data.filter(order => order.status === "Dispatched");
           renderOrders(globalOrders);
-          if (typeof setReadOnlyMode === "function") {
-            setReadOnlyMode();
-          }
-
         } else {
-          throw new Error("Invalid response");
+          console.error("Failed to fetch orders:", result.message);
+          document.getElementById('orders-container').innerHTML = `<p class="text-center text-red-500">Error: ${result.message}</p>`;
         }
-      } catch (err) {
-        document.getElementById("loader").innerText = "Failed to load orders.";
-        console.error(err);
+      } catch (error) {
+        console.error("Error fetching orders:", error);
+        document.getElementById('orders-container').innerHTML = `<p class="text-center text-red-500">Failed to load orders. Please try again.</p>`;
+      } finally {
+        document.getElementById('loader').classList.add('hidden');
       }
-    }
-
-    function getDeadline(originalTimestampStr) {
-      const original = new Date(originalTimestampStr);
-      let deadline = new Date(original);
-      const day = original.getUTCDay(); // 1 = Monday
-
-      // If timestamp is Monday (1), subtract 2 days
-      if (day === 1) {
-        deadline.setDate(deadline.getDate());
-      } else {
-        deadline.setDate(deadline.getDate());
-      }
-
-      deadline.setHours(18, 0, 0, 0); // 6:00 PM
-      return deadline;
     }
 
     function renderOrders(orders) {
-      const container = document.getElementById("ordersContainer");
-      container.innerHTML = "";
+      const container = document.getElementById("orders-container");
+      container.innerHTML = ""; // Clear previous cards
 
-        if (orders.length === 0) {
-    container.innerHTML = `
-      <div class="col-span-full text-center text-xl text-gray-600 font-semibold">
-        📦 No Pending Orders
-      </div>
-    `;
-    return;
-  }
-
-orders.forEach((order, index) => {
-  const deadline = getDeadline(order.timestamp);
-
-  const hasInvoice = order.invoiceUrl && order.invoiceUrl.trim() !== "";
-  const bgColor = hasInvoice ? "bg-green-100 border border-green-300" : "bg-red-100 border border-red-300";
-
-  const card = document.createElement("div");
-  card.className = `${bgColor} p-6 rounded-2xl shadow-md relative transition hover:scale-[1.02]`;
-
-  const overdue = new Date() > deadline;
-  const deadlineLabel = overdue ? "Overdue" : "Active";
-
-  // --- NEW: Dealer Type Badge HTML Logic for L5.html ---
-  let dealerTypeBadge = '';
-  if (order.dealerType) {
-      let badgeColorClass = '';
-      switch (order.dealerType.toLowerCase()) {
-          case 'red':
-              badgeColorClass = 'bg-red-500';
-              break;
-          case 'yellow':
-              badgeColorClass = 'bg-yellow-500';
-              break;
-          case 'green':
-              badgeColorClass = 'bg-green-500';
-              break;
-          default:
-              badgeColorClass = 'bg-gray-500'; // Fallback color
-      }
-      dealerTypeBadge = `
-          <div class="dealer-type-badge ${badgeColorClass} text-white text-xs font-semibold px-3 py-1 rounded-full flex items-center justify-center ml-2">
-              ${order.dealerType}
+      if (orders.length === 0) {
+        container.innerHTML = `
+          <div class="col-span-1 md:col-span-2 lg:col-span-3 text-center py-10">
+            <p class="text-lg text-gray-700">No dispatched orders to inform dealers about.</p>
           </div>
-      `;
-  }
-  // --- END NEW ---
-
-  card.innerHTML = `
-    <div class="absolute top-2 right-2 text-sm font-semibold px-3 py-1 rounded-full ${overdue ? 'bg-red-200 text-red-800' : 'bg-green-200 text-green-800'}">
-      ${deadlineLabel}
-    </div>
-
-    ${!hasInvoice ? `<div class="absolute top-2 left-2 text-xs font-semibold px-2 py-1 rounded-full bg-red-200 text-red-800">Missing Invoice</div>` : ""}
-
-    <div class="flex items-center">
-        <div class="text-xl font-bold mb-2">${order.dealerName}</div>
-        ${dealerTypeBadge}
-    </div>
-    <p><strong>Marketing:</strong> ${order.marketingPersonName}</p>
-    <p><strong>Location:</strong> ${order.location}</p>
-    <p><strong>CRM:</strong> ${order.crmName}</p>
-    <p><strong>Con. Owner:</strong> ${order.concernedOwner}</p>    
-    <p><strong>Expected Delivery:</strong> ${formatDateToDDMMMYYYY(order.expectedDeliveryDate)}</p>
-    <p><strong>Dispatch Date & Time:</strong> ${formatDateToDDMMMYYYY(order.timestamp)}</p>
-    <p><strong>Deadline:</strong> ${formatDateToDDMMMYYYY(deadline)}</p>
-    <p><strong>Time Left:</strong> <span id="countdown-${index}" class="font-mono text-blue-700"></span></p>
-    <p><strong>Vehicle No:</strong> ${order.vehicleNo || 'N/A'}</p>
-    <p><strong>Freight:</strong> ${order.freight || 'N/A'}</p>
-    <p><strong>Driver Name:</strong> ${order.driverName || 'N/A'}</p>
-    <p><strong>Driver Mobile:</strong> ${order.driverMob || 'N/A'}</p>
-    <div class="editable">
-    <span class="text-m text-black-600">Dispatch Receipt:</span>
-    <button onclick="openMultipleDocuments('${order.dispatchDetailUrl.replace(/'/g, "\\'")}', ${index})" class="text-sm text-blue-600 hover:text-blue-800 underline bg-transparent border-none cursor-pointer">View Dispatch Receipts</button>
-
-    <span class="text-m text-black-600">Raw File:</span>
-    <button onclick="openMultipleDocuments('${order.fileUploadLink.replace(/'/g, "\\'")}', ${index})" class="text-sm text-blue-600 hover:text-blue-800 underline bg-transparent border-none cursor-pointer">Raw File</button>
-
-    <span class="text-m text-black-600">Final Order:</span>
-    <button onclick="openMultipleDocuments('${order.finalOrder.replace(/'/g, "\\'")}', ${index})" class="text-sm text-blue-600 hover:text-blue-800 underline bg-transparent border-none cursor-pointer">Final File</button>   
-
-    ${order.additionalOrder ? `
-      <span class="text-m text-red-600">Additional Order:</span>
-      <button onclick="openMultipleDocuments('${order.additionalOrder.replace(/'/g, "\\'")}', ${index})" 
-              class="text-sm text-blue-600 hover:text-blue-800 underline bg-transparent border-none cursor-pointer">
-        Additional Order File
-      </button>
-    ` : ''}
-
-    <span class="text-m text-black-600">Invoices:</span>
-    <button onclick="openMultipleDocuments('${order.invoiceUrl.replace(/'/g, "\\'")}', ${index})" class="text-sm text-blue-600 hover:text-blue-800 underline bg-transparent border-none cursor-pointer">View Invoices</button>
-
-    <div class="mt-4">
-      <label class="inline-flex items-center">
-        <input type="radio" name="confirm-${index}" id="radio-${index}" class="form-radio h-4 w-4 text-blue-600">
-        <span class="ml-2 text-sm">Dispatch Details Sent To Dealer</span>
-      </label>
-    </div>
-    <button id="submit-${index}" onclick="submitConfirmation(${index})"
-      class="mt-4 w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
-      Submit
-    </button>
-    <button onclick="copyDispatchDetails(${index})"
-      class="mt-2 w-full bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition">
-      Copy Dispatch Details
-    </button>
-    </div>
-  `;
-
-  container.appendChild(card);
-  startCountdown(deadline, index);
-});
-}
-    function startCountdown(deadline, index) {
-      const el = document.getElementById(`countdown-${index}`);
-      function update() {
-        const now = new Date();
-        const diff = deadline - now;
-        if (diff <= 0) {
-          el.innerText = "00:00:00";
-          el.classList.add("text-red-500");
-          return;
-        }
-        const h = String(Math.floor(diff / (1000 * 60 * 60))).padStart(2, "0");
-        const m = String(Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))).padStart(2, "0");
-        const s = String(Math.floor((diff % (1000 * 60)) / 1000)).padStart(2, "0");
-        el.innerText = `${h}:${m}:${s}`;
-      }
-      update();
-      setInterval(update, 1000);
-    }
-
-    async function submitConfirmation(index) {
-      const radio = document.getElementById(`radio-${index}`);
-      if (!radio.checked) {
-        alert("Please confirm that the Dispatch Department is informed.");
+        `;
         return;
       }
-    const button = document.getElementById(`submit-${index}`);
- // Show loading state
-  const originalText = button.textContent;
-  button.textContent = "Submitting...";
-  button.disabled = true;
 
- 
-     const payload = {
-        timestampForMap: globalOrders[index].timestampForMap
+      orders.forEach((order, index) => {
+        const card = document.createElement("div");
+        card.className = "order-card bg-white p-6 rounded-lg shadow-md";
+        card.innerHTML = `
+          <div class="order-header">
+            <h2 class="text-xl font-bold">${order.dealerName || 'N/A'}
+                ${order.dealerType ? `<div class="dealer-type-badge ${getDealerBadgeColor(order.dealerType)}">${order.dealerType}</div>` : ''}
+            </h2>
+            <span class="status ${order.status}">${order.status || 'N/A'}</span>
+          </div>
+          <div class="order-details text-gray-700">
+            <p><strong>Marketing Person:</strong> ${order.marketingPersonName || 'N/A'}</p>
+            <p><strong>Location:</strong> ${order.location || 'N/A'}</p>
+            <p><strong>CRM Name:</strong> ${order.crmName || 'N/A'}</p>
+            <p><strong>Concerned Owner:</strong> ${order.concernedOwner || 'N/A'}</p>
+            <p><strong>Order Time:</strong> ${formatDateToDDMMMYYYY(order.timestamp)}</p>
+            <p><strong>Tentative Dispatch:</strong> ${order.dispatchDate || 'N/A'}</p>
+            <p><strong>Expected Delivery Date:</strong> ${order.expectedDeliveryDate || 'N/A'}</p>
+            <p><strong>Vehicle No:</strong> <input type="text" id="vehicleNo-${index}" value="${order.vehicleNo || ''}" class="p-1 border rounded w-full mt-1"></p>
+            <p><strong>Freight Amt:</strong> <input type="text" id="freight-${index}" value="${order.freight || ''}" class="p-1 border rounded w-full mt-1"></p>
+            <p><strong>Driver Name:</strong> <input type="text" id="driverName-${index}" value="${order.driverName || ''}" class="p-1 border rounded w-full mt-1"></p>
+            <p><strong>Driver Mobile:</strong> <input type="text" id="driverMob-${index}" value="${order.driverMob || ''}" class="p-1 border rounded w-full mt-1"></p>
+            <p><strong>Invoice URL:</strong> <input type="text" id="invoiceUrl-${index}" value="${order.invoiceUrl || ''}" class="p-1 border rounded w-full mt-1"></p>
+            
+            <p><strong>Remark:</strong> <input type="text" id="remark-${index}" required class="p-1 border rounded w-full mt-1" placeholder="Enter remark here"></p>
+
+          </div>
+          <div class="button-group">
+            <button class="dispatch-btn py-2 px-4 rounded" onclick="submitOrder(${index})">
+              <i class="fas fa-paper-plane mr-2"></i>Inform Dealer
+            </button>
+            <button class="copy-btn py-2 px-4 rounded" onclick="copyDispatchDetails(${index})">
+              <i class="fas fa-copy mr-2"></i>Copy Details
+            </button>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function getDealerBadgeColor(dealerType) {
+        if (!dealerType) return 'bg-gray-500';
+        switch (dealerType.toLowerCase()) {
+            case 'red': return 'bg-red-500';
+            case 'yellow': return 'bg-yellow-500';
+            case 'green': return 'bg-green-500';
+            default: return 'bg-gray-500';
+        }
+    }
+
+    function formatDateToDDMMMYYYY(dateString) {
+      if (!dateString) return 'N/A';
+      const date = new Date(dateString);
+      const options = { day: '2-digit', month: 'short', year: 'numeric' };
+      return date.toLocaleDateString('en-GB', options).replace(/ /g, '-');
+    }
+
+    async function submitOrder(index) {
+      const order = globalOrders[index];
+      const button = document.querySelector(`#orders-container div:nth-child(${index + 1}) .dispatch-btn`);
+      const originalText = button.innerHTML;
+
+      const vehicleNo = document.getElementById(`vehicleNo-${index}`).value;
+      const freight = document.getElementById(`freight-${index}`).value;
+      const driverName = document.getElementById(`driverName-${index}`).value;
+      const driverMob = document.getElementById(`driverMob-${index}`).value;
+      const invoiceUrl = document.getElementById(`invoiceUrl-${index}`).value;
+      const remark = document.getElementById(`remark-${index}`).value; // Get remark value
+
+      if (!remark) {
+          alert("Remark field is mandatory. Please fill it.");
+          return;
+      }
+
+      button.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> Submitting...`;
+      button.disabled = true;
+
+      const payload = {
+        timestamp: order.timestamp,
+        vehicleNo: vehicleNo,
+        freight: freight,
+        driverName: driverName,
+        driverMob: driverMob,
+        invoiceUrl: invoiceUrl,
+        remark: remark // Include remark in payload
       };
+
       try {
-        const res = await fetch(API_URL, {
-          method: "POST",
-          mode: "no-cors",
-          body: JSON.stringify(payload),
-          headers: { "Content-Type": "application/json" }
+        await fetch(API_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(payload)
         });
 
-    setTimeout(() => {
-      alert("Submitted successfully!");
-      button.textContent = "Submitted ✓";
-      button.style.backgroundColor = "#10B981"; // Green color
-      fetchOrders();
-      
-      // Optional: Remove the card or disable further submissions
-      // button.disabled = true;
-    }, 1000);
+        setTimeout(() => {
+          alert("Submitted successfully!");
+          button.innerHTML = `<i class="fas fa-check mr-2"></i> Submitted ✓`;
+          button.className = button.className.replace('dispatch-btn', 'bg-green-500 hover:bg-green-600');
+          fetchOrders();
+        }, 1000);
 
-  } catch (err) {
-    console.error('Submit error:', err);
-    button.textContent = originalText;
-    button.disabled = false;
-    alert("Submission failed. Please try again.");
-    fetchOrders();      
-  }
-}
+      } catch (err) {
+        console.error('Submit error:', err);
+        button.innerHTML = originalText;
+        button.disabled = false;
+        alert("Submission failed. Please try again.");
+      }
+    }
 
     function copyDispatchDetails(index) {
       const order = globalOrders[index];
+      const vehicleNo = document.getElementById(`vehicleNo-${index}`).value;
+      const freight = document.getElementById(`freight-${index}`).value;
+      const driverName = document.getElementById(`driverName-${index}`).value;
+      const driverMob = document.getElementById(`driverMob-${index}`).value;
+      const invoiceUrl = document.getElementById(`invoiceUrl-${index}`).value;
+
       const details = `Expected Delivery Date: ${formatDateToDDMMMYYYY(order.expectedDeliveryDate)}
-      Dispatch Date & Time: ${formatDateToDDMMMYYYY(order.timestamp)}
-      Vehicle No: ${order.vehicleNo || 'N/A'}
-      Freight Amt: ${order.freight || 'N/A'}
-      Driver Name: ${order.driverName || 'N/A'}
-      Driver Mobile: ${order.driverMob || 'N/A'}
-      Invoice URL: ${order.invoiceUrl || 'N/A'}`;
+Dispatch Date & Time: ${formatDateToDDMMMYYYY(order.timestamp)}
+Vehicle No: ${vehicleNo || 'N/A'}
+Freight Amt: ${freight || 'N/A'}
+Driver Name: ${driverName || 'N/A'}
+Driver Mobile: ${driverMob || 'N/A'}
+Invoice URL: ${invoiceUrl || 'N/A'}`;
 
       navigator.clipboard.writeText(details)
         .then(() => {
@@ -300,12 +347,12 @@ orders.forEach((order, index) => {
         })
         .catch(err => {
           console.error('Failed to copy dispatch details:', err);
-          alert('Failed to copy dispatch details. Please try again or copy manually.');
+          alert('Failed to copy dispatch details. Please copy manually.');
         });
     }
 
-    fetchOrders();
+    // Initial fetch on page load
+    document.addEventListener('DOMContentLoaded', fetchOrders);
   </script>
-  <script src="js/viewOnly.js"></script>
 </body>
 </html>
