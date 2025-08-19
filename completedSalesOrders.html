@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Completed Sales Orders</title>
+    <title>Sales Order Dashboard</title>
     <!-- Tailwind CSS CDN for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Use Inter font family -->
@@ -12,13 +12,45 @@
             font-family: 'Inter', sans-serif;
             background-color: #f3f4f6;
         }
+
+        /* Custom scrollbar styles for better visibility */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #e5e7eb;
+            border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background-color: #9ca3af;
+            border-radius: 10px;
+            border: 2px solid #e5e7eb;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background-color: #6b7280;
+        }
+
+        /* Responsive table cell styling */
+        @media (max-width: 640px) {
+            .responsive-cell {
+                display: block;
+                width: 100%;
+                text-align: left;
+                padding-left: 1rem;
+                padding-right: 1rem;
+            }
+        }
     </style>
 </head>
 <body class="p-4 sm:p-8 flex flex-col items-center min-h-screen">
 
     <!-- Main Content Container -->
-    <div class="w-full max-w-7xl bg-white shadow-xl rounded-2xl p-6 sm:p-8">
-        <h1 class="text-3xl font-bold text-center mb-6 text-gray-800">Completed Sales Orders</h1>
+    <div class="w-full max-w-7xl bg-white shadow-2xl rounded-2xl p-6 sm:p-10">
+        <h1 class="text-3xl font-bold text-center mb-6 text-gray-800">Sales Order Dashboard</h1>
         
         <!-- Loading and Error Messages -->
         <div id="loading" class="text-center text-lg font-medium text-gray-500 my-8">
@@ -33,9 +65,9 @@
         </div>
 
         <!-- Table Container -->
-        <div id="table-container" class="overflow-x-auto rounded-lg shadow-md hidden">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
+        <div id="table-container" class="overflow-x-auto rounded-lg shadow-md border border-gray-200 hidden">
+            <table class="min-w-full divide-y divide-gray-300">
+                <thead class="bg-gray-100">
                     <tr id="table-headers">
                         <!-- Headers will be dynamically generated here -->
                     </tr>
@@ -57,6 +89,20 @@
         const loadingIndicator = document.getElementById('loading');
         const errorIndicator = document.getElementById('error');
         const tableContainer = document.getElementById('table-container');
+
+        // Column order and display names
+        const COLUMN_ORDER = {
+            'orderDate': "Order's Date",
+            'crmName': "CRM Name",
+            'dealerName': "Dealer's Name",
+            'location': "Location",
+            'rawOrder': "Provisional Ord.",
+            'finalOrder': "Final Ord.",
+            'additionalOrder': "Additional Ord.",
+            'invoiceFile': "Invoice",
+            'expectedDelivery': "Exp. Del. Dt.",
+            'goodsDeliveredDate': "Goods Delivered On."
+        };
 
         // State for sorting
         let allData = [];
@@ -86,7 +132,7 @@
         function createLinkButton(url) {
             if (!url || url === '-') return '-';
             return `
-                <a href="${url}" target="_blank" class="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200 transform hover:scale-105">
+                <a href="${url}" target="_blank" class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200 transform hover:scale-105">
                     Open File
                 </a>
             `;
@@ -102,16 +148,17 @@
             
             dataArray.forEach(item => {
                 const row = document.createElement('tr');
-                row.className = 'hover:bg-gray-100 transition-colors duration-200';
+                row.className = 'hover:bg-gray-50 transition-colors duration-200';
                 
-                for (const key in item) {
+                // Iterate through the predefined column order
+                for (const key in COLUMN_ORDER) {
                     const cell = document.createElement('td');
-                    cell.className = 'px-6 py-4 whitespace-nowrap text-sm text-gray-500';
+                    cell.className = 'px-4 py-3 whitespace-nowrap text-sm text-gray-700 border-b border-gray-200';
                     
                     const value = item[key];
                     
-                    // Handle special formatting for dates, links, and multiple links
-                    if (key.toLowerCase().includes('date')) {
+                    // Explicitly handle date fields for formatting
+                    if (['orderDate', 'expectedDelivery', 'goodsDeliveredDate'].includes(key)) {
                         cell.textContent = formatDate(value);
                     } else if (value && (value.includes('drive.google.com') || value.includes('docs.google.com'))) {
                         const urls = value.split(',').map(url => url.trim());
@@ -149,7 +196,7 @@
                 const aValue = a[key] || '';
                 const bValue = b[key] || '';
 
-                if (key.toLowerCase().includes('date')) {
+                if (['orderDate', 'expectedDelivery', 'goodsDeliveredDate'].includes(key)) {
                     // Custom sort for dates
                     const dateA = aValue ? new Date(aValue) : new Date(0);
                     const dateB = bValue ? new Date(bValue) : new Date(0);
@@ -193,22 +240,19 @@
          * Initializes the table headers and adds sort event listeners.
          * @param {Array} dataArray The initial data array.
          */
-        function initializeTableHeaders(dataArray) {
-            // Get the keys from the first object to create headers
-            if (dataArray.length === 0) return;
-            const headers = Object.keys(dataArray[0]);
-
+        function initializeTableHeaders() {
             // Clear existing headers
             tableHeaders.innerHTML = '';
 
-            headers.forEach(headerText => {
+            // Use the predefined column order and display names
+            for (const key in COLUMN_ORDER) {
                 const th = document.createElement('th');
-                th.className = 'px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer transition-colors duration-200 hover:bg-gray-200 rounded-md';
-                th.textContent = headerText;
-                th.setAttribute('data-sort-key', headerText); // Use data attribute for sorting
-                th.addEventListener('click', () => sortData(headerText));
+                th.className = 'px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider cursor-pointer transition-colors duration-200 hover:bg-gray-200 rounded-md';
+                th.textContent = COLUMN_ORDER[key];
+                th.setAttribute('data-sort-key', key); // Use data attribute for sorting
+                th.addEventListener('click', () => sortData(key));
                 tableHeaders.appendChild(th);
-            });
+            }
         }
 
         /**
@@ -228,10 +272,10 @@
 
                 // If no data, show a message
                 if (allData.length === 0) {
-                    tableContainer.innerHTML = `<div class="text-center text-gray-500">No data found.</div>`;
+                    tableContainer.innerHTML = `<div class="text-center text-gray-500 p-8">No data found.</div>`;
                     tableContainer.classList.remove('hidden');
                 } else {
-                    initializeTableHeaders(allData);
+                    initializeTableHeaders();
                     renderTable(allData);
                     tableContainer.classList.remove('hidden');
                 }
