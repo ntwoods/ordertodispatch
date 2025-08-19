@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Completed Sales Orders</title>
+    <!-- Tailwind CSS CDN for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Use Inter font family -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+    </style>
+</head>
+<body class="p-4 sm:p-8 flex flex-col items-center min-h-screen">
+
+    <!-- Main Content Container -->
+    <div class="w-full max-w-7xl bg-white shadow-xl rounded-2xl p-6 sm:p-8">
+        <h1 class="text-3xl font-bold text-center mb-6 text-gray-800">Completed Sales Orders</h1>
+        
+        <!-- Loading and Error Messages -->
+        <div id="loading" class="text-center text-lg font-medium text-gray-500 my-8">
+            <svg class="animate-spin h-8 w-8 text-indigo-500 mx-auto mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            Fetching data...
+        </div>
+        <div id="error" class="text-center text-red-500 font-semibold hidden my-8">
+            Failed to load data. Please try again later.
+        </div>
+
+        <!-- Table Container -->
+        <div id="table-container" class="overflow-x-auto rounded-lg shadow-md hidden">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr id="table-headers">
+                        <!-- Headers will be dynamically generated here -->
+                    </tr>
+                </thead>
+                <tbody id="table-body" class="bg-white divide-y divide-gray-200">
+                    <!-- Table rows will be dynamically populated here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // API URL to fetch sales data
+        const API_URL = 'https://script.google.com/macros/s/AKfycbzXZ7nVVhk_49F7Hz0TmiwoxCjhgQ9d1e9o_fCroNul_iyfeedGV_-p1IlzfgNYaqo1tA/exec';
+
+        // DOM elements
+        const tableBody = document.getElementById('table-body');
+        const tableHeaders = document.getElementById('table-headers');
+        const loadingIndicator = document.getElementById('loading');
+        const errorIndicator = document.getElementById('error');
+        const tableContainer = document.getElementById('table-container');
+
+        // State for sorting
+        let allData = [];
+        let sortKey = null;
+        let sortDirection = 'asc'; // 'asc' or 'desc'
+
+        /**
+         * Formats an ISO date string to a human-readable dd-mm-yyyy format.
+         * @param {string} dateString The date string in ISO format.
+         * @returns {string} The formatted date string.
+         */
+        function formatDate(dateString) {
+            // Handle cases where dateString is empty or invalid
+            if (!dateString || dateString === '-') return '-';
+            const date = new Date(dateString);
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const year = date.getFullYear();
+            return `${day}-${month}-${year}`;
+        }
+
+        /**
+         * Creates a single button for a URL, opening it in a new tab.
+         * @param {string} url The URL to open.
+         * @returns {string} The HTML string for the button.
+         */
+        function createLinkButton(url) {
+            if (!url || url === '-') return '-';
+            return `
+                <a href="${url}" target="_blank" class="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200 transform hover:scale-105">
+                    Open File
+                </a>
+            `;
+        }
+
+        /**
+         * Renders the table body with the provided data.
+         * @param {Array} dataArray The array of sales order objects.
+         */
+        function renderTable(dataArray) {
+            // Clear existing table rows
+            tableBody.innerHTML = '';
+            
+            dataArray.forEach(item => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-100 transition-colors duration-200';
+                
+                for (const key in item) {
+                    const cell = document.createElement('td');
+                    cell.className = 'px-6 py-4 whitespace-nowrap text-sm text-gray-500';
+                    
+                    const value = item[key];
+                    
+                    // Handle special formatting for dates, links, and multiple links
+                    if (key.toLowerCase().includes('date')) {
+                        cell.textContent = formatDate(value);
+                    } else if (value && (value.includes('drive.google.com') || value.includes('docs.google.com'))) {
+                        const urls = value.split(',').map(url => url.trim());
+                        let htmlContent = '';
+                        urls.forEach(url => {
+                            if (url !== '-') {
+                                htmlContent += `<div class="mb-1">${createLinkButton(url)}</div>`;
+                            }
+                        });
+                        cell.innerHTML = htmlContent || '-'; // If no valid links, show a dash
+                    } else {
+                        cell.textContent = value || '-';
+                    }
+                    row.appendChild(cell);
+                }
+                tableBody.appendChild(row);
+            });
+        }
+
+        /**
+         * Handles sorting the data based on a column key.
+         * @param {string} key The key of the column to sort by.
+         */
+        function sortData(key) {
+            // Check if the same key is clicked again to reverse sort direction
+            if (sortKey === key) {
+                sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+                sortKey = key;
+                sortDirection = 'asc'; // Default to ascending for a new key
+            }
+
+            // Sort the data array
+            allData.sort((a, b) => {
+                const aValue = a[key] || '';
+                const bValue = b[key] || '';
+
+                if (key.toLowerCase().includes('date')) {
+                    // Custom sort for dates
+                    const dateA = aValue ? new Date(aValue) : new Date(0);
+                    const dateB = bValue ? new Date(bValue) : new Date(0);
+                    return sortDirection === 'asc' ? dateA - dateB : dateB - dateA;
+                } else if (typeof aValue === 'string' && typeof bValue === 'string') {
+                    // Locale-aware string comparison
+                    const comparison = aValue.localeCompare(bValue, 'en', { sensitivity: 'base' });
+                    return sortDirection === 'asc' ? comparison : -comparison;
+                } else {
+                    // Simple numeric or other comparison
+                    if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
+                    if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
+                    return 0;
+                }
+            });
+
+            // Re-render the table with the sorted data
+            renderTable(allData);
+            updateSortIcons();
+        }
+        
+        /**
+         * Updates the sort icons in the table headers to show the current sort state.
+         */
+        function updateSortIcons() {
+            // Remove existing icons
+            document.querySelectorAll('.sort-icon').forEach(icon => icon.remove());
+            
+            if (sortKey) {
+                const header = document.querySelector(`th[data-sort-key="${sortKey}"]`);
+                if (header) {
+                    const icon = document.createElement('span');
+                    icon.className = 'sort-icon ml-2 text-gray-400';
+                    icon.innerHTML = sortDirection === 'asc' ? '&#9650;' : '&#9660;'; // Up or down triangle
+                    header.appendChild(icon);
+                }
+            }
+        }
+
+        /**
+         * Initializes the table headers and adds sort event listeners.
+         * @param {Array} dataArray The initial data array.
+         */
+        function initializeTableHeaders(dataArray) {
+            // Get the keys from the first object to create headers
+            if (dataArray.length === 0) return;
+            const headers = Object.keys(dataArray[0]);
+
+            // Clear existing headers
+            tableHeaders.innerHTML = '';
+
+            headers.forEach(headerText => {
+                const th = document.createElement('th');
+                th.className = 'px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer transition-colors duration-200 hover:bg-gray-200 rounded-md';
+                th.textContent = headerText;
+                th.setAttribute('data-sort-key', headerText); // Use data attribute for sorting
+                th.addEventListener('click', () => sortData(headerText));
+                tableHeaders.appendChild(th);
+            });
+        }
+
+        /**
+         * Main function to fetch data and initialize the dashboard.
+         */
+        async function fetchData() {
+            loadingIndicator.classList.remove('hidden');
+            errorIndicator.classList.add('hidden');
+            tableContainer.classList.add('hidden');
+
+            try {
+                const response = await fetch(API_URL);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                allData = await response.json();
+
+                // If no data, show a message
+                if (allData.length === 0) {
+                    tableContainer.innerHTML = `<div class="text-center text-gray-500">No data found.</div>`;
+                    tableContainer.classList.remove('hidden');
+                } else {
+                    initializeTableHeaders(allData);
+                    renderTable(allData);
+                    tableContainer.classList.remove('hidden');
+                }
+            } catch (error) {
+                console.error("Could not fetch data:", error);
+                errorIndicator.classList.remove('hidden');
+            } finally {
+                loadingIndicator.classList.add('hidden');
+            }
+        }
+
+        // Call the main function to start the application
+        fetchData();
+    </script>
+</body>
+</html>
