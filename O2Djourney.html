@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dealer Data Dashboard</title>
-    <!-- Tailwind CSS CDN for styling -->
+    <meta http-equiv="refresh" content="10">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         /* Custom styles to ensure Inter font and responsive table behavior */
@@ -75,14 +75,12 @@
         <div id="loading" class="text-center text-blue-600 text-lg mb-4 hidden">Loading data...</div>
         <div id="error" class="text-center text-red-600 text-lg mb-4 hidden"></div>
 
-        <!-- Filter and Sort Controls -->
         <div class="flex flex-col sm:flex-row justify-end items-center mb-4 space-y-2 sm:space-y-0 sm:space-x-4">
             <div class="flex items-center space-x-2">
                 <label for="crmFilter" class="font-semibold text-gray-700">Filter by CRM:</label>
                 <select id="crmFilter" class="p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                     <option value="all">All CRMs</option>
-                    <!-- CRM options will be populated here by JavaScript -->
-                </select>
+                    </select>
             </div>
         </div>
 
@@ -98,8 +96,7 @@
                     </tr>
                 </thead>
                 <tbody id="tableBody">
-                    <!-- Data will be inserted here by JavaScript -->
-                </tbody>
+                    </tbody>
             </table>
         </div>
     </div>
