@@ -209,10 +209,6 @@
                 statusMessage.textContent = 'Ticket submitted successfully! ✅';
                 statusMessage.className = 'status-message success';
                 form.reset(); // Clear the form
-                statusMessage.textContent = 'Failed to submit the ticket. Please try again. ❌';
-                statusMessage.className = 'status-message error';
-                const errorText = await response.text();
-                console.error('Submission failed with response:', errorText);
         } catch (error) {
             console.error('Submission failed:', error);
             statusMessage.textContent = 'Failed to submit the ticket. Please check the console. ❌';
