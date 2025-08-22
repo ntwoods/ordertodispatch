@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Raise A Ticket</title>
+    <style>
+        :root {
+            --white: #ffffff;
+            --blue-light: #e3f2fd;
+            --blue-medium: #2196f3;
+            --blue-dark: #0d47a1;
+            --gray-light: #f0f0f0;
+            --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background-color: var(--blue-light);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            color: var(--blue-dark);
+        }
+
+        .ticket-container {
+            background-color: var(--white);
+            padding: 2.5rem;
+            border-radius: 12px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 500px;
+            box-sizing: border-box;
+        }
+
+        h1 {
+            color: var(--blue-dark);
+            text-align: center;
+            margin-bottom: 2rem;
+            font-size: 2.2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--blue-medium);
+        }
+
+        input[type="text"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid var(--blue-medium);
+            border-radius: 8px;
+            font-size: 1rem;
+            box-sizing: border-box;
+            background-color: var(--blue-light);
+            color: var(--blue-dark);
+        }
+
+        input[type="file"] {
+            display: block;
+            width: 100%;
+            margin-top: 0.5rem;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        input[type="submit"] {
+            width: 100%;
+            padding: 1rem;
+            background-color: var(--blue-medium);
+            color: var(--white);
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+
+        input[type="submit"]:hover {
+            background-color: var(--blue-dark);
+            transform: translateY(-2px);
+        }
+
+        input[type="submit"]:active {
+            transform: translateY(0);
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 600px) {
+            .ticket-container {
+                padding: 1.5rem;
+                margin: 1rem;
+            }
+            h1 {
+                font-size: 1.8rem;
+            }
+        }
+
+        .status-message {
+            margin-top: 1.5rem;
+            text-align: center;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .status-message.success {
+            color: green;
+        }
+
+        .status-message.error {
+            color: red;
+        }
+    </style>
+</head>
+<body>
+
+<div class="ticket-container">
+    <h1>Raise A Ticket</h1>
+    <form id="ticketForm">
+        <div class="form-group">
+            <label for="fullName">Full Name</label>
+            <select id="fullName" name="fullName" required>
+                <option value="" disabled selected>Select your name</option>
+                <option value="Akansha Jain">Akansha Jain</option>
+                <option value="Mahima Agarwal">Mahima Agarwal</option>
+                <option value="Km Kalpana">Km Kalpana</option>
+                <option value="Priyam Dixit">Priyam Dixit</option>
+                <option value="Sonakshi Jain">Sonakshi Jain</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="remark">Remark</label>
+            <textarea id="remark" name="remark" required></textarea>
+        </div>
+        <div class="form-group">
+            <label for="attachment">Attach A File (Optional)</label>
+            <input type="file" id="attachment" name="attachment">
+        </div>
+        <input type="submit" value="Submit">
+    </form>
+    <div id="statusMessage" class="status-message"></div>
+</div>
+
+<script>
+    document.getElementById('ticketForm').addEventListener('submit', function(event) {
+        event.preventDefault(); // Prevents the default form submission
+
+        const form = event.target;
+        const formData = new FormData(form);
+        const statusMessage = document.getElementById('statusMessage');
+
+        // Show a temporary message to the user
+        statusMessage.textContent = 'Submitting your ticket...';
+        statusMessage.className = 'status-message';
+
+        // The URL for your Google Apps Script Web App
+        const webAppUrl = 'YOUR_WEB_APP_URL_HERE'; 
+
+        fetch(webAppUrl, {
+            method: 'POST',
+            body: formData,
+            mode: 'no-cors' // Use 'no-cors' for simple POST requests
+        })
+        .then(() => {
+            // A simple 'no-cors' fetch won't return a response, so we just assume success.
+            // A more robust app would handle the response with a different fetch configuration.
+            statusMessage.textContent = 'Ticket submitted successfully! ✅';
+            statusMessage.className = 'status-message success';
+            form.reset(); // Clear the form
+        })
+        .catch(error => {
+            console.error('Submission failed:', error);
+            statusMessage.textContent = 'Failed to submit the ticket. Please try again. ❌';
+            statusMessage.className = 'status-message error';
+        });
+    });
+</script>
+
+</body>
+</html>
