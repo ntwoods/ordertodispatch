@@ -3,555 +3,224 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Raise A Ticket - Debug Version</title>
+    <title>NT Woods Ticket Portal</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap');
+
         :root {
+            --primary-blue: #007bff;
+            --light-blue: #e6f2ff;
+            --dark-blue: #0056b3;
             --white: #ffffff;
-            --blue-light: #e3f2fd;
-            --blue-medium: #2196f3;
-            --blue-dark: #0d47a1;
-            --gray-light: #f0f0f0;
-            --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            --gray-text: #6c757d;
+            --border-radius: 8px;
         }
 
         body {
-            font-family: var(--font-family);
-            background-color: var(--blue-light);
+            font-family: 'Inter', sans-serif;
+            background-color: var(--light-blue);
+            color: #333;
             display: flex;
-            flex-direction: column;
+            justify-content: center;
             align-items: center;
             min-height: 100vh;
             margin: 0;
-            color: var(--blue-dark);
-            padding: 1rem;
+            padding: 20px;
+            box-sizing: border-box;
         }
 
-        .ticket-container {
+        .container {
             background-color: var(--white);
-            padding: 2.5rem;
-            border-radius: 12px;
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
             width: 100%;
-            max-width: 500px;
-            box-sizing: border-box;
-            margin-bottom: 2rem;
-        }
-
-        .debug-container {
-            background-color: #f8f9fa;
-            border: 1px solid #dee2e6;
-            border-radius: 8px;
-            padding: 1rem;
-            width: 100%;
-            max-width: 800px;
-            box-sizing: border-box;
-            margin-top: 1rem;
+            max-width: 600px;
+            text-align: center;
         }
 
         h1 {
-            color: var(--blue-dark);
-            text-align: center;
-            margin-bottom: 2rem;
-            font-size: 2.2rem;
-        }
-
-        h2 {
-            color: #495057;
-            font-size: 1.5rem;
-            margin-bottom: 1rem;
+            color: var(--primary-blue);
+            margin-bottom: 30px;
+            font-weight: 600;
         }
 
         .form-group {
-            margin-bottom: 1.5rem;
+            margin-bottom: 20px;
+            text-align: left;
         }
 
         label {
             display: block;
-            margin-bottom: 0.5rem;
+            margin-bottom: 8px;
             font-weight: 600;
-            color: var(--blue-medium);
         }
 
         input[type="text"],
-        select,
-        textarea {
+        textarea,
+        input[type="file"] {
             width: 100%;
-            padding: 0.8rem;
-            border: 1px solid var(--blue-medium);
-            border-radius: 8px;
-            font-size: 1rem;
+            padding: 12px;
+            border: 1px solid #ced4da;
+            border-radius: var(--border-radius);
+            font-size: 16px;
             box-sizing: border-box;
-            background-color: var(--blue-light);
-            color: var(--blue-dark);
+            transition: border-color 0.3s;
+        }
+        
+        input[type="file"] {
+             cursor: pointer;
         }
 
-        input[type="file"] {
-            display: block;
-            width: 100%;
-            margin-top: 0.5rem;
+        input[type="text"]:focus,
+        textarea:focus {
+            border-color: var(--primary-blue);
+            outline: none;
         }
 
         textarea {
             resize: vertical;
-            min-height: 100px;
+            min-height: 120px;
         }
 
-        button[type="submit"] {
+        button {
             width: 100%;
-            padding: 1rem;
-            background-color: var(--blue-medium);
+            padding: 15px;
+            background-color: var(--primary-blue);
             color: var(--white);
             border: none;
-            border-radius: 8px;
-            font-size: 1.1rem;
-            font-weight: 700;
+            border-radius: var(--border-radius);
+            font-size: 18px;
+            font-weight: 600;
             cursor: pointer;
-            transition: background-color 0.3s ease, transform 0.2s ease;
+            transition: background-color 0.3s, transform 0.2s;
         }
 
-        button[type="submit"]:hover {
-            background-color: var(--blue-dark);
+        button:hover {
+            background-color: var(--dark-blue);
             transform: translateY(-2px);
         }
 
-        button[type="submit"]:active {
-            transform: translateY(0);
-        }
-
-        button[type="submit"]:disabled {
-            background-color: #6c757d;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .status-message {
-            margin-top: 1.5rem;
-            text-align: center;
-            font-size: 1rem;
+        #status-message {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: var(--border-radius);
             font-weight: 600;
-            padding: 1rem;
-            border-radius: 8px;
+            display: none; /* Hidden by default */
         }
 
-        .status-message.success {
-            color: #155724;
+        .success {
             background-color: #d4edda;
+            color: #155724;
             border: 1px solid #c3e6cb;
         }
 
-        .status-message.error {
-            color: #721c24;
+        .error {
             background-color: #f8d7da;
+            color: #721c24;
             border: 1px solid #f5c6cb;
         }
 
-        .status-message.info {
-            color: #0c5460;
-            background-color: #d1ecf1;
-            border: 1px solid #bee5eb;
-        }
-
-        .debug-log {
-            background-color: #f8f9fa;
-            border: 1px solid #dee2e6;
-            border-radius: 4px;
-            padding: 1rem;
-            margin-top: 1rem;
-            font-family: 'Courier New', monospace;
-            font-size: 0.9rem;
-            max-height: 400px;
-            overflow-y: auto;
-            white-space: pre-wrap;
-        }
-
-        .clear-log-btn {
-            background-color: #6c757d;
-            color: white;
-            border: none;
-            padding: 0.5rem 1rem;
-            border-radius: 4px;
-            cursor: pointer;
-            margin-top: 1rem;
-        }
-
-        .test-section {
-            margin-top: 2rem;
-            padding-top: 2rem;
-            border-top: 2px solid #dee2e6;
-        }
-
-        .test-btn {
-            background-color: #28a745;
-            color: white;
-            border: none;
-            padding: 0.75rem 1.5rem;
-            border-radius: 4px;
-            cursor: pointer;
-            margin-right: 1rem;
-            margin-bottom: 0.5rem;
-        }
-
-        .payload-display {
-            background-color: #f8f9fa;
-            border: 1px solid #dee2e6;
-            border-radius: 4px;
-            padding: 1rem;
-            margin-top: 1rem;
-            font-family: 'Courier New', monospace;
-            font-size: 0.8rem;
-            white-space: pre-wrap;
-            max-height: 300px;
-            overflow-y: auto;
-        }
-
-        @media (max-width: 600px) {
-            .ticket-container {
-                padding: 1.5rem;
-            }
-            h1 {
-                font-size: 1.8rem;
-            }
+        .footer {
+            margin-top: 30px;
+            font-size: 12px;
+            color: var(--gray-text);
         }
     </style>
 </head>
 <body>
 
-<div class="ticket-container">
-    <h1>Raise A Ticket - Debug Version</h1>
+<div class="container">
+    <h1>NT Woods Ticket Portal</h1>
     <form id="ticketForm">
         <div class="form-group">
             <label for="fullName">Full Name</label>
-            <select id="fullName" name="fullName" required>
-                <option value="" disabled selected>Select your name</option>
-                <option value="Akansha Jain">Akansha Jain</option>
-                <option value="Mahima Agarwal">Mahima Agarwal</option>
-                <option value="Km Kalpana">Km Kalpana</option>
-                <option value="Priyam Dixit">Priyam Dixit</option>
-                <option value="Sonakshi Jain">Sonakshi Jain</option>
-            </select>
+            <input type="text" id="fullName" name="fullName" placeholder="Enter your full name" required>
         </div>
         <div class="form-group">
             <label for="remark">Remark</label>
-            <textarea id="remark" name="remark" required></textarea>
+            <textarea id="remark" name="remark" placeholder="Describe the issue" required></textarea>
         </div>
         <div class="form-group">
-            <label for="attachment">Attach A File (Optional)</label>
-            <input type="file" id="attachment" name="attachment" multiple>
+            <label for="fileAttachments">File Attachments</label>
+            <input type="file" id="fileAttachments" name="fileAttachments" multiple>
         </div>
         <button type="submit">Submit Ticket</button>
     </form>
-    <div id="statusMessage" class="status-message"></div>
-</div>
-
-<div class="debug-container">
-    <h2>Debug Information</h2>
-    <div class="test-section">
-        <button class="test-btn" onclick="testConnection()">Test Connection</button>
-        <button class="test-btn" onclick="testWithoutFiles()">Test Without Files</button>
-        <button class="test-btn" onclick="validateForm()">Validate Form</button>
-        <button class="clear-log-btn" onclick="clearLog()">Clear Debug Log</button>
+    <div id="status-message"></div>
+    <div class="footer">
+        Created by: Kuldeep Sharma
     </div>
-    
-    <h3>Current Payload Preview:</h3>
-    <div id="payloadPreview" class="payload-display">Payload will appear here when form is filled...</div>
-    
-    <h3>Debug Log:</h3>
-    <div id="debugLog" class="debug-log">Debug information will appear here...</div>
 </div>
 
 <script>
-    // Debug logging function
-    function debugLog(message, type = 'info') {
-        const timestamp = new Date().toISOString();
-        const logElement = document.getElementById('debugLog');
-        const logEntry = `[${timestamp}] [${type.toUpperCase()}] ${message}\n`;
-        logElement.textContent += logEntry;
-        logElement.scrollTop = logElement.scrollHeight;
-        console.log(`[DEBUG] ${message}`);
-    }
+    document.getElementById('ticketForm').addEventListener('submit', async function(event) {
+        event.preventDefault();
 
-    // Clear debug log
-    function clearLog() {
-        document.getElementById('debugLog').textContent = '';
-        debugLog('Debug log cleared');
-    }
+        // ** IMPORTANT **: Replace this URL with your deployed Google Apps Script URL.
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby_h66HCQ2AOrNnAS9VoM1oZjkEhSjHcTmGJVWbH2ZpuIOF3Ty21xu14ppIyDUFIeS-dQ/exec';
+        
+        const form = event.target;
+        const statusMessage = document.getElementById('status-message');
+        statusMessage.style.display = 'none';
 
-    // Update status message
-    function updateStatus(message, type = 'info') {
-        const statusElement = document.getElementById('statusMessage');
-        statusElement.textContent = message;
-        statusElement.className = `status-message ${type}`;
-        debugLog(`Status updated: ${message} (${type})`, 'status');
-    }
-
-    // Validate form data
-    function validateForm() {
-        const form = document.getElementById('ticketForm');
         const fullName = form.querySelector('#fullName').value;
         const remark = form.querySelector('#remark').value;
-        const files = form.querySelector('#attachment').files;
+        const files = form.querySelector('#fileAttachments').files;
 
-        debugLog(`Form validation started`, 'validation');
-        debugLog(`Full Name: "${fullName}"`, 'validation');
-        debugLog(`Remark length: ${remark.length} characters`, 'validation');
-        debugLog(`Files selected: ${files.length}`, 'validation');
-
-        if (!fullName) {
-            debugLog('❌ Validation failed: Full Name is required', 'error');
-            updateStatus('Please select a name', 'error');
-            return false;
-        }
-
-        if (!remark.trim()) {
-            debugLog('❌ Validation failed: Remark is required', 'error');
-            updateStatus('Please enter a remark', 'error');
-            return false;
-        }
-
-        debugLog('✅ Form validation passed', 'success');
-        return true;
-    }
-
-    // Update payload preview in real-time
-    function updatePayloadPreview() {
-        const form = document.getElementById('ticketForm');
-        const fullName = form.querySelector('#fullName').value;
-        const remark = form.querySelector('#remark').value;
-        const files = form.querySelector('#attachment').files;
-
-        const preview = {
-            fullName: fullName || '[Not Selected]',
-            remark: remark || '[Empty]',
-            attachments: Array.from(files).map(file => ({
+        // Function to convert a file to a Base64 string
+        const toBase64 = file => new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => resolve({
                 name: file.name,
-                size: `${(file.size / 1024).toFixed(2)} KB`,
-                type: file.type
-            }))
-        };
-
-        document.getElementById('payloadPreview').textContent = JSON.stringify(preview, null, 2);
-    }
-
-    // Add event listeners for real-time preview updates
-    document.addEventListener('DOMContentLoaded', function() {
-        const form = document.getElementById('ticketForm');
-        form.querySelector('#fullName').addEventListener('change', updatePayloadPreview);
-        form.querySelector('#remark').addEventListener('input', updatePayloadPreview);
-        form.querySelector('#attachment').addEventListener('change', updatePayloadPreview);
-        
-        debugLog('Form listeners attached', 'init');
-        updatePayloadPreview();
-    });
-
-    // Test connection to Apps Script
-    async function testConnection() {
-        debugLog('Testing connection to Apps Script...', 'test');
-        updateStatus('Testing connection...', 'info');
-        
-        const webAppUrl = 'https://script.google.com/macros/s/AKfycbxQBhrkREKYuBVqpit2e1U6jezgLbBXbXyGXhZ9-pRaRbpZXtWJreISTjK9HuWMw5tynQ/exec';
-        
-        try {
-            const testPayload = {
-                test: true,
-                fullName: "Test User",
-                remark: "Connection test",
-                attachments: []
-            };
-
-            debugLog(`Test payload: ${JSON.stringify(testPayload)}`, 'test');
-
-            const response = await fetch(webAppUrl, {
-                method: 'POST',
-                mode: 'no-cors',
-                body: JSON.stringify(testPayload),
-                headers: {
-                    'Content-Type': 'application/json'
-                }
+                base64Data: reader.result
             });
+            reader.onerror = error => reject(error);
+        });
 
-            debugLog('✅ Connection test completed (no-cors mode)', 'success');
-            updateStatus('Connection test sent successfully', 'success');
-
+        let fileDataArray = [];
+        try {
+            if (files.length > 0) {
+                // Use Promise.all to handle multiple file conversions at once
+                fileDataArray = await Promise.all(Array.from(files).map(file => toBase64(file)));
+            }
         } catch (error) {
-            debugLog(`❌ Connection test failed: ${error.message}`, 'error');
-            updateStatus(`Connection test failed: ${error.message}`, 'error');
-        }
-    }
-
-    // Test without files
-    async function testWithoutFiles() {
-        debugLog('Testing form submission without files...', 'test');
-        
-        if (!validateForm()) {
+            console.error('File conversion error:', error);
+            statusMessage.textContent = 'Error converting files. Please try again.';
+            statusMessage.className = 'error';
+            statusMessage.style.display = 'block';
             return;
         }
 
-        const form = document.getElementById('ticketForm');
-        const testPayload = {
-            fullName: form.querySelector('#fullName').value,
-            remark: form.querySelector('#remark').value,
-            attachments: []
+        const payload = {
+            fullName: fullName,
+            remark: remark,
+            fileData: fileDataArray
         };
-
-        debugLog(`Test payload (no files): ${JSON.stringify(testPayload)}`, 'test');
         
-        await submitFormData(testPayload, true);
-    }
-
-    // File processing function
-    async function processFiles(files) {
-        debugLog(`Processing ${files.length} files...`, 'file');
-        let attachments = [];
-        
-        for (let i = 0; i < files.length; i++) {
-            const file = files[i];
-            debugLog(`Processing file ${i + 1}: ${file.name} (${file.size} bytes, ${file.type})`, 'file');
-            
-            try {
-                const base64 = await new Promise((resolve, reject) => {
-                    const reader = new FileReader();
-                    reader.onload = () => {
-                        debugLog(`✅ File ${i + 1} converted to base64`, 'file');
-                        resolve(reader.result);
-                    };
-                    reader.onerror = () => {
-                        debugLog(`❌ Failed to read file ${i + 1}: ${reader.error}`, 'error');
-                        reject(reader.error);
-                    };
-                    reader.readAsDataURL(file);
-                });
-                
-                attachments.push({
-                    name: file.name,
-                    type: file.type,
-                    size: file.size,
-                    data: base64.split(',')[1] // Get the base64 data part
-                });
-                
-            } catch (error) {
-                debugLog(`❌ Error processing file ${file.name}: ${error.message}`, 'error');
-                throw error;
-            }
-        }
-        
-        debugLog(`✅ All files processed successfully`, 'file');
-        return attachments;
-    }
-
-    // Submit form data
-    async function submitFormData(payload, isTest = false) {
-        const webAppUrl = 'https://script.google.com/macros/s/AKfycbwK_ePT5wGbobduZYoj7i9itDs5TXYbUCnmMr-4Vo-9NQAkuak3d6jAwK16xWnfJvNq4w/exec';
-        
-        debugLog(`${isTest ? 'Test s' : 'S'}ubmission started`, 'submit');
-        debugLog(`Target URL: ${webAppUrl}`, 'submit');
-        debugLog(`Payload size: ${JSON.stringify(payload).length} characters`, 'submit');
-        
-        const submitButton = document.querySelector('button[type="submit"]');
-        const originalText = submitButton.textContent;
-        
-        if (!isTest) {
-            submitButton.disabled = true;
-            submitButton.textContent = 'Submitting...';
-        }
-
         try {
-            debugLog('Sending fetch request...', 'submit');
-            
-            const fetchOptions = {
+            const response = await fetch(SCRIPT_URL, {
                 method: 'POST',
-                mode: 'no-cors',
+                mode: 'no-cors',                
                 body: JSON.stringify(payload),
                 headers: {
                     'Content-Type': 'application/json'
-                }
-            };
-            
-            debugLog(`Fetch options: ${JSON.stringify({...fetchOptions, body: '[PAYLOAD]'})}`, 'submit');
+                },
+            });
 
-            const response = await fetch(webAppUrl, fetchOptions);
-            
-            debugLog(`✅ Fetch completed - Response type: ${response.type}`, 'success');
-            debugLog(`Response status would be opaque due to no-cors mode`, 'info');
-            
-            if (isTest) {
-                updateStatus('✅ Test submission completed successfully!', 'success');
-            } else {
-                updateStatus('✅ Ticket submitted successfully!', 'success');
-                document.getElementById('ticketForm').reset();
-                updatePayloadPreview();
-            }
-            
+                statusMessage.textContent = 'Ticket submitted successfully! ' + result;
+                statusMessage.className = 'success';
+                form.reset(); // Clear the form on success
+                statusMessage.className = 'error';
         } catch (error) {
-            debugLog(`❌ Submission error: ${error.name} - ${error.message}`, 'error');
-            debugLog(`Error stack: ${error.stack}`, 'error');
-            
-            if (isTest) {
-                updateStatus(`❌ Test submission failed: ${error.message}`, 'error');
-            } else {
-                updateStatus(`❌ Failed to submit ticket: ${error.message}`, 'error');
-            }
+            console.error('Fetch error:', error);
+            statusMessage.textContent = 'Could not connect to the server. Please check your network.';
+            statusMessage.className = 'error';
         } finally {
-            if (!isTest) {
-                submitButton.disabled = false;
-                submitButton.textContent = originalText;
-            }
+            statusMessage.style.display = 'block';
         }
-    }
-
-    // Main form submission handler
-    document.getElementById('ticketForm').addEventListener('submit', async function(event) {
-        event.preventDefault();
-        
-        debugLog('=== FORM SUBMISSION STARTED ===', 'submit');
-        
-        if (!validateForm()) {
-            return;
-        }
-
-        updateStatus('Processing your ticket...', 'info');
-        
-        const form = event.target;
-        const fullName = form.querySelector('#fullName').value;
-        const remark = form.querySelector('#remark').value;
-        const files = form.querySelector('#attachment').files;
-        
-        debugLog(`Form data - Name: ${fullName}, Remark length: ${remark.length}, Files: ${files.length}`, 'submit');
-
-        try {
-            let attachments = [];
-            
-            if (files.length > 0) {
-                debugLog('Processing file attachments...', 'submit');
-                attachments = await processFiles(files);
-                debugLog(`✅ ${attachments.length} files processed`, 'submit');
-            } else {
-                debugLog('No files to process', 'submit');
-            }
-            
-            const payload = {
-                fullName: fullName,
-                remark: remark,
-                attachments: attachments,
-                timestamp: new Date().toISOString(),
-                userAgent: navigator.userAgent
-            };
-            
-            debugLog(`Final payload prepared (${JSON.stringify(payload).length} chars)`, 'submit');
-            
-            await submitFormData(payload);
-            
-        } catch (error) {
-            debugLog(`❌ Form submission error: ${error.message}`, 'error');
-            updateStatus(`❌ Error processing form: ${error.message}`, 'error');
-        }
-        
-        debugLog('=== FORM SUBMISSION ENDED ===', 'submit');
     });
-
-    // Initialize
-    debugLog('🚀 Debug version initialized', 'init');
-    debugLog(`User Agent: ${navigator.userAgent}`, 'init');
-    debugLog(`Current URL: ${window.location.href}`, 'init');
 </script>
 
 </body>
