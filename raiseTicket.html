@@ -77,7 +77,7 @@
             min-height: 100px;
         }
 
-        input[type="submit"] {
+        button[type="submit"] {
             width: 100%;
             padding: 1rem;
             background-color: var(--blue-medium);
@@ -90,12 +90,12 @@
             transition: background-color 0.3s ease, transform 0.2s ease;
         }
 
-        input[type="submit"]:hover {
+        button[type="submit"]:hover {
             background-color: var(--blue-dark);
             transform: translateY(-2px);
         }
 
-        input[type="submit"]:active {
+        button[type="submit"]:active {
             transform: translateY(0);
         }
 
@@ -148,45 +148,81 @@
         </div>
         <div class="form-group">
             <label for="attachment">Attach A File (Optional)</label>
-            <input type="file" id="attachment" name="attachment">
+            <input type="file" id="attachment" name="attachment" multiple>
         </div>
-        <input type="submit" value="Submit">
+        <button type="submit">Submit</button>
     </form>
     <div id="statusMessage" class="status-message"></div>
 </div>
 
 <script>
-    document.getElementById('ticketForm').addEventListener('submit', function(event) {
+    document.getElementById('ticketForm').addEventListener('submit', async function(event) {
         event.preventDefault(); // Prevents the default form submission
 
         const form = event.target;
-        const formData = new FormData(form);
         const statusMessage = document.getElementById('statusMessage');
+        const submitButton = form.querySelector('button[type="submit"]');
 
-        // Show a temporary message to the user
         statusMessage.textContent = 'Submitting your ticket...';
         statusMessage.className = 'status-message';
+        submitButton.disabled = true; // Disable button to prevent multiple submissions
 
         // The URL for your Google Apps Script Web App
         const webAppUrl = 'https://script.google.com/macros/s/AKfycbwK_ePT5wGbobduZYoj7i9itDs5TXYbUCnmMr-4Vo-9NQAkuak3d6jAwK16xWnfJvNq4w/exec'; 
 
-        fetch(webAppUrl, {
-            method: 'POST',
-            body: formData,
-            mode: 'no-cors' // Use 'no-cors' for simple POST requests
-        })
-        .then(() => {
-            // A simple 'no-cors' fetch won't return a response, so we just assume success.
-            // A more robust app would handle the response with a different fetch configuration.
-            statusMessage.textContent = 'Ticket submitted successfully! ✅';
-            statusMessage.className = 'status-message success';
-            form.reset(); // Clear the form
-        })
-        .catch(error => {
+        const fullName = form.querySelector('#fullName').value;
+        const remark = form.querySelector('#remark').value;
+        const files = form.querySelector('#attachment').files;
+        
+        let attachments = [];
+        
+        // Asynchronously read each file and convert it to a Base64 string
+        for (const file of files) {
+            const base64 = await new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+            attachments.push({
+                name: file.name,
+                type: file.type,
+                data: base64.split(',')[1] // Get the base64 data part
+            });
+        }
+        
+        const payload = {
+            fullName: fullName,
+            remark: remark,
+            attachments: attachments
+        };
+
+        try {
+            const response = await fetch(webAppUrl, {
+                method: 'POST',
+                body: JSON.stringify(payload),
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.ok) {
+                statusMessage.textContent = 'Ticket submitted successfully! ✅';
+                statusMessage.className = 'status-message success';
+                form.reset(); // Clear the form
+            } else {
+                statusMessage.textContent = 'Failed to submit the ticket. Please try again. ❌';
+                statusMessage.className = 'status-message error';
+                const errorText = await response.text();
+                console.error('Submission failed with response:', errorText);
+            }
+        } catch (error) {
             console.error('Submission failed:', error);
-            statusMessage.textContent = 'Failed to submit the ticket. Please try again. ❌';
+            statusMessage.textContent = 'Failed to submit the ticket. Please check the console. ❌';
             statusMessage.className = 'status-message error';
-        });
+        } finally {
+            submitButton.disabled = false; // Re-enable button
+        }
     });
 </script>
 
