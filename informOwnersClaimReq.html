@@ -235,21 +235,6 @@
                     }
                     
                     // Display the fetched data.
-                    displayCards(result.data);
-
-                } catch (error) {
-                    console.error('Fetch error:', error);
-                    errorMessage.classList.remove('hidden');
-                } finally {
-                    loadingIndicator.classList.add('hidden');
-                    cardContainer.classList.remove('hidden');
-                }
-            };
-
-            /**
-             * Creates and appends HTML cards to the container.
-             * @param {Array<Object>} data An array of claim request objects.
-             */
             const displayCards = (data) => {
                 cardContainer.innerHTML = '';
                 if (data.length === 0) {
@@ -265,6 +250,42 @@
                     const formattedDate = new Date(item['Request Date']).toLocaleDateString('en-US', {
                         year: 'numeric', month: 'long', day: 'numeric'
                     });
+
+                    // Variables for dynamic content
+                    let cardColorClass = 'bg-white';
+                    let buttonHtml = `<button class="owners-informed-btn w-full px-4 py-2 text-sm font-semibold text-white bg-blue-500 rounded-lg hover:bg-blue-600 transition-colors shadow-md focus:outline-none" data-req-id="${item['REQ-ID']}">
+                                        <i class="fas fa-bullhorn mr-2"></i>Owners Informed
+                                    </button>`;
+                    let remarkHtml = '';
+
+                    // Check for Owner Response and update card based on its value
+                    const ownerResponse = item['Owner Response']?.toLowerCase();
+                    const ownerRemark = item['Owner Remark'] || '';
+
+                    if (ownerRemark) {
+                        remarkHtml = `
+                            <div class="mt-4 border-t pt-4 border-slate-200">
+                                <h4 class="text-sm font-semibold text-slate-600 mb-2">Owner's Remark:</h4>
+                                <p class="text-sm text-slate-800 break-words">${ownerRemark}</p>
+                            </div>`;
+                    }
+
+                    if (ownerResponse === 'reject') {
+                        cardColorClass = 'bg-red-100 border-red-400';
+                        buttonHtml = '';
+                    } else if (ownerResponse === 'verify') {
+                        cardColorClass = 'bg-yellow-100 border-yellow-400';
+                        buttonHtml = `<button class="submit-verification-btn w-full px-4 py-2 text-sm font-semibold text-white bg-yellow-500 rounded-lg hover:bg-yellow-600 transition-colors shadow-md focus:outline-none" data-req-id="${item['REQ-ID']}">
+                                        <i class="fas fa-file-alt mr-2"></i>Submit Verification Report
+                                    </button>`;
+                    } else if (ownerResponse === 'approve') {
+                        cardColorClass = 'bg-green-100 border-green-400';
+                        buttonHtml = `<span class="inline-flex items-center px-3 py-1 text-sm font-semibold text-green-800 bg-green-200 rounded-full shadow-sm">
+                                        <i class="fas fa-clock mr-2"></i>A/c Team's Response Awaiting
+                                    </span>`;
+                    }
+
+                    card.classList.add(cardColorClass);
 
                     // Build the card's inner HTML
                     card.innerHTML = `
@@ -288,11 +309,10 @@
                                     <p class="text-sm md:text-base break-words flex-1">Issue: ${item['Issue']}</p>
                                 </div>
                             </div>
+                            ${remarkHtml}
                         </div>
                         <div class="mt-4">
-                            <button class="owners-informed-btn w-full px-4 py-2 text-sm font-semibold text-white bg-blue-500 rounded-lg hover:bg-blue-600 transition-colors shadow-md focus:outline-none" data-req-id="${item['REQ-ID']}">
-                                <i class="fas fa-bullhorn mr-2"></i>Owners Informed
-                            </button>
+                            ${buttonHtml}
                         </div>
                     `;
                     cardContainer.appendChild(card);
@@ -310,7 +330,6 @@
                     });
                 });
             };
-
             // Event listener to close the modal
             closeModalBtn.addEventListener('click', () => {
                 modal.classList.add('hidden');
