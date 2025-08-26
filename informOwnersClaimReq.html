@@ -283,7 +283,7 @@
                                     </span>`;
                     }
 
-                    card.classList.add(cardColorClass);
+                    card.classList.add(...cardColorClass.split(' '));
 
                     // Build the card's inner HTML
                     card.innerHTML = `
