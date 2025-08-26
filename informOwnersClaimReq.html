@@ -128,18 +128,26 @@
         </div>
     </div>
 
+    <!-- Loading overlay for POST requests -->
+    <div id="post-loading" class="fixed inset-0 z-60 flex items-center justify-center bg-black bg-opacity-50 hidden">
+        <div class="bg-white p-6 rounded-lg shadow-xl flex items-center space-x-4">
+            <i class="fas fa-spinner fa-spin text-blue-500 text-2xl"></i>
+            <span class="text-lg font-medium">Processing...</span>
+        </div>
+    </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             // Placeholder for the Google Apps Script deployment URL.
             // You MUST replace this with your actual deployed URL.
-            const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzrRLWOtKKIkxs0cUBMZpfRjukuMP0171yTZfXCtp-0oKnt7FaM0frkbkbLAyApZV8xXg/exec';
+            const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzrRLWOtKKIkxs0cUBMZpfRjukuMP0171yTZfXCtp-0oKnt7FaM0frkbkbLAyApZV8xXg/exec;
 
             const cardContainer = document.getElementById('card-container');
             const loadingIndicator = document.getElementById('loading');
             const errorMessage = document.getElementById('error-message');
             const noDataMessage = document.getElementById('no-data-message');
             const crmDisplay = document.getElementById('crm-display');
+            const postLoading = document.getElementById('post-loading');
             
             const modal = document.getElementById('modal');
             const closeModalBtn = document.getElementById('close-modal-btn');
@@ -159,34 +167,52 @@
             const getUrlParams = () => new URLSearchParams(window.location.search);
 
             /**
+             * Sends data to the Google Apps Script doPost function
+             * @param {Object} payload The data to send
+             */
+            const sendData = async (payload) => {
+                try {
+                    postLoading.classList.remove('hidden');
+                    
+                    // Create form data for POST request
+                    const formData = new FormData();
+                    formData.append('reqId', payload.reqId);
+                    formData.append('action', payload.action);
+                    formData.append('ownerRemark', payload.ownerRemark);
+                    if (payload.marketingPerson) {
+                        formData.append('marketingPerson', payload.marketingPerson);
+                    }
+
+                    console.log('Sending payload to server:', payload);
+
+                    const response = await fetch(SCRIPT_URL, {
+                        method: 'POST',
+                        mode: 'no-cors', // As you mentioned this is intentional
+                        body: formData
+                    });
+
+                    // Note: With no-cors mode, we can't read the response
+                    // So we'll assume success if no error is thrown
+                    console.log('Request sent successfully');
+                    
+                    // Show success message
+                    alert(`Claim ${payload.action}d successfully!`);
+                    
+                    // Optionally refresh the page to see updated data
+                    // window.location.reload();
+
+                } catch (error) {
+                    console.error('Error sending data:', error);
+                    alert('Error processing request. Please try again.');
+                } finally {
+                    postLoading.classList.add('hidden');
+                }
+            };
+
+            /**
              * Fetches data from the Google Apps Script API.
              * @param {string} crmName The CRM name to filter the data.
              */
-
-            /**
-             * Sends a POST request to the Google Apps Script API.
-             * @param {Object} data The data payload to send.
-             */
-            const sendData = async (data) => {
-                try {
-                    const response = await fetch(SCRIPT_URL, {
-                        method: 'POST',
-                        mode: 'no-cors',
-                        body: new URLSearchParams(data) // Convert the data object to URL-encoded form data
-                    });
-                        alert('Claim updated successfully!');
-                } catch (error) {
-                    console.error('API call failed:', error);
-                    alert('An error occurred. Please try again.');
-                }
-            };
-            
-            // ... inside the button click handlers, replace the console.log line with:
-            // approveBtn.addEventListener('click', () => {
-            //     const payload = { /* ... */ };
-            //     sendData(payload);
-            // });            
-            
             const fetchData = async (crmName) => {
                 loadingIndicator.classList.remove('hidden');
                 cardContainer.classList.add('hidden');
@@ -278,6 +304,8 @@
                         // Store the REQ-ID on the modal for later use
                         modal.dataset.reqId = button.dataset.reqId;
                         marketingPersonField.classList.add('hidden');
+                        ownerRemarkInput.value = ''; // Clear previous input
+                        marketingPersonNameInput.value = ''; // Clear previous input
                         modal.classList.remove('hidden');
                     });
                 });
@@ -303,8 +331,7 @@
                     reqId: modal.dataset.reqId
                 };
                 console.log('Approve Payload:', payload);
-                // Here you would call your doPost function to send the data
-                // sendData(payload);
+                sendData(payload);
                 modal.classList.add('hidden');
             });
 
@@ -321,8 +348,7 @@
                     reqId: modal.dataset.reqId
                 };
                 console.log('Verify Payload:', payload);
-                // Here you would call your doPost function to send the data
-                // sendData(payload);
+                sendData(payload);
                 modal.classList.add('hidden');
             });
 
@@ -333,11 +359,9 @@
                     reqId: modal.dataset.reqId
                 };
                 console.log('Reject Payload:', payload);
-                // Here you would call your doPost function to send the data
-                // sendData(payload);
+                sendData(payload);
                 modal.classList.add('hidden');
             });
-
 
             // Main execution logic
             const params = getUrlParams();
