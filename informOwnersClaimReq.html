@@ -162,6 +162,37 @@
              * Fetches data from the Google Apps Script API.
              * @param {string} crmName The CRM name to filter the data.
              */
+
+            /**
+             * Sends a POST request to the Google Apps Script API.
+             * @param {Object} data The data payload to send.
+             */
+            const sendData = async (data) => {
+                try {
+                    const response = await fetch(SCRIPT_URL, {
+                        method: 'POST',
+                        body: new URLSearchParams(data) // Convert the data object to URL-encoded form data
+                    });
+                    const result = await response.json();
+                    console.log('API Response:', result);
+                    if (result.status === 'success') {
+                        alert('Claim updated successfully!');
+                        // Reload or update the UI as needed
+                    } else {
+                        alert('Error: ' + result.message);
+                    }
+                } catch (error) {
+                    console.error('API call failed:', error);
+                    alert('An error occurred. Please try again.');
+                }
+            };
+            
+            // ... inside the button click handlers, replace the console.log line with:
+            // approveBtn.addEventListener('click', () => {
+            //     const payload = { /* ... */ };
+            //     sendData(payload);
+            // });            
+            
             const fetchData = async (crmName) => {
                 loadingIndicator.classList.remove('hidden');
                 cardContainer.classList.add('hidden');
