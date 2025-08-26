@@ -4,10 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Claim Request Dashboard</title>
+    <!-- Tailwind CSS CDN for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts for premium typography -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         body {
@@ -32,21 +35,57 @@
 </head>
 <body class="bg-gray-50 flex flex-col min-h-screen">
 
+    <!-- Header -->
     <header class="bg-gradient-to-r from-blue-600 to-blue-800 text-white shadow-lg p-6">
-        <div class="container mx-auto flex items-center justify-between">
-            <h1 id="dashboard-title" class="text-3xl md:text-4xl font-extrabold tracking-tight">
+        <div class="container mx-auto flex items-center justify-between flex-wrap">
+            <!-- Left side: Title -->
+            <h1 id="dashboard-title" class="text-3xl md:text-4xl font-extrabold tracking-tight mb-4 md:mb-0">
                 <i class="fas fa-clipboard-list mr-3"></i>
                 Claim Requests
             </h1>
-            <div class="flex items-center space-x-2">
-                <span class="text-sm md:text-base font-medium">CRM:</span>
-                <span id="crm-display" class="text-sm md:text-base font-semibold bg-white text-blue-800 px-3 py-1 rounded-full shadow-inner">N/A</span>
+
+            <!-- Right side: Filters and CRM Name -->
+            <div class="flex items-center space-x-4 md:space-x-8 flex-wrap justify-end">
+                
+                <!-- Filter Dropdown -->
+                <div class="relative inline-block text-left z-10">
+                    <button id="filter-dropdown-btn" class="inline-flex justify-center items-center rounded-lg border border-transparent bg-white px-4 py-2 text-sm font-semibold text-blue-800 shadow-sm hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-blue-600 transition-colors">
+                        <i class="fas fa-filter mr-2"></i>
+                        Filter Status
+                        <i class="fas fa-chevron-down ml-2 -mr-1 text-xs"></i>
+                    </button>
+                    
+                    <div id="filter-menu" class="origin-top-right absolute right-0 mt-2 w-56 rounded-lg shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none hidden transition-all duration-200">
+                        <div class="py-1" role="menu" aria-orientation="vertical" aria-labelledby="filter-dropdown-btn">
+                            <label class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer">
+                                <input type="checkbox" name="filter-status" value="reject" class="h-4 w-4 text-red-600 border-gray-300 rounded focus:ring-red-500 mr-2">
+                                <span class="font-medium text-red-600">Rejected</span>
+                            </label>
+                            <label class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer">
+                                <input type="checkbox" name="filter-status" value="approve" class="h-4 w-4 text-green-600 border-gray-300 rounded focus:ring-green-500 mr-2">
+                                <span class="font-medium text-green-600">Pending at A/c</span>
+                            </label>
+                            <label class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer">
+                                <input type="checkbox" name="filter-status" value="verify" class="h-4 w-4 text-yellow-600 border-gray-300 rounded focus:ring-yellow-500 mr-2">
+                                <span class="font-medium text-yellow-600">Pending for Verification Report</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CRM Display -->
+                <div class="flex items-center space-x-2">
+                    <span class="text-sm md:text-base font-medium">CRM:</span>
+                    <span id="crm-display" class="text-sm md:text-base font-semibold bg-white text-blue-800 px-3 py-1 rounded-full shadow-inner">N/A</span>
+                </div>
             </div>
         </div>
     </header>
 
+    <!-- Main Content Area -->
     <main class="container mx-auto p-6 flex-grow overflow-hidden">
         
+        <!-- Loading and Error States -->
         <div id="loading" class="text-center py-20 text-blue-500 hidden">
             <i class="fas fa-spinner fa-spin text-5xl mb-4"></i>
             <p class="text-lg font-medium">Fetching your claims...</p>
@@ -60,22 +99,29 @@
             <p class="text-lg font-medium">No claims found for this CRM.</p>
         </div>
 
+        <!-- Cards Container -->
         <div id="card-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            </div>
+            <!-- Cards will be dynamically added here by JavaScript -->
+        </div>
 
     </main>
 
+    <!-- Footer -->
     <footer class="bg-slate-100 text-slate-600 text-center py-4 text-sm shadow-inner">
         &copy; 2024 Claim Request Dashboard. All Rights Reserved.
     </footer>
 
+    <!-- Modal for "Owners Informed" -->
     <div id="modal" class="fixed inset-0 z-50 overflow-y-auto hidden">
         <div class="flex items-center justify-center min-h-screen px-4 py-8 text-center sm:block sm:p-0">
+            <!-- Modal backdrop -->
             <div class="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75" aria-hidden="true"></div>
             
+            <!-- Modal content container -->
             <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
             <div class="inline-block px-4 pt-5 pb-4 overflow-hidden text-left align-bottom transition-all transform bg-white rounded-lg shadow-xl sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
                 
+                <!-- Modal header -->
                 <div class="flex items-center justify-between pb-3 border-b border-gray-200">
                     <h3 class="text-xl font-bold text-blue-800">
                         <i class="fas fa-user-check mr-2"></i>
@@ -86,17 +132,20 @@
                     </button>
                 </div>
 
+                <!-- Modal body -->
                 <div class="mt-4">
                     <div class="mb-4">
                         <label for="owner-remark" class="block text-sm font-medium text-gray-700 mb-2">Owner's Remark</label>
                         <textarea id="owner-remark" rows="4" class="block w-full px-3 py-2 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500"></textarea>
                     </div>
+                    <!-- New input field for Marketing Person, initially hidden -->
                     <div id="marketing-person-field" class="mb-4 hidden">
                         <label for="marketing-person-name" class="block text-sm font-medium text-gray-700 mb-2">Marketing Person's Name</label>
                         <input type="text" id="marketing-person-name" class="block w-full px-3 py-2 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500">
                     </div>
                 </div>
 
+                <!-- Modal footer -->
                 <div class="flex flex-col sm:flex-row-reverse sm:justify-start sm:space-x-2 sm:space-x-reverse space-y-2 sm:space-y-0 mt-4">
                     <button id="approve-claim-btn" class="px-5 py-2 text-sm font-semibold text-white bg-green-500 rounded-lg hover:bg-green-600 transition-colors shadow-sm">
                         <i class="fas fa-check-circle mr-2"></i>Approve Claim
@@ -112,6 +161,7 @@
         </div>
     </div>
 
+    <!-- Loading overlay for POST requests -->
     <div id="post-loading" class="fixed inset-0 z-60 flex items-center justify-center bg-black bg-opacity-50 hidden">
         <div class="bg-white p-6 rounded-lg shadow-xl flex items-center space-x-4">
             <i class="fas fa-spinner fa-spin text-blue-500 text-2xl"></i>
@@ -142,6 +192,13 @@
             const approveBtn = document.getElementById('approve-claim-btn');
             const verifyBtn = document.getElementById('verify-claim-btn');
             const rejectBtn = document.getElementById('reject-claim-btn');
+
+            // Filter dropdown elements
+            const filterDropdownBtn = document.getElementById('filter-dropdown-btn');
+            const filterMenu = document.getElementById('filter-menu');
+            const filterCheckboxes = document.querySelectorAll('input[name="filter-status"]');
+
+            let originalData = [];
 
             /**
              * Extracts URL parameters from the current window location.
@@ -217,8 +274,11 @@
                         throw new Error(result.error);
                     }
                     
+                    // Store the original fetched data
+                    originalData = result.data;
+                    
                     // Display the fetched data.
-                    displayCards(result.data);
+                    displayCards(originalData);
 
                 } catch (error) {
                     console.error('Fetch error:', error);
@@ -227,6 +287,28 @@
                     loadingIndicator.classList.add('hidden');
                     cardContainer.classList.remove('hidden');
                 }
+            };
+
+            /**
+             * Filters the original data based on selected statuses and displays the results.
+             */
+            const filterCards = () => {
+                const selectedStatuses = Array.from(filterCheckboxes)
+                    .filter(checkbox => checkbox.checked)
+                    .map(checkbox => checkbox.value);
+
+                let filteredData = [];
+                if (selectedStatuses.length > 0) {
+                    filteredData = originalData.filter(item => {
+                        const ownerResponse = item['Owner Response']?.toLowerCase();
+                        return selectedStatuses.includes(ownerResponse);
+                    });
+                } else {
+                    // If no filters are selected, show all cards
+                    filteredData = originalData;
+                }
+                
+                displayCards(filteredData);
             };
 
             /**
@@ -283,6 +365,7 @@
                                     </span>`;
                     }
 
+                    // Fix for the InvalidCharacterError
                     card.classList.add(...cardColorClass.split(' '));
 
                     // Build the card's inner HTML
@@ -380,6 +463,25 @@
                 sendData(payload);
                 modal.classList.add('hidden');
             });
+
+            // Filter dropdown event listeners
+            filterDropdownBtn.addEventListener('click', () => {
+                filterMenu.classList.toggle('hidden');
+            });
+
+            filterCheckboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', () => {
+                    filterCards();
+                });
+            });
+
+            // Close the filter menu if the user clicks outside of it
+            window.addEventListener('click', (event) => {
+                if (!filterDropdownBtn.contains(event.target) && !filterMenu.contains(event.target)) {
+                    filterMenu.classList.add('hidden');
+                }
+            });
+
 
             // Main execution logic
             const params = getUrlParams();
