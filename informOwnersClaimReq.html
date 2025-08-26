@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Claim Request Dashboard</title>
+    <!-- Tailwind CSS CDN for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts for premium typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Custom scrollbar for a cleaner look */
+        .overflow-y-scroll::-webkit-scrollbar {
+            width: 8px;
+        }
+        .overflow-y-scroll::-webkit-scrollbar-track {
+            background: #f1f5f9; /* slate-100 */
+            border-radius: 10px;
+        }
+        .overflow-y-scroll::-webkit-scrollbar-thumb {
+            background: #94a3b8; /* slate-400 */
+            border-radius: 10px;
+        }
+        .overflow-y-scroll::-webkit-scrollbar-thumb:hover {
+            background: #64748b; /* slate-500 */
+        }
+    </style>
+</head>
+<body class="bg-gray-50 flex flex-col min-h-screen">
+
+    <!-- Header -->
+    <header class="bg-gradient-to-r from-blue-600 to-blue-800 text-white shadow-lg p-6">
+        <div class="container mx-auto flex items-center justify-between">
+            <h1 id="dashboard-title" class="text-3xl md:text-4xl font-extrabold tracking-tight">
+                <i class="fas fa-clipboard-list mr-3"></i>
+                Claim Requests
+            </h1>
+            <div class="flex items-center space-x-2">
+                <span class="text-sm md:text-base font-medium">CRM:</span>
+                <span id="crm-display" class="text-sm md:text-base font-semibold bg-white text-blue-800 px-3 py-1 rounded-full shadow-inner">N/A</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="container mx-auto p-6 flex-grow overflow-hidden">
+        
+        <!-- Loading and Error States -->
+        <div id="loading" class="text-center py-20 text-blue-500 hidden">
+            <i class="fas fa-spinner fa-spin text-5xl mb-4"></i>
+            <p class="text-lg font-medium">Fetching your claims...</p>
+        </div>
+        <div id="error-message" class="text-center py-20 text-red-500 hidden">
+            <i class="fas fa-exclamation-triangle text-5xl mb-4"></i>
+            <p class="text-lg font-medium">Oops! Something went wrong. Please try again later.</p>
+        </div>
+        <div id="no-data-message" class="text-center py-20 text-gray-500 hidden">
+            <i class="fas fa-box-open text-5xl mb-4"></i>
+            <p class="text-lg font-medium">No claims found for this CRM.</p>
+        </div>
+
+        <!-- Cards Container -->
+        <div id="card-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <!-- Cards will be dynamically added here by JavaScript -->
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-100 text-slate-600 text-center py-4 text-sm shadow-inner">
+        &copy; 2024 Claim Request Dashboard. All Rights Reserved.
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Placeholder for the Google Apps Script deployment URL.
+            // You MUST replace this with your actual deployed URL.
+            const SCRIPT_URL = 'YOUR_DEPLOYED_SCRIPT_URL_HERE';
+
+            const cardContainer = document.getElementById('card-container');
+            const loadingIndicator = document.getElementById('loading');
+            const errorMessage = document.getElementById('error-message');
+            const noDataMessage = document.getElementById('no-data-message');
+            const crmDisplay = document.getElementById('crm-display');
+
+            /**
+             * Extracts URL parameters from the current window location.
+             * @returns {URLSearchParams} An object containing the URL parameters.
+             */
+            const getUrlParams = () => new URLSearchParams(window.location.search);
+
+            /**
+             * Fetches data from the Google Apps Script API.
+             * @param {string} crmName The CRM name to filter the data.
+             */
+            const fetchData = async (crmName) => {
+                loadingIndicator.classList.remove('hidden');
+                cardContainer.classList.add('hidden');
+                errorMessage.classList.add('hidden');
+                noDataMessage.classList.add('hidden');
+
+                try {
+                    // Encode the CRM name to handle spaces and special characters.
+                    const encodedCrmName = encodeURIComponent(crmName);
+                    const response = await fetch(`${SCRIPT_URL}?crm=${encodedCrmName}`);
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    
+                    const result = await response.json();
+                    
+                    if (result.error) {
+                        throw new Error(result.error);
+                    }
+                    
+                    // Display the fetched data.
+                    displayCards(result.data);
+
+                } catch (error) {
+                    console.error('Fetch error:', error);
+                    errorMessage.classList.remove('hidden');
+                } finally {
+                    loadingIndicator.classList.add('hidden');
+                    cardContainer.classList.remove('hidden');
+                }
+            };
+
+            /**
+             * Creates and appends HTML cards to the container.
+             * @param {Array<Object>} data An array of claim request objects.
+             */
+            const displayCards = (data) => {
+                cardContainer.innerHTML = '';
+                if (data.length === 0) {
+                    noDataMessage.classList.remove('hidden');
+                    return;
+                }
+
+                data.forEach(item => {
+                    const card = document.createElement('div');
+                    card.classList.add('bg-white', 'p-6', 'rounded-xl', 'shadow-lg', 'hover:shadow-xl', 'transition-shadow', 'duration-300', 'border', 'border-slate-200');
+
+                    // Convert the raw date string to a readable format
+                    const formattedDate = new Date(item['Request Date']).toLocaleDateString('en-US', {
+                        year: 'numeric', month: 'long', day: 'numeric'
+                    });
+
+                    // Build the card's inner HTML
+                    card.innerHTML = `
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="text-sm font-medium text-slate-500">${formattedDate}</span>
+                            <i class="fas fa-inbox text-blue-400 text-lg"></i>
+                        </div>
+                        <h2 class="text-lg md:text-xl font-bold text-blue-800 mb-2">${item['Product']}</h2>
+                        <div class="space-y-3 text-slate-700">
+                            <div class="flex items-center space-x-3">
+                                <i class="fas fa-building text-blue-500 w-5 text-center"></i>
+                                <span class="text-sm md:text-base">Dealer: ${item['Dealer Name']}</span>
+                            </div>
+                            <div class="flex items-center space-x-3">
+                                <i class="fas fa-hashtag text-blue-500 w-5 text-center"></i>
+                                <span class="text-sm md:text-base">Qty: ${item['Qty']}</span>
+                            </div>
+                            <div class="flex items-start space-x-3">
+                                <i class="fas fa-exclamation-circle text-red-500 w-5 text-center mt-1"></i>
+                                <p class="text-sm md:text-base break-words flex-1">Issue: ${item['Issue']}</p>
+                            </div>
+                        </div>
+                    `;
+                    cardContainer.appendChild(card);
+                });
+            };
+
+            // Main execution logic
+            const params = getUrlParams();
+            const crmName = params.get('crm');
+
+            if (crmName) {
+                // Decode the CRM name for display purposes
+                const decodedCrmName = decodeURIComponent(crmName);
+                crmDisplay.textContent = decodedCrmName;
+                fetchData(decodedCrmName);
+            } else {
+                crmDisplay.textContent = 'Parameter Missing';
+                noDataMessage.innerHTML = '<i class="fas fa-box-open text-5xl mb-4"></i><p class="text-lg font-medium">No CRM name provided in the URL.</p><p class="mt-2 text-sm text-gray-400">Example: `your-page.html?crm=Kuldeep%20Sharma`</p>';
+                noDataMessage.classList.remove('hidden');
+            }
+        });
+    </script>
+</body>
+</html>
