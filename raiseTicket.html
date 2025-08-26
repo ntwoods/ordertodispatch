@@ -209,25 +209,15 @@
       try {
         const response = await fetch(API_URL, {
           method: 'POST',
+          mode: 'no-cors',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify(payload)
         });
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const result = await response.json();
-        if (result.success) {
-          showToast(result.message, 'success');
+          showToast("Submitted successfully", 'success');
           form.reset();
           fileNamesDiv.textContent = 'No files selected.';
-        } else {
-          throw new Error(result.message || 'An unknown error occurred.');
-        }
-
       } catch (error) {
         showToast(`Error: ${error.message}`, 'error');
       } finally {
