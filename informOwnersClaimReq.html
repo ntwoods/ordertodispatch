@@ -78,6 +78,52 @@
         &copy; 2024 Claim Request Dashboard. All Rights Reserved.
     </footer>
 
+    <!-- Modal for "Owners Informed" -->
+    <div id="modal" class="fixed inset-0 z-50 overflow-y-auto hidden">
+        <div class="flex items-center justify-center min-h-screen px-4 py-8 text-center sm:block sm:p-0">
+            <!-- Modal backdrop -->
+            <div class="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75" aria-hidden="true"></div>
+            
+            <!-- Modal content container -->
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+            <div class="inline-block px-4 pt-5 pb-4 overflow-hidden text-left align-bottom transition-all transform bg-white rounded-lg shadow-xl sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
+                
+                <!-- Modal header -->
+                <div class="flex items-center justify-between pb-3 border-b border-gray-200">
+                    <h3 class="text-xl font-bold text-blue-800">
+                        <i class="fas fa-user-check mr-2"></i>
+                        Owners Informed
+                    </h3>
+                    <button id="close-modal-btn" class="text-gray-400 hover:text-gray-600 focus:outline-none">
+                        <i class="fas fa-times text-2xl"></i>
+                    </button>
+                </div>
+
+                <!-- Modal body -->
+                <div class="mt-4">
+                    <div class="mb-4">
+                        <label for="owner-remark" class="block text-sm font-medium text-gray-700 mb-2">Owner's Remark</label>
+                        <textarea id="owner-remark" rows="4" class="block w-full px-3 py-2 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500"></textarea>
+                    </div>
+                </div>
+
+                <!-- Modal footer -->
+                <div class="flex flex-col sm:flex-row-reverse sm:justify-start sm:space-x-2 sm:space-x-reverse space-y-2 sm:space-y-0 mt-4">
+                    <button id="approve-claim-btn" class="px-5 py-2 text-sm font-semibold text-white bg-green-500 rounded-lg hover:bg-green-600 transition-colors shadow-sm">
+                        <i class="fas fa-check-circle mr-2"></i>Approve Claim
+                    </button>
+                    <button id="verify-claim-btn" class="px-5 py-2 text-sm font-semibold text-white bg-yellow-500 rounded-lg hover:bg-yellow-600 transition-colors shadow-sm">
+                        <i class="fas fa-info-circle mr-2"></i>Verify Claim
+                    </button>
+                    <button id="reject-claim-btn" class="px-5 py-2 text-sm font-semibold text-white bg-red-500 rounded-lg hover:bg-red-600 transition-colors shadow-sm">
+                        <i class="fas fa-times-circle mr-2"></i>Reject Claim
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             // Placeholder for the Google Apps Script deployment URL.
@@ -89,6 +135,9 @@
             const errorMessage = document.getElementById('error-message');
             const noDataMessage = document.getElementById('no-data-message');
             const crmDisplay = document.getElementById('crm-display');
+            
+            const modal = document.getElementById('modal');
+            const closeModalBtn = document.getElementById('close-modal-btn');
 
             /**
              * Extracts URL parameters from the current window location.
@@ -146,7 +195,7 @@
 
                 data.forEach(item => {
                     const card = document.createElement('div');
-                    card.classList.add('bg-white', 'p-6', 'rounded-xl', 'shadow-lg', 'hover:shadow-xl', 'transition-shadow', 'duration-300', 'border', 'border-slate-200');
+                    card.classList.add('bg-white', 'p-6', 'rounded-xl', 'shadow-lg', 'hover:shadow-xl', 'transition-shadow', 'duration-300', 'border', 'border-slate-200', 'flex', 'flex-col', 'justify-between');
 
                     // Convert the raw date string to a readable format
                     const formattedDate = new Date(item['Request Date']).toLocaleDateString('en-US', {
@@ -155,29 +204,55 @@
 
                     // Build the card's inner HTML
                     card.innerHTML = `
-                        <div class="flex items-center justify-between mb-4">
-                            <span class="text-sm font-medium text-slate-500">${formattedDate}</span>
-                            <i class="fas fa-inbox text-blue-400 text-lg"></i>
+                        <div class="flex-grow">
+                            <div class="flex items-center justify-between mb-4">
+                                <span class="text-sm font-medium text-slate-500">${formattedDate}</span>
+                                <i class="fas fa-inbox text-blue-400 text-lg"></i>
+                            </div>
+                            <h2 class="text-lg md:text-xl font-bold text-blue-800 mb-2">${item['Product']}</h2>
+                            <div class="space-y-3 text-slate-700">
+                                <div class="flex items-center space-x-3">
+                                    <i class="fas fa-building text-blue-500 w-5 text-center"></i>
+                                    <span class="text-sm md:text-base">Dealer: ${item['Dealer Name']}</span>
+                                </div>
+                                <div class="flex items-center space-x-3">
+                                    <i class="fas fa-hashtag text-blue-500 w-5 text-center"></i>
+                                    <span class="text-sm md:text-base">Qty: ${item['Qty']}</span>
+                                </div>
+                                <div class="flex items-start space-x-3">
+                                    <i class="fas fa-exclamation-circle text-red-500 w-5 text-center mt-1"></i>
+                                    <p class="text-sm md:text-base break-words flex-1">Issue: ${item['Issue']}</p>
+                                </div>
+                            </div>
                         </div>
-                        <h2 class="text-lg md:text-xl font-bold text-blue-800 mb-2">${item['Product']}</h2>
-                        <div class="space-y-3 text-slate-700">
-                            <div class="flex items-center space-x-3">
-                                <i class="fas fa-building text-blue-500 w-5 text-center"></i>
-                                <span class="text-sm md:text-base">Dealer: ${item['Dealer Name']}</span>
-                            </div>
-                            <div class="flex items-center space-x-3">
-                                <i class="fas fa-hashtag text-blue-500 w-5 text-center"></i>
-                                <span class="text-sm md:text-base">Qty: ${item['Qty']}</span>
-                            </div>
-                            <div class="flex items-start space-x-3">
-                                <i class="fas fa-exclamation-circle text-red-500 w-5 text-center mt-1"></i>
-                                <p class="text-sm md:text-base break-words flex-1">Issue: ${item['Issue']}</p>
-                            </div>
+                        <div class="mt-4">
+                            <button class="owners-informed-btn w-full px-4 py-2 text-sm font-semibold text-white bg-blue-500 rounded-lg hover:bg-blue-600 transition-colors shadow-md focus:outline-none">
+                                <i class="fas fa-bullhorn mr-2"></i>Owners Informed
+                            </button>
                         </div>
                     `;
                     cardContainer.appendChild(card);
                 });
+                
+                // Add event listeners to the new buttons
+                document.querySelectorAll('.owners-informed-btn').forEach(button => {
+                    button.addEventListener('click', () => {
+                        modal.classList.remove('hidden');
+                    });
+                });
             };
+
+            // Event listener to close the modal
+            closeModalBtn.addEventListener('click', () => {
+                modal.classList.add('hidden');
+            });
+            
+            // Close modal when clicking outside of it
+            window.addEventListener('click', (event) => {
+                if (event.target === modal) {
+                    modal.classList.add('hidden');
+                }
+            });
 
             // Main execution logic
             const params = getUrlParams();
