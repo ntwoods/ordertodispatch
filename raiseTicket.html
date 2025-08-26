@@ -1,227 +1,254 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NT Woods Ticket Portal</title>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap');
-
-        :root {
-            --primary-blue: #007bff;
-            --light-blue: #e6f2ff;
-            --dark-blue: #0056b3;
-            --white: #ffffff;
-            --gray-text: #6c757d;
-            --border-radius: 8px;
-        }
-
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--light-blue);
-            color: #333;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-            padding: 20px;
-            box-sizing: border-box;
-        }
-
-        .container {
-            background-color: var(--white);
-            padding: 40px;
-            border-radius: var(--border-radius);
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-            width: 100%;
-            max-width: 600px;
-            text-align: center;
-        }
-
-        h1 {
-            color: var(--primary-blue);
-            margin-bottom: 30px;
-            font-weight: 600;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-            text-align: left;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-        }
-
-        input[type="text"],
-        textarea,
-        input[type="file"] {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #ced4da;
-            border-radius: var(--border-radius);
-            font-size: 16px;
-            box-sizing: border-box;
-            transition: border-color 0.3s;
-        }
-        
-        input[type="file"] {
-             cursor: pointer;
-        }
-
-        input[type="text"]:focus,
-        textarea:focus {
-            border-color: var(--primary-blue);
-            outline: none;
-        }
-
-        textarea {
-            resize: vertical;
-            min-height: 120px;
-        }
-
-        button {
-            width: 100%;
-            padding: 15px;
-            background-color: var(--primary-blue);
-            color: var(--white);
-            border: none;
-            border-radius: var(--border-radius);
-            font-size: 18px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background-color 0.3s, transform 0.2s;
-        }
-
-        button:hover {
-            background-color: var(--dark-blue);
-            transform: translateY(-2px);
-        }
-
-        #status-message {
-            margin-top: 20px;
-            padding: 15px;
-            border-radius: var(--border-radius);
-            font-weight: 600;
-            display: none; /* Hidden by default */
-        }
-
-        .success {
-            background-color: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-
-        .error {
-            background-color: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-
-        .footer {
-            margin-top: 30px;
-            font-size: 12px;
-            color: var(--gray-text);
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Help Slip Form</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f4f7f6;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+    }
+    .form-container {
+      background: #ffffff;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      max-width: 600px;
+    }
+    h2 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 25px;
+    }
+    .form-group {
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: #555;
+    }
+    input[type="text"], textarea {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      box-sizing: border-box;
+      font-size: 16px;
+      transition: border-color 0.3s;
+    }
+    input[type="text"]:focus, textarea:focus {
+      border-color: #4CAF50;
+      outline: none;
+    }
+    textarea {
+      resize: vertical;
+      min-height: 100px;
+    }
+    input[type="file"] {
+      display: none;
+    }
+    .custom-file-upload {
+      border: 2px dashed #ddd;
+      padding: 20px;
+      text-align: center;
+      border-radius: 8px;
+      cursor: pointer;
+      color: #999;
+      transition: border-color 0.3s, color 0.3s;
+    }
+    .custom-file-upload:hover {
+      border-color: #4CAF50;
+      color: #4CAF50;
+    }
+    #file-names {
+      margin-top: 10px;
+      font-size: 14px;
+      color: #666;
+    }
+    .submit-btn {
+      width: 100%;
+      padding: 15px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 18px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.3s, transform 0.2s;
+    }
+    .submit-btn:hover {
+      background-color: #45a049;
+      transform: translateY(-2px);
+    }
+    .submit-btn:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+    .toast {
+      visibility: hidden;
+      min-width: 250px;
+      margin-left: -125px;
+      background-color: #333;
+      color: #fff;
+      text-align: center;
+      border-radius: 5px;
+      padding: 16px;
+      position: fixed;
+      z-index: 1;
+      left: 50%;
+      bottom: 30px;
+      font-size: 17px;
+    }
+    .toast.show {
+      visibility: visible;
+      -webkit-animation: fadein 0.5s, fadeout 0.5s 2.5s;
+      animation: fadein 0.5s, fadeout 0.5s 2.5s;
+    }
+    @-webkit-keyframes fadein {
+      from { bottom: 0; opacity: 0; } 
+      to { bottom: 30px; opacity: 1; }
+    }
+    @keyframes fadein {
+      from { bottom: 0; opacity: 0; }
+      to { bottom: 30px; opacity: 1; }
+    }
+    @-webkit-keyframes fadeout {
+      from { bottom: 30px; opacity: 1; } 
+      to { bottom: 0; opacity: 0; }
+    }
+    @keyframes fadeout {
+      from { bottom: 30px; opacity: 1; }
+      to { bottom: 0; opacity: 0; }
+    }
+  </style>
 </head>
 <body>
-
-<div class="container">
-    <h1>NT Woods Ticket Portal</h1>
-    <form id="ticketForm">
-        <div class="form-group">
-            <label for="fullName">Full Name</label>
-            <input type="text" id="fullName" name="fullName" placeholder="Enter your full name" required>
-        </div>
-        <div class="form-group">
-            <label for="remark">Remark</label>
-            <textarea id="remark" name="remark" placeholder="Describe the issue" required></textarea>
-        </div>
-        <div class="form-group">
-            <label for="fileAttachments">File Attachments</label>
-            <input type="file" id="fileAttachments" name="fileAttachments" multiple>
-        </div>
-        <button type="submit">Submit Ticket</button>
+  <div class="form-container">
+    <h2>Help Slip</h2>
+    <form id="helpForm">
+      <div class="form-group">
+        <label for="fullName">Full Name</label>
+        <input type="text" id="fullName" name="fullName" required>
+      </div>
+      <div class="form-group">
+        <label for="issue">Issue (describe in detail)</label>
+        <textarea id="issue" name="issue" placeholder="Describe your issue here..." required></textarea>
+      </div>
+      <div class="form-group">
+        <label for="fileAttachment">File Attachment (optional)</label>
+        <label for="fileAttachment" class="custom-file-upload">
+          Click to attach file(s)
+        </label>
+        <input type="file" id="fileAttachment" name="fileAttachment" multiple>
+        <div id="file-names">No files selected.</div>
+      </div>
+      <button type="submit" class="submit-btn" id="submitBtn">Submit</button>
     </form>
-    <div id="status-message"></div>
-    <div class="footer">
-        Created by: Kuldeep Sharma
-    </div>
-</div>
+  </div>
+  <div id="toast" class="toast"></div>
 
-<script>
-    document.getElementById('ticketForm').addEventListener('submit', async function(event) {
-        event.preventDefault();
+  <script>
+    // --- IMPORTANT: Paste your Apps Script Web App URL here ---
+    const API_URL = 'https://script.google.com/macros/s/AKfycbwNqM8Ap1ZmiUr4OQOSR4VtvPLv2SZolpBX9XA3UywPaBMSo6BUdo6ZcR1e25G1iMEoWQ/exec';
 
-        // ** IMPORTANT **: Replace this URL with your deployed Google Apps Script URL.
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby_h66HCQ2AOrNnAS9VoM1oZjkEhSjHcTmGJVWbH2ZpuIOF3Ty21xu14ppIyDUFIeS-dQ/exec';
-        
-        const form = event.target;
-        const statusMessage = document.getElementById('status-message');
-        statusMessage.style.display = 'none';
+    const form = document.getElementById('helpForm');
+    const fileInput = document.getElementById('fileAttachment');
+    const fileNamesDiv = document.getElementById('file-names');
+    const submitBtn = document.getElementById('submitBtn');
 
-        const fullName = form.querySelector('#fullName').value;
-        const remark = form.querySelector('#remark').value;
-        const files = form.querySelector('#fileAttachments').files;
+    fileInput.addEventListener('change', () => {
+      if (fileInput.files.length > 0) {
+        let names = Array.from(fileInput.files).map(file => file.name).join(', ');
+        fileNamesDiv.textContent = `Selected: ${names}`;
+      } else {
+        fileNamesDiv.textContent = 'No files selected.';
+      }
+    });
 
-        // Function to convert a file to a Base64 string
-        const toBase64 = file => new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onload = () => resolve({
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Submitting...';
+
+      const formData = new FormData(form);
+      const payload = {
+        fullName: formData.get('fullName'),
+        issue: formData.get('issue'),
+        files: []
+      };
+
+      const files = fileInput.files;
+      if (files.length > 0) {
+        for (let i = 0; i < files.length; i++) {
+          const file = files[i];
+          const reader = new FileReader();
+          await new Promise(resolve => {
+            reader.onloadend = () => {
+              payload.files.push({
                 name: file.name,
-                base64Data: reader.result
-            });
-            reader.onerror = error => reject(error);
+                type: file.type,
+                data: reader.result
+              });
+              resolve();
+            };
+            reader.readAsDataURL(file);
+          });
+        }
+      }
+
+      try {
+        const response = await fetch(API_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(payload)
         });
 
-        let fileDataArray = [];
-        try {
-            if (files.length > 0) {
-                // Use Promise.all to handle multiple file conversions at once
-                fileDataArray = await Promise.all(Array.from(files).map(file => toBase64(file)));
-            }
-        } catch (error) {
-            console.error('File conversion error:', error);
-            statusMessage.textContent = 'Error converting files. Please try again.';
-            statusMessage.className = 'error';
-            statusMessage.style.display = 'block';
-            return;
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
         }
 
-        const payload = {
-            fullName: fullName,
-            remark: remark,
-            fileData: fileDataArray
-        };
-        
-        try {
-            const response = await fetch(SCRIPT_URL, {
-                method: 'POST',
-                mode: 'no-cors',                
-                body: JSON.stringify(payload),
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-            });
-
-                statusMessage.textContent = 'Ticket submitted successfully! ';
-                statusMessage.className = 'success';
-                form.reset(); // Clear the form on success
-                statusMessage.className = 'error';
-        } catch (error) {
-            console.error('Fetch error:', error);
-            statusMessage.textContent = 'Could not connect to the server. Please check your network.';
-            statusMessage.className = 'error';
-        } finally {
-            statusMessage.style.display = 'block';
+        const result = await response.json();
+        if (result.success) {
+          showToast(result.message, 'success');
+          form.reset();
+          fileNamesDiv.textContent = 'No files selected.';
+        } else {
+          throw new Error(result.message || 'An unknown error occurred.');
         }
+
+      } catch (error) {
+        showToast(`Error: ${error.message}`, 'error');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Submit';
+      }
     });
-</script>
 
+    function showToast(message, type) {
+      const toast = document.getElementById('toast');
+      toast.className = 'toast show';
+      toast.textContent = message;
+      if (type === 'success') {
+        toast.style.backgroundColor = '#4CAF50';
+      } else {
+        toast.style.backgroundColor = '#f44336';
+      }
+      setTimeout(function() {
+        toast.className = toast.className.replace('show', '');
+      }, 3000);
+    }
+  </script>
 </body>
 </html>
