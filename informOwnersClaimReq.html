@@ -171,16 +171,10 @@
                 try {
                     const response = await fetch(SCRIPT_URL, {
                         method: 'POST',
+                        mode: 'no-cors',
                         body: new URLSearchParams(data) // Convert the data object to URL-encoded form data
                     });
-                    const result = await response.json();
-                    console.log('API Response:', result);
-                    if (result.status === 'success') {
                         alert('Claim updated successfully!');
-                        // Reload or update the UI as needed
-                    } else {
-                        alert('Error: ' + result.message);
-                    }
                 } catch (error) {
                     console.error('API call failed:', error);
                     alert('An error occurred. Please try again.');
