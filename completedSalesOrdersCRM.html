@@ -48,6 +48,46 @@
 
     <div class="w-full max-w-7xl bg-white shadow-2xl rounded-2xl p-6 sm:p-10">
         <h1 class="text-3xl font-bold text-center mb-6 text-gray-800">Sales Order Dashboard</h1>
+
+        <!-- Total Orders Card -->
+        <div class="w-full mb-8 flex justify-center">
+            <div class="relative w-full max-w-xs p-6 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl shadow-xl transform transition-all duration-300 hover:scale-105">
+                <div class="absolute inset-0 bg-white bg-opacity-10 backdrop-filter backdrop-blur-sm rounded-2xl"></div>
+                <div class="relative z-10">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-white text-xl font-semibold">Total Orders</h2>
+                        <svg class="h-8 w-8 text-white opacity-80" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                        </svg>
+                    </div>
+                    <p id="order-count" class="text-4xl sm:text-5xl font-extrabold text-white text-shadow-lg">0</p>
+                    <p class="text-sm text-gray-200 mt-2">Currently displayed rows</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filter/Search Box -->
+        <div class="flex flex-col sm:flex-row items-center w-full mb-8 space-y-4 sm:space-y-0 sm:space-x-4">
+            <div class="relative flex-grow w-full">
+                <input
+                    type="text"
+                    id="filter-input"
+                    placeholder="Filter by Dealer's Name or Location..."
+                    class="w-full pl-10 pr-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200"
+                >
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <svg class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                </div>
+            </div>
+            <button
+                id="reset-button"
+                class="w-full sm:w-auto px-6 py-2 bg-gray-200 text-gray-700 font-medium rounded-xl shadow-sm hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 transition-all duration-200"
+            >
+                Reset Filter
+            </button>
+        </div>
         
         <div id="loading" class="text-center text-lg font-medium text-gray-500 my-8">
             <svg class="animate-spin h-8 w-8 text-indigo-500 mx-auto mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -82,6 +122,10 @@
         const loadingIndicator = document.getElementById('loading');
         const errorIndicator = document.getElementById('error');
         const tableContainer = document.getElementById('table-container');
+        const orderCountCard = document.getElementById('order-count');
+        const filterInput = document.getElementById('filter-input');
+        const resetButton = document.getElementById('reset-button');
+
 
         // Column order and display names
         const COLUMN_ORDER = {
@@ -97,8 +141,9 @@
             'goodsDeliveredDate': "Goods Delivered On."
         };
 
-        // State for sorting
+        // State for sorting and filtering
         let allData = [];
+        let filteredData = []; // Store filtered data
         let sortKey = null;
         let sortDirection = 'asc'; // 'asc' or 'desc'
 
@@ -169,6 +214,16 @@
                 }
                 tableBody.appendChild(row);
             });
+             // Update the order count
+             updateOrderCount(dataArray.length);
+        }
+
+        /**
+         * Updates the count displayed in the total orders card.
+         * @param {number} count The number of rows to display.
+         */
+        function updateOrderCount(count) {
+            orderCountCard.textContent = count;
         }
 
         /**
@@ -176,6 +231,9 @@
          * @param {string} key The key of the column to sort by.
          */
         function sortData(key) {
+            // Use filtered data for sorting if available, otherwise use allData
+            const dataToSort = filteredData.length > 0 ? filteredData : allData;
+
             // Check if the same key is clicked again to reverse sort direction
             if (sortKey === key) {
                 sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
@@ -185,7 +243,7 @@
             }
 
             // Sort the data array
-            allData.sort((a, b) => {
+            dataToSort.sort((a, b) => {
                 const aValue = a[key] || '';
                 const bValue = b[key] || '';
 
@@ -207,7 +265,7 @@
             });
 
             // Re-render the table with the sorted data
-            renderTable(allData);
+            renderTable(dataToSort);
             updateSortIcons();
         }
         
@@ -230,8 +288,34 @@
         }
 
         /**
+         * Filters the data based on the search input value.
+         */
+        function filterData() {
+            const searchTerm = filterInput.value.toLowerCase().trim();
+            if (searchTerm === '') {
+                filteredData = [];
+                renderTable(allData);
+            } else {
+                filteredData = allData.filter(item => {
+                    const dealerName = (item.dealerName || '').toLowerCase();
+                    const location = (item.location || '').toLowerCase();
+                    return dealerName.includes(searchTerm) || location.includes(searchTerm);
+                });
+                renderTable(filteredData);
+            }
+        }
+
+        /**
+         * Resets the filter and re-renders the full table.
+         */
+        function resetFilter() {
+            filterInput.value = '';
+            filteredData = [];
+            renderTable(allData);
+        }
+
+        /**
          * Initializes the table headers and adds sort event listeners.
-         * @param {Array} dataArray The initial data array.
          */
         function initializeTableHeaders() {
             // Clear existing headers
@@ -289,6 +373,10 @@
                 loadingIndicator.classList.add('hidden');
             }
         }
+
+        // Add event listeners for the new filter functionality
+        filterInput.addEventListener('input', filterData);
+        resetButton.addEventListener('click', resetFilter);
 
         // Call the main function to start the application
         fetchData();
