@@ -310,7 +310,7 @@
                         year: 'numeric', month: 'long', day: 'numeric'
                     });
                     
-                    const issueDate = new Date(item['Request Date']).toLocaleDateString('en-US');
+                    const issueDate = new Date(item['Request Date']).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
 
                     // Variables for dynamic content
                     let cardColorClass = 'bg-white';
