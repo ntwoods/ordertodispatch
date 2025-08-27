@@ -622,6 +622,14 @@
                 <span class="text-m text-black-600">Invoice:</span>
                 <button onclick="openMultipleDocuments('${order.invoiceURL.replace(/'/g, "\\'")}', ${index})" class="text-sm text-blue-600 hover:text-blue-800 underline bg-transparent border-none cursor-pointer">View Invoice</button>                
         
+                ${order.rawOrder ? `
+                  <span class="text-m text-red-600">Raw Order:</span>
+                  <button onclick="openMultipleDocuments('${order.rawOrder.replace(/'/g, "\\'")}', ${index})" 
+                          class="text-sm text-blue-600 hover:text-blue-800 underline bg-transparent border-none cursor-pointer">
+                    Click for Raw
+                  </button>
+                ` : ''}
+
                 ${order.additionalOrder ? `
                   <span class="text-m text-red-600">Additional Order:</span>
                   <button onclick="openMultipleDocuments('${order.additionalOrder.replace(/'/g, "\\'")}', ${index})" 
