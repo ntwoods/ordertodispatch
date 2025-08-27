@@ -376,13 +376,13 @@
                         <div class="mt-4">
                             ${buttonHtml}
                         </div>
-<button class="copy-btn absolute bottom-3 right-3 transition-colors duration-200 bg-[#7fffd4] hover:bg-[#1a6e1a] rounded-md p-2 shadow-sm"
+<button class="copy-btn absolute bottom-3 right-3 text-white transition-all duration-200 bg-black/20 backdrop-blur-sm rounded-md p-2 shadow-lg hover:bg-black/30"
         data-dealer-name="${item['Dealer Name']}"
         data-product="${item['Product']}"
         data-qty="${item['Qty']}"
         data-issue="${item['Issue']}"
         data-issue-date="${issueDate}">
-    <i class="fas fa-copy text-[#7fffd4] text-sm"></i>
+    <i class="fas fa-copy text-sm"></i>
 </button>
                     `;
                     cardContainer.appendChild(card);
