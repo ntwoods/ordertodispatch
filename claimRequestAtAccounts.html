@@ -394,10 +394,14 @@
 
 
             // Handle "Supplier Claim Done" button click on the card
-            requestsContainer.addEventListener('click', async (e) => {
-                if (e.target.classList.contains('supplier-claim-btn')) {
-                    const reqId = e.target.getAttribute('data-id');
-                    currentReqId = reqId; // Store the current request ID
+                requestsContainer.addEventListener('click', async (e) => {
+                    const btn = e.target.closest('.supplier-claim-btn');
+                    if (!btn) return;
+                
+                    const reqId = btn.getAttribute('data-id');
+                    if (!reqId) return;
+                
+                    currentReqId = reqId;
                     
                     // Show modal
                     supplierModal.classList.remove('hidden');
@@ -485,16 +489,23 @@
                 try {
                     const response = await fetch(postUrl, {
                         method: 'POST',
+                        // keep or change the mode as you need; ignoring the CORS topic per your note
                         mode: 'no-cors',
-                        // IMPORTANT: Removed 'no-cors' mode to allow Content-Type header to be sent
                         headers: {
+                            // With no-cors this header is ignored by the browser, but keeping it is harmless.
                             'Content-Type': 'application/json',
                         },
                         body: JSON.stringify(payload)
                     });
-                    showMessageBox('Success!', 'The request has been sent to the server successfully.');
+                
+                    // UI feedback
+                    showMessageBox('Success!', `Submitted to server for REQ-ID ${reqId}.`);
+                
+                    // IMPORTANT: Refresh cards so the change is visible
+                    await loadRequests();
                 } catch (error) {
                     console.error('Error sending POST request:', error);
+                    showMessageBox('Error', 'Could not submit to server.');
                 } finally {
                     hideLoader();
                 }
