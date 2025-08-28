@@ -485,7 +485,7 @@
                 try {
                     const response = await fetch(postUrl, {
                         method: 'POST',
-                        mode: 'no-cors', // Use 'no-cors' for Apps Script API
+                        // IMPORTANT: Removed 'no-cors' mode to allow Content-Type header to be sent
                         headers: {
                             'Content-Type': 'application/json',
                         },
