@@ -433,12 +433,12 @@
             document.getElementById('done-btn').addEventListener('click', async () => {
                 const selectedValue = tomSelectInstance.getValue();
                 const selectedOption = tomSelectInstance.options[selectedValue];
-
-                currentSupplierName = selectedValue;
+            
+                currentSupplierName = selectedValue;   // Store supplier name
                 let supplierEmail = selectedOption ? selectedOption.email : null;
-                
-                // If a new value was created (not from the original list)
+            
                 if (!selectedOption) {
+                    // 👉 This is a new custom supplier
                     closeSupplierModal();
                     // Show email input modal
                     emailModal.classList.remove('hidden');
@@ -447,31 +447,30 @@
                         emailModalContent.classList.add('scale-100', 'opacity-100');
                     }, 10);
                 } else {
-                    // This is an existing supplier, send the POST request directly
+                    // Existing supplier → send request directly
                     await sendPostRequest(currentReqId, currentSupplierName, supplierEmail);
                     closeSupplierModal();
                 }
             });
 
-            // Handle the "Submit" button click inside the email modal
-            submitEmailBtn.addEventListener('click', async () => {
-                const supplierEmail = emailInput.value;
-
-                if (!supplierEmail) {
-                    showMessageBox('Validation Error', 'Please enter a valid email address.');
-                    return;
-                }
+                submitEmailBtn.addEventListener('click', async () => {
+                    const supplierEmail = emailInput.value.trim();
                 
-                // Simple email format validation
-                const emailPattern = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
-                if (!emailPattern.test(supplierEmail)) {
-                    showMessageBox('Validation Error', 'Please enter a valid email address.');
-                    return;
-                }
-
-                await sendPostRequest(currentReqId, currentSupplierName, supplierEmail);
-                closeEmailModal();
-            });
+                    if (!supplierEmail) {
+                        showMessageBox('Validation Error', 'Please enter a valid email address.');
+                        return;
+                    }
+                
+                    const emailPattern = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
+                    if (!emailPattern.test(supplierEmail)) {
+                        showMessageBox('Validation Error', 'Please enter a valid email address.');
+                        return;
+                    }
+                
+                    // 👉 Use currentSupplierName (custom supplier) + provided email
+                    await sendPostRequest(currentReqId, currentSupplierName, supplierEmail);
+                    closeEmailModal();
+                });
 
 
             // Function to send the POST request
