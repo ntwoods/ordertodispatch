@@ -44,7 +44,27 @@
 </head>
 <body class="p-6">
     <div id="request-cards-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <p id="loading-message" class="text-gray-500">Loading requests...</p>
+        <div class="card p-6 rounded-lg shadow-md flex flex-col justify-between" data-req-id="REQ12345">
+            <div>
+                <span class="text-sm font-semibold text-blue-600">Request ID: #<span class="req-id">REQ12345</span></span>
+                <h2 class="text-xl font-bold text-blue-900 mt-2">Example Dealer</h2>
+                <p class="text-gray-700 mt-1">Product: <span class="font-medium">Example Product</span></p>
+                <p class="text-gray-700">Quantity: <span class="font-medium">10</span></p>
+                <p class="text-gray-700">CRM: <span class="font-medium">Example CRM</span></p>
+                <div class="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                    <p class="text-sm font-semibold text-blue-800">Owner Remark:</p>
+                    <p class="text-sm text-blue-700 italic">This is a sample owner remark.</p>
+                </div>
+            </div>
+            <div class="flex flex-col sm:flex-row mt-6 space-y-2 sm:space-y-0 sm:space-x-2">
+                <button class="flex-1 btn-dealer text-white py-2 px-4 rounded-md font-semibold text-sm hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    Dealer Claim Done
+                </button>
+                <button class="flex-1 btn-supplier text-white py-2 px-4 rounded-md font-semibold text-sm hover:bg-blue-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    Supplier Claim Done
+                </button>
+            </div>
+        </div>
     </div>
     
     <div id="supplier-modal" class="modal fixed inset-0 z-50 overflow-auto flex items-center justify-center modal-overlay">
@@ -72,8 +92,7 @@
     
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const requestCardsContainer = document.getElementById('request-cards-container');
-            const loadingMessage = document.getElementById('loading-message');
+            const supplierButtons = document.querySelectorAll('.btn-supplier');
             const modal = document.getElementById('supplier-modal');
             const closeBtn = document.getElementById('close-modal-btn');
             const supplierSelect = document.getElementById('supplier-select');
@@ -90,68 +109,7 @@
                 maxItems: 1
             });
 
-            // Function to fetch and render request cards
-            const fetchAndRenderRequests = async () => {
-                const apiUrl = 'https://script.google.com/macros/s/AKfycbxKHLxhcxparrfNpCcC8jExol17fJjmL-uuMxia_uld7t8AcsMrDUxZkIrRT-GT9d1AJw/exec';
-                
-                try {
-                    const response = await fetch(apiUrl);
-                    const requests = await response.json();
-                    
-                    if (requests.length > 0) {
-                        loadingMessage.style.display = 'none';
-                        requestCardsContainer.innerHTML = ''; // Clear the container before adding new cards
-                        
-                        requests.forEach(request => {
-                            const cardHtml = `
-                                <div class="card p-6 rounded-lg shadow-md flex flex-col justify-between" data-req-id="${request.reqId}">
-                                    <div>
-                                        <span class="text-sm font-semibold text-blue-600">Request ID: #<span class="req-id">${request.reqId}</span></span>
-                                        <h2 class="text-xl font-bold text-blue-900 mt-2">${request.dealerName}</h2>
-                                        <p class="text-gray-700 mt-1">Product: <span class="font-medium">${request.product}</span></p>
-                                        <p class="text-gray-700">Quantity: <span class="font-medium">${request.qty}</span></p>
-                                        <p class="text-gray-700">CRM: <span class="font-medium">${request.crmName}</span></p>
-                                        <div class="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
-                                            <p class="text-sm font-semibold text-blue-800">Owner Remark:</p>
-                                            <p class="text-sm text-blue-700 italic">${request.ownerRemark}</p>
-                                        </div>
-                                    </div>
-                                    <div class="flex flex-col sm:flex-row mt-6 space-y-2 sm:space-y-0 sm:space-x-2">
-                                        <button class="flex-1 btn-dealer text-white py-2 px-4 rounded-md font-semibold text-sm hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                                            Dealer Claim Done
-                                        </button>
-                                        <button class="flex-1 btn-supplier text-white py-2 px-4 rounded-md font-semibold text-sm hover:bg-blue-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                                            Supplier Claim Done
-                                        </button>
-                                    </div>
-                                </div>
-                            `;
-                            requestCardsContainer.innerHTML += cardHtml;
-                        });
-                        attachSupplierButtonListeners(); // Re-attach listeners to the new buttons
-                    } else {
-                        loadingMessage.textContent = 'No active requests found.';
-                    }
-                } catch (error) {
-                    console.error('Error fetching requests:', error);
-                    loadingMessage.textContent = 'Failed to load requests.';
-                }
-            };
-            
-            // Function to attach event listeners to "Supplier Claim Done" buttons
-            const attachSupplierButtonListeners = () => {
-                const supplierButtons = document.querySelectorAll('.btn-supplier');
-                supplierButtons.forEach(button => {
-                    button.addEventListener('click', (e) => {
-                        const card = e.target.closest('.card');
-                        currentReqId = card.dataset.reqId;
-                        modal.style.display = 'flex';
-                        fetchSuppliers(); // Fetch suppliers and populate the dropdown
-                    });
-                });
-            };
-
-            // Function to fetch suppliers from Google Sheet
+            // Fetch suppliers from Google Sheet
             const fetchSuppliers = async () => {
                 const sheetUrl = 'https://docs.google.com/spreadsheets/d/1UeohB4IPgEzGwybOJaIKpCIa38A4UvBstM8waqYv9V0/gviz/tq?tqx=out:csv&gid=724087621&range=D2:D';
                 try {
@@ -160,20 +118,24 @@
                     
                     const suppliers = text
                         .split('\n')
-                        .slice(1) // Skip the header row
-                        .map(row => row.trim().replace(/^"|"$/g, '')) // Trim and remove leading/trailing quotes
-                        .filter(supplier => supplier.length > 0) // Remove empty rows
+                        .slice(1) // Skip the header row if present, or just the first empty line
+                        .map(row => row.trim())
+                        .filter(supplier => supplier.length > 0) // Remove any empty rows
                         .sort((a, b) => a.localeCompare(b)); // Alphabetical sort
 
-                    // Clear existing options and add new ones
+                    // Clear existing options
                     tomSelect.clearOptions();
-                    tomSelect.addOption({value: '', text: 'Select a supplier', disabled: true, selected: true});
+                    
+                    // Add new options to TomSelect
                     suppliers.forEach(supplier => {
                         tomSelect.addOption({ value: supplier, text: supplier });
                     });
                     
+                    // Re-enable select box after loading
                     tomSelect.enable();
                     tomSelect.refreshOptions(false);
+                    tomSelect.addOption({value: '', text: 'Select a supplier', disabled: true, selected: true});
+                    tomSelect.setValue('');
 
                 } catch (error) {
                     console.error('Error fetching suppliers:', error);
@@ -182,6 +144,16 @@
                 }
             };
             
+            // Event listener for "Supplier Claim Done" button
+            supplierButtons.forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const card = e.target.closest('.card');
+                    currentReqId = card.dataset.reqId;
+                    modal.style.display = 'flex';
+                    fetchSuppliers();
+                });
+            });
+
             // Event listener for modal close button
             closeBtn.addEventListener('click', () => {
                 modal.style.display = 'none';
@@ -228,9 +200,6 @@
                     alert('An error occurred. Please check the console.');
                 }
             });
-
-            // Initial call to fetch and render the request cards
-            fetchAndRenderRequests();
         });
     </script>
 </body>
