@@ -485,18 +485,16 @@
                 try {
                     const response = await fetch(postUrl, {
                         method: 'POST',
+                        mode: 'no-cors',
                         // IMPORTANT: Removed 'no-cors' mode to allow Content-Type header to be sent
                         headers: {
                             'Content-Type': 'application/json',
                         },
                         body: JSON.stringify(payload)
                     });
-
-                    console.log('Post request sent successfully.', payload);
                     showMessageBox('Success!', 'The request has been sent to the server successfully.');
                 } catch (error) {
                     console.error('Error sending POST request:', error);
-                    showMessageBox('Error', 'Failed to send the request. Please try again.');
                 } finally {
                     hideLoader();
                 }
