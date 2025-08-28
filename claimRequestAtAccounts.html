@@ -207,6 +207,7 @@
 
             let tomSelectInstance;
             let currentReqId = null;
+            let currentSupplierName = null;
 
             // Function to show a custom message box
             const showMessageBox = (title, message) => {
@@ -274,7 +275,8 @@
                     const rows = csvText.split('\n').slice(1); // Remove header row
                     const suppliers = rows.map(row => {
                         const columns = row.split(',').map(col => col.trim().replace(/^"|"$/g, ''));
-                        // Return an object with both name and email
+                        // Return an object with both name and email.
+                        // We are strictly using column D for name (columns[3]) and E for email (columns[4])
                         return { name: columns[3], email: columns[4] }; 
                     }).filter(s => s.name); // Filter out any empty names
                     
@@ -282,7 +284,7 @@
                     const uniqueNames = new Set();
                     const uniqueSuppliers = [];
                     for (const supplier of suppliers) {
-                        if (!uniqueNames.has(supplier.name)) {
+                        if (supplier.name && !uniqueNames.has(supplier.name)) {
                             uniqueNames.add(supplier.name);
                             uniqueSuppliers.push(supplier);
                         }
@@ -429,7 +431,7 @@
                 const selectedValue = tomSelectInstance.getValue();
                 const selectedOption = tomSelectInstance.options[selectedValue];
 
-                let supplierName = selectedValue;
+                currentSupplierName = selectedValue;
                 let supplierEmail = selectedOption ? selectedOption.email : null;
                 
                 // If a new value was created (not from the original list)
@@ -443,22 +445,28 @@
                     }, 10);
                 } else {
                     // This is an existing supplier, send the POST request directly
-                    await sendPostRequest(currentReqId, supplierName, supplierEmail);
+                    await sendPostRequest(currentReqId, currentSupplierName, supplierEmail);
                     closeSupplierModal();
                 }
             });
 
             // Handle the "Submit" button click inside the email modal
             submitEmailBtn.addEventListener('click', async () => {
-                const supplierName = tomSelectInstance.getValue();
                 const supplierEmail = emailInput.value;
 
                 if (!supplierEmail) {
                     showMessageBox('Validation Error', 'Please enter a valid email address.');
                     return;
                 }
+                
+                // Simple email format validation
+                const emailPattern = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
+                if (!emailPattern.test(supplierEmail)) {
+                    showMessageBox('Validation Error', 'Please enter a valid email address.');
+                    return;
+                }
 
-                await sendPostRequest(currentReqId, supplierName, supplierEmail);
+                await sendPostRequest(currentReqId, currentSupplierName, supplierEmail);
                 closeEmailModal();
             });
 
@@ -467,7 +475,7 @@
             const sendPostRequest = async (reqId, supplierName, supplierEmail) => {
                 showLoader('Sending data to server...');
                 // IMPORTANT: Replace this URL with your deployed Apps Script URL
-                const postUrl = 'https://script.google.com/macros/s/AKfycbxKHLxhcxparrfNpCcC8jExol17fJjmL-uuMxia_uld7t8AcsMrDUxZkIrRT-GT9d1AJw/exec'; 
+                const postUrl = 'YOUR_DEPLOYED_APPS_SCRIPT_URL_HERE'; 
                 const payload = {
                     reqId: reqId,
                     supplierName: supplierName,
