@@ -430,28 +430,29 @@
                 });
 
             // Handle the "Done" button click inside the supplier modal
-            document.getElementById('done-btn').addEventListener('click', async () => {
-                const selectedValue = tomSelectInstance.getValue();
-                const selectedOption = tomSelectInstance.options[selectedValue];
-            
-                currentSupplierName = selectedValue;   // Store supplier name
-                let supplierEmail = selectedOption ? selectedOption.email : null;
-            
-                if (!selectedOption) {
-                    // 👉 This is a new custom supplier
-                    closeSupplierModal();
-                    // Show email input modal
-                    emailModal.classList.remove('hidden');
-                    setTimeout(() => {
-                        emailModalContent.classList.remove('scale-95', 'opacity-0');
-                        emailModalContent.classList.add('scale-100', 'opacity-100');
-                    }, 10);
-                } else {
-                    // Existing supplier → send request directly
-                    await sendPostRequest(currentReqId, currentSupplierName, supplierEmail);
-                    closeSupplierModal();
-                }
-            });
+                document.getElementById('done-btn').addEventListener('click', async () => {
+                    const selectedValue = tomSelectInstance.getValue();
+                    const selectedOption = tomSelectInstance.options[selectedValue];
+                
+                    currentSupplierName = selectedValue;
+                    let supplierEmail = selectedOption ? selectedOption.email : null;
+                
+                    if (!supplierEmail) {
+                        // 👉 This is a new custom supplier OR one without email
+                        closeSupplierModal();
+                        // Show email input modal
+                        emailModal.classList.remove('hidden');
+                        setTimeout(() => {
+                            emailModalContent.classList.remove('scale-95', 'opacity-0');
+                            emailModalContent.classList.add('scale-100', 'opacity-100');
+                        }, 10);
+                    } else {
+                        // Existing supplier with an email → send request directly
+                        await sendPostRequest(currentReqId, currentSupplierName, supplierEmail);
+                        closeSupplierModal();
+                    }
+                });
+
 
                 submitEmailBtn.addEventListener('click', async () => {
                     const supplierEmail = emailInput.value.trim();
