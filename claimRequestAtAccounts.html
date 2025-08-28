@@ -28,178 +28,91 @@
             background-color: #1E40AF;
         }
         .btn-supplier:hover {
-            background-color: #1D4ED8;
-        }
-        .modal {
-            display: none;
-        }
-        .modal-overlay {
-            background-color: rgba(0, 0, 0, 0.5);
-        }
-        .modal-content {
-            background-color: #fff;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            background-color: #1E3A8A;
         }
     </style>
 </head>
-<body class="p-6">
-    <div id="request-cards-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <div class="card p-6 rounded-lg shadow-md flex flex-col justify-between" data-req-id="REQ12345">
-            <div>
-                <span class="text-sm font-semibold text-blue-600">Request ID: #<span class="req-id">REQ12345</span></span>
-                <h2 class="text-xl font-bold text-blue-900 mt-2">Example Dealer</h2>
-                <p class="text-gray-700 mt-1">Product: <span class="font-medium">Example Product</span></p>
-                <p class="text-gray-700">Quantity: <span class="font-medium">10</span></p>
-                <p class="text-gray-700">CRM: <span class="font-medium">Example CRM</span></p>
-                <div class="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
-                    <p class="text-sm font-semibold text-blue-800">Owner Remark:</p>
-                    <p class="text-sm text-blue-700 italic">This is a sample owner remark.</p>
-                </div>
+<body>
+    <div class="container mx-auto p-4">
+        <header class="text-center my-8">
+            <h1 class="text-4xl font-extrabold text-blue-900">Claim Requests Portal</h1>
+            <p class="text-lg text-blue-700 mt-2">Manage and track your claim requests efficiently.</p>
+        </header>
+
+        <main id="card-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div id="loading" class="col-span-full text-center text-blue-600 text-lg font-medium py-10">
+                Loading claims...
             </div>
-            <div class="flex flex-col sm:flex-row mt-6 space-y-2 sm:space-y-0 sm:space-x-2">
-                <button class="flex-1 btn-dealer text-white py-2 px-4 rounded-md font-semibold text-sm hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                    Dealer Claim Done
-                </button>
-                <button class="flex-1 btn-supplier text-white py-2 px-4 rounded-md font-semibold text-sm hover:bg-blue-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                    Supplier Claim Done
-                </button>
-            </div>
-        </div>
-    </div>
-    
-    <div id="supplier-modal" class="modal fixed inset-0 z-50 overflow-auto flex items-center justify-center modal-overlay">
-        <div class="modal-content w-full max-w-lg p-6 rounded-lg relative">
-            <h3 class="text-2xl font-bold mb-4 text-blue-900">Select Supplier</h3>
-            
-            <form id="supplier-form">
-                <div class="mb-4">
-                    <label for="supplier-select" class="block text-gray-700 font-semibold mb-2">Supplier Name <span class="text-red-500">*</span></label>
-                    <select id="supplier-select" class="block w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
-                        <option value="" disabled selected>Loading suppliers...</option>
-                    </select>
-                </div>
-                
-                <div class="flex justify-end space-x-2">
-                    <button type="button" id="close-modal-btn" class="bg-gray-300 text-gray-800 py-2 px-4 rounded-md font-semibold hover:bg-gray-400">Cancel</button>
-                    <button type="submit" class="bg-blue-600 text-white py-2 px-4 rounded-md font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">Submit</button>
-                </div>
-            </form>
-        </div>
+        </main>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
-    <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.css" rel="stylesheet">
-    
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const supplierButtons = document.querySelectorAll('.btn-supplier');
-            const modal = document.getElementById('supplier-modal');
-            const closeBtn = document.getElementById('close-modal-btn');
-            const supplierSelect = document.getElementById('supplier-select');
-            const supplierForm = document.getElementById('supplier-form');
-            let currentReqId = null;
+            const apiUrl = 'https://script.google.com/macros/s/AKfycbxKHLxhcxparrfNpCcC8jExol17fJjmL-uuMxia_uld7t8AcsMrDUxZkIrRT-GT9d1AJw/exec';
+            const cardContainer = document.getElementById('card-container');
+            const loadingElement = document.getElementById('loading');
 
-            // Initialize TomSelect for searchable dropdown
-            const tomSelect = new TomSelect(supplierSelect, {
-                create: false,
-                sortField: {
-                    field: "text",
-                    direction: "asc"
-                },
-                maxItems: 1
-            });
-
-            // Fetch suppliers from Google Sheet
-            const fetchSuppliers = async () => {
-                const sheetUrl = 'https://docs.google.com/spreadsheets/d/1UeohB4IPgEzGwybOJaIKpCIa38A4UvBstM8waqYv9V0/gviz/tq?tqx=out:csv&gid=724087621&range=D2:D';
-                try {
-                    const response = await fetch(sheetUrl);
-                    const text = await response.text();
-                    
-                    const suppliers = text
-                        .split('\n')
-                        .slice(1) // Skip the header row if present, or just the first empty line
-                        .map(row => row.trim())
-                        .filter(supplier => supplier.length > 0) // Remove any empty rows
-                        .sort((a, b) => a.localeCompare(b)); // Alphabetical sort
-
-                    // Clear existing options
-                    tomSelect.clearOptions();
-                    
-                    // Add new options to TomSelect
-                    suppliers.forEach(supplier => {
-                        tomSelect.addOption({ value: supplier, text: supplier });
-                    });
-                    
-                    // Re-enable select box after loading
-                    tomSelect.enable();
-                    tomSelect.refreshOptions(false);
-                    tomSelect.addOption({value: '', text: 'Select a supplier', disabled: true, selected: true});
-                    tomSelect.setValue('');
-
-                } catch (error) {
-                    console.error('Error fetching suppliers:', error);
-                    tomSelect.addOption({ value: '', text: 'Failed to load suppliers.' });
-                    tomSelect.disable();
-                }
-            };
-            
-            // Event listener for "Supplier Claim Done" button
-            supplierButtons.forEach(button => {
-                button.addEventListener('click', (e) => {
-                    const card = e.target.closest('.card');
-                    currentReqId = card.dataset.reqId;
-                    modal.style.display = 'flex';
-                    fetchSuppliers();
-                });
-            });
-
-            // Event listener for modal close button
-            closeBtn.addEventListener('click', () => {
-                modal.style.display = 'none';
-                tomSelect.setValue('');
-            });
-
-            // Handle form submission
-            supplierForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                
-                const selectedSupplier = tomSelect.getValue();
-                
-                if (!selectedSupplier) {
-                    alert('Please select a supplier name.');
-                    return;
-                }
-                
-                const payload = {
-                    reqId: currentReqId,
-                    supplierName: selectedSupplier
-                };
-                
-                console.log('Sending payload:', payload);
-
-                // Placeholder for your backend POST request
-                try {
-                    const response = await fetch('/api/claim-done', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(payload)
-                    });
-
-                    if (response.ok) {
-                        alert('Supplier claim submitted successfully!');
-                        modal.style.display = 'none';
-                        tomSelect.setValue('');
-                    } else {
-                        alert('Failed to submit claim. Please try again.');
+            fetch(apiUrl)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
                     }
-                } catch (error) {
-                    console.error('Error submitting form:', error);
-                    alert('An error occurred. Please check the console.');
-                }
-            });
+                    return response.json();
+                })
+                .then(data => {
+                    loadingElement.style.display = 'none'; // Hide loading message
+                    if (data && data.data && data.data.length > 0) {
+                        data.data.forEach(claim => {
+                            const cardHtml = createClaimCard(claim);
+                            cardContainer.innerHTML += cardHtml;
+                        });
+                    } else {
+                        cardContainer.innerHTML = `<div class="col-span-full text-center text-gray-500 py-10">
+                            No claim requests found.
+                        </div>`;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching data:', error);
+                    loadingElement.style.display = 'none';
+                    cardContainer.innerHTML = `<div class="col-span-full text-center text-red-600 py-10">
+                        Failed to load data. Please try again later.
+                    </div>`;
+                });
+
+            function createClaimCard(claim) {
+                // Ensure data is available before creating the card
+                const dealerName = claim['Dealer Name'] || 'N/A';
+                const reqId = claim['REQ-ID'] || 'N/A';
+                const product = claim['Product'] || 'N/A';
+                const qty = claim['Qty'] !== undefined ? claim['Qty'] : 'N/A';
+                const crmName = claim['CRM Name'] || 'N/A';
+                const ownerRemark = claim['Owner Remark'] || 'No remark';
+
+                return `
+                <div class="card p-6 rounded-lg shadow-md flex flex-col justify-between">
+                    <div>
+                        <span class="bg-blue-100 text-blue-800 text-sm font-semibold px-2.5 py-0.5 rounded-full">${reqId}</span>
+                        <h2 class="text-xl font-bold text-blue-900 mt-2">${dealerName}</h2>
+                        <p class="text-gray-700 mt-1">Product: <span class="font-medium">${product}</span></p>
+                        <p class="text-gray-700">Quantity: <span class="font-medium">${qty}</span></p>
+                        <p class="text-gray-700">CRM: <span class="font-medium">${crmName}</span></p>
+                        <div class="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                            <p class="text-sm font-semibold text-blue-800">Owner Remark:</p>
+                            <p class="text-sm text-blue-700 italic">${ownerRemark}</p>
+                        </div>
+                    </div>
+                    <div class="flex flex-col sm:flex-row mt-6 space-y-2 sm:space-y-0 sm:space-x-2">
+                        <button class="flex-1 btn-dealer text-white py-2 px-4 rounded-md font-semibold text-sm hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            Dealer Claim Done
+                        </button>
+                        <button class="flex-1 btn-supplier text-white py-2 px-4 rounded-md font-semibold text-sm hover:bg-blue-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            Supplier Claim Done
+                        </button>
+                    </div>
+                </div>
+                `;
+            }
         });
     </script>
 </body>
