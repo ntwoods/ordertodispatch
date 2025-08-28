@@ -4,11 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Claim Requests Portal</title>
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Tom Select CSS -->
     <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.css" rel="stylesheet">
-    <!-- Font Awesome for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         body {
@@ -51,7 +48,7 @@
         }
         .btn-clear {
             background-color: #374151; /* A darker gray */
-            box-shadow: 0 4px 6px -1px rgba(55, 65, 81, 0.5), 0 2px 4px -1px rgba(55, 65, 81, 0.25);
+            box-shadow: 0 4-6px -1px rgba(55, 65, 81, 0.5), 0 2px 4px -1px rgba(55, 65, 81, 0.25);
             @apply focus:ring-gray-700;
             color: #FFFFFF;
             font-size: 15px;
@@ -77,24 +74,30 @@
         .ts-control {
             @apply rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50;
         }
+        /* Loader Pop-up styles */
+        #loader-overlay {
+            @apply fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 transition-opacity duration-300 ease-in-out;
+        }
     </style>
 </head>
 <body class="bg-gray-100 p-8 antialiased">
-    <div class="container mx-auto">
-        <h1 class="text-3xl font-extrabold text-gray-800 mb-8 text-center">Claim Requests Portal</h1>
-        <div id="requests-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <!-- Dynamic claim request cards will be inserted here by JavaScript -->
-            <div id="loading" class="col-span-full text-center text-gray-500 mt-10">
-                <svg class="animate-spin h-8 w-8 text-blue-500 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                <p class="mt-2">Fetching claim requests...</p>
-            </div>
+
+    <div id="loader-overlay" class="hidden opacity-0">
+        <div class="text-center">
+            <svg class="animate-spin h-12 w-12 text-white mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <p class="mt-4 text-white font-semibold">Fetching claim requests...</p>
         </div>
     </div>
 
-    <!-- The Modal HTML -->
+    <div class="container mx-auto">
+        <h1 class="text-3xl font-extrabold text-gray-800 mb-8 text-center">Claim Requests Portal</h1>
+        <div id="requests-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            </div>
+    </div>
+
     <div id="supplier-modal" class="modal hidden">
         <div class="modal-content transform scale-95 opacity-0">
             <div class="flex justify-between items-center pb-3">
@@ -117,15 +120,32 @@
         </div>
     </div>
 
-    <!-- Tom Select JS Library -->
     <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const requestsContainer = document.getElementById('requests-container');
-            const loadingIndicator = document.getElementById('loading');
+            const loaderOverlay = document.getElementById('loader-overlay');
             const supplierModal = document.getElementById('supplier-modal');
             const closeModalBtn = document.getElementById('close-modal-btn');
             const modalContent = supplierModal.querySelector('.modal-content');
+
+            // Function to show the loader
+            const showLoader = () => {
+                loaderOverlay.classList.remove('hidden');
+                setTimeout(() => {
+                    loaderOverlay.classList.remove('opacity-0');
+                    loaderOverlay.classList.add('opacity-100');
+                }, 10);
+            };
+
+            // Function to hide the loader
+            const hideLoader = () => {
+                loaderOverlay.classList.remove('opacity-100');
+                loaderOverlay.classList.add('opacity-0');
+                setTimeout(() => {
+                    loaderOverlay.classList.add('hidden');
+                }, 300);
+            };
 
             // Function to fetch actual claim requests from the Apps Script API
             const getClaimRequests = async () => {
@@ -207,10 +227,10 @@
 
             // Main function to load and render requests
             const loadRequests = async () => {
-                loadingIndicator.style.display = 'block';
+                showLoader();
                 requestsContainer.innerHTML = '';
                 const requests = await getClaimRequests();
-                loadingIndicator.style.display = 'none';
+                hideLoader();
 
                 if (requests.length > 0) {
                     requests.forEach(createClaimCard);
