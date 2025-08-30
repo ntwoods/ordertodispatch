@@ -361,69 +361,91 @@
         }
 
         /**
-         * Fetches purchase requests from the API and renders them as cards.
-         */
-        async function fetchRequests() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const crmName = urlParams.get('crmName');
+    function isOlderThan15Days(dateString) {
+        if (!dateString) return false;
+        const d = new Date(dateString);
+        if (isNaN(d)) return false;
+        const now = new Date();
+        const diffMs = now - d;
+        const fifteenDaysMs = 15 * 24 * 60 * 60 * 1000;
+        return diffMs > fifteenDaysMs; // strictly older
+    }
 
-            if (!crmName) {
-                displayStatusMessage('Error: CRM name not found in the URL. Please provide it as a parameter (e.g., ?crmName=JohnDoe)', 'error');
-                return;
-            }
+    async function fetchRequests() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const crmName = urlParams.get('crmName');
 
-            crmNameDisplay.textContent = `Requests for CRM: ${crmName}`;
-            displayStatusMessage('Loading requests...', 'loading');
-            requestsGrid.innerHTML = ''; // Clear previous cards
+        if (!crmName) {
+            displayStatusMessage('Error: CRM name not found in the URL.', 'error');
+            return;
+        }
 
-            try {
-                const response = await fetch(`${API_URL}?crm=${encodeURIComponent(crmName)}`);
-                const result = await response.json();
+        crmNameDisplay.textContent = `Requests for CRM: ${crmName}`;
+        displayStatusMessage('Loading requests...', 'loading');
+        requestsGrid.innerHTML = '';
 
-                if (result.status === "success" && result.data && result.data.length > 0) {
-                    statusMessage.style.display = 'none'; // Hide loading message
-                    requestsGrid.style.display = 'grid'; // Ensure grid is visible
+        try {
+            const response = await fetch(`${API_URL}?crm=${encodeURIComponent(crmName)}`);
+            const result = await response.json();
 
-                    result.data.forEach(request => {
-                        const card = document.createElement('div');
-                        card.className = 'request-card';
+            if (result.status === "success" && result.data && result.data.length > 0) {
+                statusMessage.style.display = 'none';
+                requestsGrid.style.display = 'grid';
 
-                        // Add 'cancelled-watermark' class if purchaseStatus is 'Cancel'
-                        if (request.purchaseStatus && request.purchaseStatus.toLowerCase() === 'cancel') {
-                            card.classList.add('cancelled-watermark');
-                        }
+                let renderedCount = 0;
 
-                        card.innerHTML = `
-                            <h3>Request ID: ${request.requestId || 'N/A'}</h3>
-                            <p><strong>Dealer Name:</strong> ${request.dealername || 'N/A'}</p>
-                            <p><strong>Priority:</strong> ${request.priority || 'N/A'}</p>
-                            <p><strong>CRM Remark:</strong> ${request.crmRemark || 'N/A'}</p>
-                            <p><strong>Request Date:</strong> ${formatDate(request.requestDate)}</p>
-                            <p><strong>Expected Delivery:</strong> ${formatDate(request.expectedDelivery)}</p>
-                            <p><strong>Remark Purchase:</strong> ${request.remarkPurchase || 'N/A'}</p>
-                            <div class="actions">
-                                ${request.product ? `<button class="view-file-button" data-file-url="${request.product}">View File</button>` : ''}
-                                <button class="cancel-button" data-request-id="${request.requestId}">Cancel Request</button>
-                            </div>
-                        `;
-                        requestsGrid.appendChild(card);
-                    });
+                result.data.forEach(request => {
+                    // ✅ skip card only if receivedAtGodown is older than 15 days
+                    if (isOlderThan15Days(request.receivedAtGodown)) return;
 
-                    // Attach event listeners to newly created buttons
-                    attachButtonListeners();
+                    const card = document.createElement('div');
+                    card.className = 'request-card';
 
-                } else {
-                    displayStatusMessage(`No requests found for CRM: ${crmName}.`, 'no-data');
+                    if (request.purchaseStatus && String(request.purchaseStatus).toLowerCase() === 'cancel') {
+                        card.classList.add('cancelled-watermark');
+                    }
+
+                    // ✅ show badge if receivedAtGodown exists
+                    const arrivedBadge = request.receivedAtGodown ? `<span class="arrived-badge">Arrived</span>` : '';
+
+                    card.innerHTML = `
+                        <h3>
+                          <span>Request ID: ${request.requestId || 'N/A'}</span>
+                          ${arrivedBadge}
+                        </h3>
+                        <p><strong>Dealer Name:</strong> ${request.dealername || 'N/A'}</p>
+                        <p><strong>Priority:</strong> ${request.priority || 'N/A'}</p>
+                        <p><strong>CRM Remark:</strong> ${request.crmRemark || 'N/A'}</p>
+                        <p><strong>Request Date:</strong> ${formatDate(request.requestDate)}</p>
+                        <p><strong>Expected Delivery:</strong> ${formatDate(request.expectedDelivery)}</p>
+                        <p><strong>Remark Purchase:</strong> ${request.remarkPurchase || 'N/A'}</p>
+                        <div class="actions">
+                            ${request.product ? `<button class="view-file-button" data-file-url="${request.product}">View File</button>` : ''}
+                            <button class="cancel-button" data-request-id="${request.requestId}">Cancel Request</button>
+                        </div>
+                    `;
+                    requestsGrid.appendChild(card);
+                    renderedCount++;
+                });
+
+                attachButtonListeners();
+
+                if (renderedCount === 0) {
+                    displayStatusMessage(`No requests available for CRM: ${crmName}.`, 'no-data');
                     requestsGrid.style.display = 'none';
                 }
 
-            } catch (error) {
-                console.error("Failed to fetch requests:", error);
-                displayStatusMessage(`Error fetching data: ${error.message}. Please check the API URL and your internet connection.`, 'error');
+            } else {
+                displayStatusMessage(`No requests found for CRM: ${crmName}.`, 'no-data');
                 requestsGrid.style.display = 'none';
             }
-        }
 
+        } catch (error) {
+            console.error("Failed to fetch requests:", error);
+            displayStatusMessage(`Error fetching data: ${error.message}`, 'error');
+            requestsGrid.style.display = 'none';
+        }
+    }
         /**
          * Sends a cancellation request to the API.
          * @param {string} requestId - The ID of the request to cancel.
