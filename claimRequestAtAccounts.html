@@ -185,6 +185,57 @@
     <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+// Add this event listener within the main 'DOMContentLoaded' block
+        requestsContainer.addEventListener('click', async (e) => {
+            const clearBtn = e.target.closest('.btn-clear');
+            if (!clearBtn) return;
+        
+            const reqId = clearBtn.getAttribute('data-id');
+        
+            // Prompt for Dealer Claim
+            const dealerClaimCleared = confirm("Have you cleared Dealer Claim?");
+            if (!dealerClaimCleared) {
+                showMessageBox('Action Required', 'Clear dealer claim first');
+                return;
+            }
+        
+            // Prompt for Supplier Claim
+            const supplierClaimCleared = confirm("Have you cleared Supplier Claim?");
+            if (!supplierClaimCleared) {
+                showMessageBox('Action Required', 'Clear Supplier Claim first');
+                return;
+            }
+        
+            // If both are cleared, send the POST request
+            await sendClearRequest(reqId);
+        });
+        
+        // Add this function within the main script block
+        const sendClearRequest = async (reqId) => {
+            showLoader('Clearing the claim request...');
+            const postUrl = 'https://script.google.com/macros/s/AKfycbxKHLxhcxparrfNpCcC8jExol17fJjmL-uuMxia_uld7t8AcsMrDUxZkIrRT-GT9d1AJw/exec';
+            const payload = {
+                reqId: reqId,
+                action: 'clear'
+            };
+        
+            try {
+                const response = await fetch(postUrl, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+        
+                showMessageBox('Success!', `Request ID ${reqId} has been cleared.`);
+                await loadRequests();
+            } catch (error) {
+                console.error('Error sending clear request:', error);
+                showMessageBox('Error', 'Could not clear claim on the server.');
+            } finally {
+                hideLoader();
+            }
+        };
             const requestsContainer = document.getElementById('requests-container');
             const loaderOverlay = document.getElementById('loader-overlay');
 
