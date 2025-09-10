@@ -339,22 +339,10 @@
                                      <p class="text-xs text-blue-700 italic">${String(request["Owner Remark"]||'')}</p>`;
             
               const btnRow = document.createElement('div');
-              btnRow.className = 'flex mt-4 space-x-1 original-buttons';
-              const btnDealer = document.createElement('button'); 
-              btnDealer.className = 'btn btn-dealer'; 
-              btnDealer.dataset.id = request["REQ-ID"]||''; 
-              btnDealer.textContent = 'Dealer Claim';
-              
-              const btnSupplier = document.createElement('button'); 
-              btnSupplier.className = 'btn btn-supplier supplier-claim-btn'; 
-              btnSupplier.dataset.id = request["REQ-ID"]||''; 
-              btnSupplier.textContent = 'Supplier Claim';
-              
-              const btnClear = document.createElement('button'); 
-              btnClear.className = 'btn btn-clear'; 
-              btnClear.dataset.id = request["REQ-ID"]||''; 
-              btnClear.textContent = 'Clear';
-              
+              btnRow.className = 'flex mt-4 space-x-1';
+              const btnDealer = document.createElement('button'); btnDealer.className = 'btn btn-dealer'; btnDealer.dataset.id = request["REQ-ID"]||''; btnDealer.textContent = 'Dealer Claim';
+              const btnSupplier = document.createElement('button'); btnSupplier.className = 'btn btn-supplier supplier-claim-btn'; btnSupplier.dataset.id = request["REQ-ID"]||''; btnSupplier.textContent = 'Supplier Claim';
+              const btnClear = document.createElement('button'); btnClear.className = 'btn btn-clear'; btnClear.dataset.id = request["REQ-ID"]||''; btnClear.textContent = 'Clear';
               btnRow.append(btnDealer, btnSupplier, btnClear);
             
               card.append(pReq, h2, pProduct, pQty, pCrm, pIssue, remarkBox, btnRow);
@@ -418,90 +406,15 @@
                 }
             });
 
-            // Handle "Dealer Claim" button click on the card
-            requestsContainer.addEventListener('click', async (e) => {
-                const btnDealer = e.target.closest('.btn-dealer');
-                if (btnDealer) {
-                    const reqId = btnDealer.getAttribute('data-id');
-                    const card = btnDealer.closest('.card');
-                    
-                    // Check if CN input form already exists to prevent duplicates
-                    if (card.querySelector('.cn-input-form')) {
-                        return;
-                    }
 
-                    // Hide the original buttons
-                    const btnRow = card.querySelector('.original-buttons');
-                    btnRow.style.display = 'none';
-
-                    // Create the CN input form
-                    const formDiv = document.createElement('div');
-                    formDiv.className = 'cn-input-form mt-4 p-3 bg-gray-50 border border-gray-200 rounded-md';
-                    formDiv.innerHTML = `
-                        <label for="cn-input-${reqId}" class="block text-sm font-semibold text-gray-700 mb-2">Enter CN No. (Required):</label>
-                        <div class="flex items-center space-x-2">
-                            <input type="text" id="cn-input-${reqId}" class="flex-grow px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="e.g., CN12345" required>
-                            <button class="submit-cn-btn bg-green-600 hover:bg-green-700 text-white text-sm px-4 py-2 rounded-md font-medium transition duration-200" data-req-id="${reqId}">
-                                <i class="fas fa-paper-plane mr-1"></i> Submit
-                            </button>
-                            <button class="cancel-cn-btn bg-gray-500 hover:bg-gray-600 text-white text-sm px-4 py-2 rounded-md font-medium transition duration-200" data-req-id="${reqId}">
-                                Cancel
-                            </button>
-                        </div>
-                    `;
-
-                    // Insert the form after the remark box
-                    const remarkBox = card.querySelector('.mt-3.p-2.bg-blue-50');
-                    remarkBox.insertAdjacentElement('afterend', formDiv);
-
-                    // Focus on the input field
-                    document.getElementById(`cn-input-${reqId}`).focus();
-                    return;
-                }
-
-                // Handle Submit CN button click
-                const submitBtn = e.target.closest('.submit-cn-btn');
-                if (submitBtn) {
-                    const reqId = submitBtn.getAttribute('data-req-id');
-                    const cnInput = document.getElementById(`cn-input-${reqId}`);
-                    const cnNo = cnInput.value.trim();
-
-                    if (cnNo === '') {
-                        showMessageBox('Validation Error', 'Please enter a Credit Note number.');
-                        cnInput.focus();
-                        return;
-                    }
-
-                    await sendDealerClaimRequest(reqId, cnNo);
-
-                    // Clean up the card UI after submission
-                    const card = submitBtn.closest('.card');
-                    const form = card.querySelector('.cn-input-form');
-                    const btnRow = card.querySelector('.original-buttons');
-                    
-                    form.remove();
-                    btnRow.style.display = 'flex';
-                    return;
-                }
-
-                // Handle Cancel CN button click
-                const cancelBtn = e.target.closest('.cancel-cn-btn');
-                if (cancelBtn) {
-                    const card = cancelBtn.closest('.card');
-                    const form = card.querySelector('.cn-input-form');
-                    const btnRow = card.querySelector('.original-buttons');
-                    
-                    form.remove();
-                    btnRow.style.display = 'flex';
-                    return;
-                }
-
-                // Handle "Supplier Claim" button click
-                const supplierBtn = e.target.closest('.supplier-claim-btn');
-                if (supplierBtn) {
-                    const reqId = supplierBtn.getAttribute('data-id');
+            // Handle "Supplier Claim Done" button click on the card
+                requestsContainer.addEventListener('click', async (e) => {
+                    const btn = e.target.closest('.supplier-claim-btn');
+                    if (!btn) return;
+                
+                    const reqId = btn.getAttribute('data-id');
                     if (!reqId) return;
-
+                
                     currentReqId = reqId;
                     
                     // Show modal
@@ -523,10 +436,147 @@
                       sortField: { field: "text", direction: "asc" },
                       options: suppliers.map(s => ({ value: s.name, text: s.name, email: s.email })),
                       plugins: ['dropdown_input'],
-                      dropdownParent: document.body
+                      dropdownParent: document.body   // safer
                     });
+                });
+
+            // Handle the "Done" button click inside the supplier modal
+                document.getElementById('done-btn').addEventListener('click', async () => {
+                    const selectedValue = tomSelectInstance.getValue();
+                    const selectedOption = tomSelectInstance.options[selectedValue];
+                
+                    currentSupplierName = selectedValue;
+                    let supplierEmail = selectedOption ? selectedOption.email : null;
+                
+                    if (!supplierEmail) {
+                        // 👉 This is a new custom supplier OR one without email
+                        closeSupplierModal();
+                        // Show email input modal
+                        emailModal.classList.remove('hidden');
+                        setTimeout(() => {
+                            emailModalContent.classList.remove('scale-95', 'opacity-0');
+                            emailModalContent.classList.add('scale-100', 'opacity-100');
+                        }, 10);
+                    } else {
+                        // Existing supplier with an email → send request directly
+                        await sendPostRequest(currentReqId, currentSupplierName, supplierEmail);
+                        closeSupplierModal();
+                    }
+                });
+
+
+                submitEmailBtn.addEventListener('click', async () => {
+                    const supplierEmail = emailInput.value.trim();
+                
+                    if (!supplierEmail) {
+                        showMessageBox('Validation Error', 'Please enter a valid email address.');
+                        return;
+                    }
+                
+                    const emailPattern = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
+                    if (!emailPattern.test(supplierEmail)) {
+                        showMessageBox('Validation Error', 'Please enter a valid email address.');
+                        return;
+                    }
+                
+                    // 👉 Use currentSupplierName (custom supplier) + provided email
+                    await sendPostRequest(currentReqId, currentSupplierName, supplierEmail);
+                    closeEmailModal();
+                });
+
+
+            // Function to send the POST request
+                    const sendPostRequest = async (reqId, supplierName, supplierEmail) => {
+                        showLoader('Sending data to server...');
+                    
+                        // Find the card by reqId
+                        const card = document.querySelector(`.card[data-req-id="${reqId}"]`);
+                        const product = card?.getAttribute("data-product") || "";
+                        const qty = card?.getAttribute("data-qty") || "";
+                        const issue = card?.getAttribute("data-issue") || "";
+                    
+                        const postUrl = 'https://script.google.com/macros/s/AKfycbxKHLxhcxparrfNpCcC8jExol17fJjmL-uuMxia_uld7t8AcsMrDUxZkIrRT-GT9d1AJw/exec'; 
+                        const payload = {
+                            reqId: reqId,
+                            supplierName: supplierName,
+                            supplierEmail: supplierEmail,
+                            product: product,
+                            qty: qty,
+                            issue: issue
+                        };
+                    
+                        try {
+                            const response = await fetch(postUrl, {
+                                method: 'POST',
+                                mode: 'no-cors',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify(payload)
+                            });
+                    
+                            showMessageBox('Success!', `Submitted to server for REQ-ID ${reqId}.`);
+                            await loadRequests();
+                        } catch (error) {
+                            console.error('Error sending POST request:', error);
+                            showMessageBox('Error', 'Could not submit to server.');
+                        } finally {
+                            hideLoader();
+                        }
+                    };
+
+// ---------------------- NEW CODE FOR DEALER CLAIM START ----------------------
+
+            // Handle "Dealer Claim" button click on the card
+            requestsContainer.addEventListener('click', async (e) => {
+                const btn = e.target.closest('.btn-dealer');
+                if (!btn) return;
+
+                const reqId = btn.getAttribute('data-id');
+                const card = btn.closest('.card');
+                
+                // Check if a form already exists to prevent duplicates
+                if (card.querySelector('.cn-input-form')) {
                     return;
                 }
+
+                // Hide the original buttons
+                const btnRow = card.querySelector('.flex.mt-4');
+                btnRow.style.display = 'none';
+
+                // Create the input form
+                const formHtml = `
+                    <div class="cn-input-form mt-4">
+                        <label for="cn-input-${reqId}" class="block text-xs font-semibold text-gray-700 mb-1">Enter CN No.:</label>
+                        <div class="flex items-center space-x-2">
+                            <input type="text" id="cn-input-${reqId}" class="flex-grow px-2 py-1 border border-gray-300 rounded-md text-xs focus:outline-none focus:ring-1 focus:ring-blue-500" placeholder="e.g., CN12345" required>
+                            <button class="btn bg-blue-600 hover:bg-blue-700 text-white text-xs px-3 py-1.5 rounded-md" data-req-id="${reqId}" id="submit-cn-btn">
+                                <i class="fas fa-paper-plane mr-1"></i> Submit
+                            </button>
+                        </div>
+                    </div>
+                `;
+
+                // Append the form to the card
+                const remarkBox = card.querySelector('.remark-box');
+                remarkBox.insertAdjacentHTML('afterend', formHtml);
+
+                // Event listener for the new submit button
+                // Use a delegated event listener on the requestsContainer to handle dynamically created buttons
+                requestsContainer.querySelector(`#submit-cn-btn[data-req-id="${reqId}"]`).addEventListener('click', async (submitEvent) => {
+                    submitEvent.preventDefault();
+                    const cnInput = document.getElementById(`cn-input-${reqId}`);
+                    const cnNo = cnInput.value.trim();
+
+                    if (cnNo === '') {
+                        showMessageBox('Validation Error', 'Please enter a Credit Note number.');
+                        return;
+                    }
+
+                    await sendDealerClaimRequest(reqId, cnNo);
+
+                    // Clean up the card UI after submission
+                    card.querySelector('.cn-input-form').remove();
+                    btnRow.style.display = 'flex';
+                });
             });
 
             // Function to send the POST request for dealer claims
@@ -557,53 +607,9 @@
                 }
             };
 
-            // Handle the "Done" button click inside the supplier modal
-            document.getElementById('done-btn').addEventListener('click', async () => {
-                const selectedValue = tomSelectInstance.getValue();
-                const selectedOption = tomSelectInstance.options[selectedValue];
-            
-                currentSupplierName = selectedValue;
-                let supplierEmail = selectedOption ? selectedOption.email : null;
-            
-                if (!supplierEmail) {
-                    // This is a new custom supplier OR one without email
-                    closeSupplierModal();
-                    // Show email input modal
-                    emailModal.classList.remove('hidden');
-                    setTimeout(() => {
-                        emailModalContent.classList.remove('scale-95', 'opacity-0');
-                        emailModalContent.classList.add('scale-100', 'opacity-100');
-                    }, 10);
-                } else {
-                    // Existing supplier with an email → send request directly
-                    await sendPostRequest(currentReqId, currentSupplierName, supplierEmail);
-                    closeSupplierModal();
-                }
-            });
+// ---------------------- NEW CODE FOR DEALER CLAIM END ----------------------
 
-            submitEmailBtn.addEventListener('click', async () => {
-                const supplierEmail = emailInput.value.trim();
-            
-                if (!supplierEmail) {
-                    showMessageBox('Validation Error', 'Please enter a valid email address.');
-                    return;
-                }
-            
-                const emailPattern = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
-                if (!emailPattern.test(supplierEmail)) {
-                    showMessageBox('Validation Error', 'Please enter a valid email address.');
-                    return;
-                }
-            
-                // Use currentSupplierName (custom supplier) + provided email
-                await sendPostRequest(currentReqId, currentSupplierName, supplierEmail);
-                closeEmailModal();
-            });
-
-            // Function to send the POST request for supplier claims
-            const sendPostRequest = async (reqId, supplierName, supplierEmail) => {
-                showLoader('Sending data to server...');
-            
-                // Find the card by reqId
-                const card = document.querySelector(`.card[data-req-id="${reqId}"]`);
-                const product = card?.getAttribute("data-product") || "";
+        });
+    </script>
+</body>
+</html>
