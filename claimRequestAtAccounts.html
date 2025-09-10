@@ -277,7 +277,7 @@
                         const columns = row.split(',').map(col => col.trim().replace(/^"|"$/g, ''));
                         // Return an object with both name and email.
                         // We are strictly using column D for name (columns[3]) and E for email (columns[4])
-                        return { name: columns[3], email: columns[4] }; 
+                        return { name: columns[8], email: columns[9] }; 
                     }).filter(s => s.name); // Filter out any empty names
                     
                     // Use a Set to store unique names to handle duplicates
