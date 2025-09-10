@@ -334,7 +334,7 @@
               pIssue.innerHTML = `Issue: <span class="font-medium">${String(request["Issue"]||'')}</span>`;
             
               const remarkBox = document.createElement('div');
-              remarkBox.className = 'mt-3 p-2 bg-blue-50 border border-blue-200 rounded-md remark-box';
+              remarkBox.className = 'mt-3 p-2 bg-blue-50 border border-blue-200 rounded-md';
               remarkBox.innerHTML = `<p class="text-xs font-semibold text-blue-800">Remark:</p>
                                      <p class="text-xs text-blue-700 italic">${String(request["Owner Remark"]||'')}</p>`;
             
@@ -555,14 +555,9 @@
                     </div>
                 `;
 
-                // Find the insertion point and add the new form
+                // Append the form to the card
                 const remarkBox = card.querySelector('.remark-box');
-                if (remarkBox) {
-                    remarkBox.insertAdjacentHTML('afterend', formHtml);
-                } else {
-                    // Fallback to the end of the card if the remark box is not found
-                    card.querySelector('.flex.mt-4').insertAdjacentHTML('beforebegin', formHtml);
-                }
+                remarkBox.insertAdjacentHTML('afterend', formHtml);
 
                 // Event listener for the new submit button
                 // Use a delegated event listener on the requestsContainer to handle dynamically created buttons
