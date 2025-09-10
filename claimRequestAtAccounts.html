@@ -183,265 +183,433 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-  const requestsContainer = document.getElementById('requests-container');
-  const loaderOverlay = document.getElementById('loader-overlay');
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const requestsContainer = document.getElementById('requests-container');
+            const loaderOverlay = document.getElementById('loader-overlay');
 
-  // ----------------- Loader -----------------
-  const showLoader = (msg = 'Loading...') => {
-    loaderOverlay.style.display = 'flex';
-    loaderOverlay.querySelector('p').textContent = msg;
-  };
-  const hideLoader = () => {
-    loaderOverlay.style.display = 'none';
-  };
+            const supplierModal = document.getElementById('supplier-modal');
+            const closeModalBtn = document.getElementById('close-supplier-modal-btn');
+            const modalContent = supplierModal.querySelector('.modal-content');
+            
+            const emailModal = document.getElementById('email-modal');
+            const closeEmailModalBtn = document.getElementById('close-email-modal-btn');
+            const emailInput = document.getElementById('email-input');
+            const submitEmailBtn = document.getElementById('submit-email-btn');
+            const emailModalContent = emailModal.querySelector('.modal-content');
 
-  // ----------------- Message Box -----------------
-  const showMessageBox = (title, message) => {
-    const box = document.createElement('div');
-    box.className =
-      'fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50';
-    box.innerHTML = `
-      <div class="bg-white p-4 rounded-md shadow-lg max-w-sm w-full">
-        <h3 class="text-base font-bold mb-2">${title}</h3>
-        <p class="text-sm mb-3">${message}</p>
-        <button class="btn bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-md text-xs">OK</button>
-      </div>`;
-    document.body.appendChild(box);
-    box.querySelector('button').addEventListener('click', () => box.remove());
-  };
+            const messageModal = document.getElementById('message-modal');
+            const messageTitle = document.getElementById('message-title');
+            const messageText = document.getElementById('message-text');
+            const closeMessageModalBtn = document.getElementById('close-message-modal');
 
-  // ----------------- Get Claim Requests -----------------
-  const getClaimRequests = async () => {
-    showLoader('Fetching claim requests...');
-    try {
-      const url =
-        'https://script.google.com/macros/s/AKfycbxKHLxhcxparrfNpCcC8jExol17fJjmL-uuMxia_uld7t8AcsMrDUxZkIrRT-GT9d1AJw/exec?action=getClaimRequests';
-      const res = await fetch(url);
-      const data = await res.json();
-      return data || [];
-    } catch (err) {
-      console.error('Error fetching claim requests:', err);
-      showMessageBox('Error', 'Could not fetch claim requests.');
-      return [];
-    } finally {
-      hideLoader();
-    }
-  };
+            let tomSelectInstance;
+            let currentReqId = null;
+            let currentSupplierName = null;
 
-  // ----------------- Get Supplier Data -----------------
-  const getSupplierData = async (reqId) => {
-    showLoader('Fetching supplier data...');
-    try {
-      const url = `https://script.google.com/macros/s/AKfycbxKHLxhcxparrfNpCcC8jExol17fJjmL-uuMxia_uld7t8AcsMrDUxZkIrRT-GT9d1AJw/exec?action=getSupplierData&reqId=${reqId}`;
-      const res = await fetch(url);
-      const data = await res.json();
-      return data || {};
-    } catch (err) {
-      console.error('Error fetching supplier data:', err);
-      showMessageBox('Error', 'Could not fetch supplier data.');
-      return {};
-    } finally {
-      hideLoader();
-    }
-  };
+            // Function to show a custom message box
+            const showMessageBox = (title, message) => {
+                messageTitle.textContent = title;
+                messageText.textContent = message;
+                messageModal.classList.remove('hidden');
+            };
 
-  // ----------------- Create Claim Card (FIXED remark-box) -----------------
-  const createClaimCard = (request) => {
-    const card = document.createElement('div');
-    card.className = 'card p-4 rounded-lg shadow-md hover:shadow-lg';
-    card.dataset.reqId = request['REQ-ID'] || '';
+            // Function to close the custom message box
+            closeMessageModalBtn.addEventListener('click', () => {
+                messageModal.classList.add('hidden');
+            });
 
-    const pReq = document.createElement('p');
-    pReq.className =
-      'text-xs font-semibold text-gray-500 mb-1';
-    pReq.innerHTML = `Request ID: <span class="font-medium text-blue-600">${
-      request['REQ-ID'] || ''
-    }</span>`;
+            // Function to show the loader
+            const showLoader = (text = 'Fetching claim requests...') => {
+                const loaderText = loaderOverlay.querySelector('p');
+                loaderText.textContent = text;
+                loaderOverlay.classList.remove('hidden');
+                setTimeout(() => {
+                    loaderOverlay.classList.remove('opacity-0');
+                    loaderOverlay.classList.add('opacity-100');
+                }, 10);
+            };
 
-    const h2 = document.createElement('h2');
-    h2.className = 'text-base font-bold text-blue-900 mt-1';
-    h2.textContent = request['Dealer Name'] || '';
+            // Function to hide the loader
+            const hideLoader = () => {
+                loaderOverlay.classList.remove('opacity-100');
+                loaderOverlay.classList.add('opacity-0');
+                setTimeout(() => {
+                    loaderOverlay.classList.add('hidden');
+                }, 300);
+            };
 
-    const pProduct = document.createElement('p');
-    pProduct.className = 'text-gray-700 text-xs mt-1';
-    pProduct.innerHTML = `Product: <span class="font-medium">${
-      request['Product'] || ''
-    }</span>`;
+            // Function to fetch actual claim requests from the Apps Script API
+            const getClaimRequests = async () => {
+                const apiUrl = 'https://script.google.com/macros/s/AKfycbxKHLxhcxparrfNpCcC8jExol17fJjmL-uuMxia_uld7t8AcsMrDUxZkIrRT-GT9d1AJw/exec';
+                try {
+                    const response = await fetch(apiUrl);
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    const data = await response.json();
+                    return data.data || [];
+                } catch (error) {
+                    console.error('Error fetching claim requests:', error);
+                    // Return an empty array or a fallback message if the API call fails
+                    const errorCard = `<div class="col-span-full text-center text-red-500 mt-10">
+                        <p>Failed to load claim requests. Please check the API URL or your internet connection.</p>
+                    </div>`;
+                    requestsContainer.innerHTML = errorCard;
+                    return [];
+                }
+            };
 
-    const pQty = document.createElement('p');
-    pQty.className = 'text-gray-700 text-xs';
-    pQty.innerHTML = `Quantity: <span class="font-medium">${
-      request['Qty'] || ''
-    }</span>`;
+            // Function to fetch data from the Google Sheet (D and E columns)
+            const getSupplierData = async () => {
+                const sheetId = '1UeohB4IPgEzGwybOJaIKpCIa38A4UvBstM8waqYv9V0';
+                const sheetName = 'Paste Here';
+                const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&sheet=${sheetName}`;
+                
+                try {
+                    const response = await fetch(url);
+                    const csvText = await response.text();
+                    
+                    const rows = csvText.split('\n').slice(1); // Remove header row
+                    const suppliers = rows.map(row => {
+                        const columns = row.split(',').map(col => col.trim().replace(/^"|"$/g, ''));
+                        // Return an object with both name and email.
+                        // We are strictly using column D for name (columns[3]) and E for email (columns[4])
+                        return { name: columns[8], email: columns[9] }; 
+                    }).filter(s => s.name); // Filter out any empty names
+                    
+                    // Use a Set to store unique names to handle duplicates
+                    const uniqueNames = new Set();
+                    const uniqueSuppliers = [];
+                    for (const supplier of suppliers) {
+                        if (supplier.name && !uniqueNames.has(supplier.name)) {
+                            uniqueNames.add(supplier.name);
+                            uniqueSuppliers.push(supplier);
+                        }
+                    }
 
-    const pCrm = document.createElement('p');
-    pCrm.className = 'text-gray-700 text-xs';
-    pCrm.innerHTML = `CRM: <span class="font-medium">${
-      request['CRM Name'] || ''
-    }</span>`;
+                    return uniqueSuppliers;
+                } catch (error) {
+                    console.error('Error fetching data from Google Sheet:', error);
+                    // Fallback options with emails
+                    return [
+                        { name: 'Supplier A', email: 'supplierA@example.com' },
+                        { name: 'Supplier B', email: 'supplierB@example.com' },
+                        { name: 'Supplier C', email: 'supplierC@example.com' }
+                    ];
+                }
+            };
+            
+            // Function to render a single claim request card
+            const createClaimCard = (request) => {
+              const card = document.createElement('div');
+              card.className = 'card p-4 rounded-lg shadow-md hover:shadow-lg';
+              card.dataset.reqId = request["REQ-ID"] || '';
+              card.dataset.product = request["Product"] || '';
+              card.dataset.qty = request["Qty"] || '';
+              card.dataset.issue = request["Issue"] || '';
+            
+              const pReq = document.createElement('p');
+              pReq.className = 'text-xs font-semibold text-gray-500 mb-1';
+              pReq.innerHTML = `Request ID: <span class="font-medium text-blue-600">${String(request["REQ-ID"]||'')}</span>`;
+            
+              const h2 = document.createElement('h2');
+              h2.className = 'text-base font-bold text-blue-900 mt-1';
+              h2.textContent = request["Dealer Name"] || '';
+            
+              const pProduct = document.createElement('p');
+              pProduct.className = 'text-gray-700 text-xs mt-1';
+              pProduct.innerHTML = `Product: <span class="font-medium">${String(request["Product"]||'')}</span>`;
+            
+              const pQty = document.createElement('p');
+              pQty.className = 'text-gray-700 text-xs';
+              pQty.innerHTML = `Quantity: <span class="font-medium">${String(request["Qty"]||'')}</span>`;
+            
+              const pCrm = document.createElement('p');
+              pCrm.className = 'text-gray-700 text-xs';
+              pCrm.innerHTML = `CRM: <span class="font-medium">${String(request["CRM Name"]||'')}</span>`;
+            
+              const pIssue = document.createElement('p');
+              pIssue.className = 'text-gray-700 text-xs';
+              pIssue.innerHTML = `Issue: <span class="font-medium">${String(request["Issue"]||'')}</span>`;
+            
+              const remarkBox = document.createElement('div');
+              remarkBox.className = 'mt-3 p-2 bg-blue-50 border border-blue-200 rounded-md';
+              remarkBox.innerHTML = `<p class="text-xs font-semibold text-blue-800">Remark:</p>
+                                     <p class="text-xs text-blue-700 italic">${String(request["Owner Remark"]||'')}</p>`;
+            
+              const btnRow = document.createElement('div');
+              btnRow.className = 'flex mt-4 space-x-1';
+              const btnDealer = document.createElement('button'); btnDealer.className = 'btn btn-dealer'; btnDealer.dataset.id = request["REQ-ID"]||''; btnDealer.textContent = 'Dealer Claim';
+              const btnSupplier = document.createElement('button'); btnSupplier.className = 'btn btn-supplier supplier-claim-btn'; btnSupplier.dataset.id = request["REQ-ID"]||''; btnSupplier.textContent = 'Supplier Claim';
+              const btnClear = document.createElement('button'); btnClear.className = 'btn btn-clear'; btnClear.dataset.id = request["REQ-ID"]||''; btnClear.textContent = 'Clear';
+              btnRow.append(btnDealer, btnSupplier, btnClear);
+            
+              card.append(pReq, h2, pProduct, pQty, pCrm, pIssue, remarkBox, btnRow);
+              requestsContainer.appendChild(card);
+            };
 
-    const pIssue = document.createElement('p');
-    pIssue.className = 'text-gray-700 text-xs';
-    pIssue.innerHTML = `Issue: <span class="font-medium">${
-      request['Issue'] || ''
-    }</span>`;
+            // Main function to load and render requests
+            const loadRequests = async () => {
+                showLoader();
+                requestsContainer.innerHTML = '';
+                const requests = await getClaimRequests();
+                hideLoader();
 
-    // FIX: added remark-box class
-    const remarkBox = document.createElement('div');
-    remarkBox.className =
-      'remark-box mt-3 p-2 bg-blue-50 border border-blue-200 rounded-md';
-    remarkBox.innerHTML = `<p class="text-xs font-semibold text-blue-800">Remark:</p>
-                           <p class="text-xs text-blue-700 italic">${
-                             request['Owner Remark'] || ''
-                           }</p>`;
+                if (requests.length > 0) {
+                    requests.forEach(createClaimCard);
+                } else {
+                    requestsContainer.innerHTML = `<div class="col-span-full text-center text-gray-500 mt-10">
+                        <p>No claim requests found.</p>
+                    </div>`;
+                }
+            };
 
-    const btnRow = document.createElement('div');
-    btnRow.className = 'flex mt-4 space-x-1';
+            loadRequests();
 
-    const btnDealer = document.createElement('button');
-    btnDealer.className = 'btn btn-dealer';
-    btnDealer.dataset.id = request['REQ-ID'] || '';
-    btnDealer.textContent = 'Dealer Claim';
+            // Function to close the supplier modal
+            const closeSupplierModal = () => {
+                modalContent.classList.remove('scale-100', 'opacity-100');
+                modalContent.classList.add('scale-95', 'opacity-0');
+                setTimeout(() => {
+                    supplierModal.classList.add('hidden');
+                    if (tomSelectInstance) {
+                        tomSelectInstance.destroy();
+                        tomSelectInstance = null;
+                    }
+                }, 300);
+            };
 
-    const btnSupplier = document.createElement('button');
-    btnSupplier.className =
-      'btn btn-supplier supplier-claim-btn';
-    btnSupplier.dataset.id = request['REQ-ID'] || '';
-    btnSupplier.textContent = 'Supplier Claim';
+            // Function to close the email modal
+            const closeEmailModal = () => {
+                emailModalContent.classList.remove('scale-100', 'opacity-100');
+                emailModalContent.classList.add('scale-95', 'opacity-0');
+                setTimeout(() => {
+                    emailModal.classList.add('hidden');
+                    emailInput.value = ''; // Reset input field
+                }, 300);
+            };
 
-    const btnClear = document.createElement('button');
-    btnClear.className = 'btn btn-clear';
-    btnClear.dataset.id = request['REQ-ID'] || '';
-    btnClear.textContent = 'Clear';
+            closeModalBtn.addEventListener('click', closeSupplierModal);
+            closeEmailModalBtn.addEventListener('click', closeEmailModal);
 
-    btnRow.append(btnDealer, btnSupplier, btnClear);
+            // Close the modals when clicking outside their content
+            supplierModal.addEventListener('click', (e) => {
+                if (e.target === supplierModal) {
+                    closeSupplierModal();
+                }
+            });
 
-    card.append(
-      pReq,
-      h2,
-      pProduct,
-      pQty,
-      pCrm,
-      pIssue,
-      remarkBox,
-      btnRow
-    );
-    requestsContainer.appendChild(card);
-  };
+            emailModal.addEventListener('click', (e) => {
+                if (e.target === emailModal) {
+                    closeEmailModal();
+                }
+            });
 
-  // ----------------- Load Requests -----------------
-  const loadRequests = async () => {
-    requestsContainer.innerHTML = '';
-    const data = await getClaimRequests();
-    data.forEach((req) => createClaimCard(req));
-  };
 
-  // ----------------- Dealer Claim: Show CN No. -----------------
-  requestsContainer.addEventListener('click', (e) => {
-    const btn = e.target.closest('.btn-dealer');
-    if (!btn) return;
-    const reqId = btn.dataset.id;
-    const card = btn.closest('.card');
+            // Handle "Supplier Claim Done" button click on the card
+                requestsContainer.addEventListener('click', async (e) => {
+                    const btn = e.target.closest('.supplier-claim-btn');
+                    if (!btn) return;
+                
+                    const reqId = btn.getAttribute('data-id');
+                    if (!reqId) return;
+                
+                    currentReqId = reqId;
+                    
+                    // Show modal
+                    supplierModal.classList.remove('hidden');
+                    setTimeout(() => {
+                        modalContent.classList.remove('scale-95', 'opacity-0');
+                        modalContent.classList.add('scale-100', 'opacity-100');
+                    }, 10);
 
-    if (card.querySelector('.cn-input-form')) return;
+                    // Fetch data and initialize Tom Select
+                    const suppliers = await getSupplierData();
+                    
+                    if (tomSelectInstance) {
+                        tomSelectInstance.destroy();
+                    }
+                    
+                    tomSelectInstance = new TomSelect('#supplier-select', {
+                      create: true,
+                      sortField: { field: "text", direction: "asc" },
+                      options: suppliers.map(s => ({ value: s.name, text: s.name, email: s.email })),
+                      plugins: ['dropdown_input'],
+                      dropdownParent: document.body   // safer
+                    });
+                });
 
-    const btnRow = card.querySelector('.flex.mt-4');
-    if (btnRow) btnRow.style.display = 'none';
+            // Handle the "Done" button click inside the supplier modal
+                document.getElementById('done-btn').addEventListener('click', async () => {
+                    const selectedValue = tomSelectInstance.getValue();
+                    const selectedOption = tomSelectInstance.options[selectedValue];
+                
+                    currentSupplierName = selectedValue;
+                    let supplierEmail = selectedOption ? selectedOption.email : null;
+                
+                    if (!supplierEmail) {
+                        // 👉 This is a new custom supplier OR one without email
+                        closeSupplierModal();
+                        // Show email input modal
+                        emailModal.classList.remove('hidden');
+                        setTimeout(() => {
+                            emailModalContent.classList.remove('scale-95', 'opacity-0');
+                            emailModalContent.classList.add('scale-100', 'opacity-100');
+                        }, 10);
+                    } else {
+                        // Existing supplier with an email → send request directly
+                        await sendPostRequest(currentReqId, currentSupplierName, supplierEmail);
+                        closeSupplierModal();
+                    }
+                });
 
-    const inputId = `cn-input-${reqId}`;
-    const formHtml = `
-      <div class="cn-input-form mt-4">
-        <label for="${inputId}" class="block text-xs font-semibold text-gray-700 mb-1">Enter CN No.:</label>
-        <div class="flex items-center space-x-2">
-          <input type="text" id="${inputId}" class="flex-grow px-2 py-1 border border-gray-300 rounded-md text-xs focus:outline-none focus:ring-1 focus:ring-blue-500" placeholder="e.g., CN12345" required>
-          <button class="btn bg-blue-600 hover:bg-blue-700 text-white text-xs px-3 py-1.5 rounded-md" 
-                  data-req-id="${reqId}" data-submit-cn-btn="true">
-            <i class="fas fa-paper-plane mr-1"></i> Submit
-          </button>
-        </div>
-      </div>
-    `;
 
-    const remarkBox = card.querySelector('.remark-box');
-    remarkBox.insertAdjacentHTML('afterend', formHtml);
-  });
+                submitEmailBtn.addEventListener('click', async () => {
+                    const supplierEmail = emailInput.value.trim();
+                
+                    if (!supplierEmail) {
+                        showMessageBox('Validation Error', 'Please enter a valid email address.');
+                        return;
+                    }
+                
+                    const emailPattern = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
+                    if (!emailPattern.test(supplierEmail)) {
+                        showMessageBox('Validation Error', 'Please enter a valid email address.');
+                        return;
+                    }
+                
+                    // 👉 Use currentSupplierName (custom supplier) + provided email
+                    await sendPostRequest(currentReqId, currentSupplierName, supplierEmail);
+                    closeEmailModal();
+                });
 
-  // ----------------- Dealer Claim Submit -----------------
-  requestsContainer.addEventListener('click', async (e) => {
-    const submitBtn = e.target.closest('[data-submit-cn-btn="true"]');
-    if (!submitBtn) return;
-    e.preventDefault();
 
-    const reqId = submitBtn.dataset.reqId;
-    const cnInput = document.getElementById(`cn-input-${reqId}`);
-    const cnNo = cnInput.value.trim();
-    if (!cnNo) {
-      showMessageBox('Validation Error', 'Please enter a Credit Note number.');
-      return;
-    }
+            // Function to send the POST request
+                    const sendPostRequest = async (reqId, supplierName, supplierEmail) => {
+                        showLoader('Sending data to server...');
+                    
+                        // Find the card by reqId
+                        const card = document.querySelector(`.card[data-req-id="${reqId}"]`);
+                        const product = card?.getAttribute("data-product") || "";
+                        const qty = card?.getAttribute("data-qty") || "";
+                        const issue = card?.getAttribute("data-issue") || "";
+                    
+                        const postUrl = 'https://script.google.com/macros/s/AKfycbxKHLxhcxparrfNpCcC8jExol17fJjmL-uuMxia_uld7t8AcsMrDUxZkIrRT-GT9d1AJw/exec'; 
+                        const payload = {
+                            reqId: reqId,
+                            supplierName: supplierName,
+                            supplierEmail: supplierEmail,
+                            product: product,
+                            qty: qty,
+                            issue: issue
+                        };
+                    
+                        try {
+                            const response = await fetch(postUrl, {
+                                method: 'POST',
+                                mode: 'no-cors',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify(payload)
+                            });
+                    
+                            showMessageBox('Success!', `Submitted to server for REQ-ID ${reqId}.`);
+                            await loadRequests();
+                        } catch (error) {
+                            console.error('Error sending POST request:', error);
+                            showMessageBox('Error', 'Could not submit to server.');
+                        } finally {
+                            hideLoader();
+                        }
+                    };
 
-    await sendDealerClaimRequest(reqId, cnNo);
+// ---------------------- NEW CODE FOR DEALER CLAIM START ----------------------
 
-    const card = submitBtn.closest('.card');
-    card.querySelector('.cn-input-form').remove();
-    const btnRow = card.querySelector('.flex.mt-4');
-    if (btnRow) btnRow.style.display = 'flex';
-  });
+            // Handle "Dealer Claim" button click on the card
+            requestsContainer.addEventListener('click', async (e) => {
+                const btn = e.target.closest('.btn-dealer');
+                if (!btn) return;
 
-  // ----------------- Send Dealer Claim -----------------
-  const sendDealerClaimRequest = async (reqId, cnNo) => {
-    showLoader('Submitting CN No. for dealer claim...');
-    const postUrl =
-      'https://script.google.com/macros/s/AKfycbxKHLxhcxparrfNpCcC8jExol17fJjmL-uuMxia_uld7t8AcsMrDUxZkIrRT-GT9d1AJw/exec';
-    const payload = { reqId, cnNo, action: 'dealerClaim' };
+                const reqId = btn.getAttribute('data-id');
+                const card = btn.closest('.card');
+                
+                // Check if a form already exists to prevent duplicates
+                if (card.querySelector('.cn-input-form')) {
+                    return;
+                }
 
-    try {
-      await fetch(postUrl, {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-      showMessageBox(
-        'Success!',
-        `CN No. ${cnNo} submitted for REQ-ID ${reqId}.`
-      );
-      await loadRequests();
-    } catch (err) {
-      console.error('Error submitting dealer claim:', err);
-      showMessageBox('Error', 'Could not submit dealer claim.');
-    } finally {
-      hideLoader();
-    }
-  };
+                // Hide the original buttons
+                const btnRow = card.querySelector('.flex.mt-4');
+                btnRow.style.display = 'none';
 
-  // ----------------- Supplier Claim -----------------
-  requestsContainer.addEventListener('click', async (e) => {
-    const btn = e.target.closest('.supplier-claim-btn');
-    if (!btn) return;
-    const reqId = btn.dataset.id;
-    const supplierData = await getSupplierData(reqId);
-    showMessageBox(
-      'Supplier Data',
-      `Supplier for REQ-ID ${reqId}: ${
-        supplierData['Supplier Name'] || 'N/A'
-      }`
-    );
-  });
+                // Create the input form
+                const formHtml = `
+                    <div class="cn-input-form mt-4">
+                        <label for="cn-input-${reqId}" class="block text-xs font-semibold text-gray-700 mb-1">Enter CN No.:</label>
+                        <div class="flex items-center space-x-2">
+                            <input type="text" id="cn-input-${reqId}" class="flex-grow px-2 py-1 border border-gray-300 rounded-md text-xs focus:outline-none focus:ring-1 focus:ring-blue-500" placeholder="e.g., CN12345" required>
+                            <button class="btn bg-blue-600 hover:bg-blue-700 text-white text-xs px-3 py-1.5 rounded-md" data-req-id="${reqId}" id="submit-cn-btn">
+                                <i class="fas fa-paper-plane mr-1"></i> Submit
+                            </button>
+                        </div>
+                    </div>
+                `;
 
-  // ----------------- Clear Button -----------------
-  requestsContainer.addEventListener('click', (e) => {
-    if (e.target.closest('.btn-clear')) {
-      e.target.closest('.card').remove();
-    }
-  });
+                // Append the form to the card
+                const remarkBox = card.querySelector('.remark-box');
+                remarkBox.insertAdjacentHTML('afterend', formHtml);
 
-  // ----------------- Init -----------------
-  loadRequests();
-});
-</script>
+                // Event listener for the new submit button
+                // Use a delegated event listener on the requestsContainer to handle dynamically created buttons
+                requestsContainer.querySelector(`#submit-cn-btn[data-req-id="${reqId}"]`).addEventListener('click', async (submitEvent) => {
+                    submitEvent.preventDefault();
+                    const cnInput = document.getElementById(`cn-input-${reqId}`);
+                    const cnNo = cnInput.value.trim();
 
+                    if (cnNo === '') {
+                        showMessageBox('Validation Error', 'Please enter a Credit Note number.');
+                        return;
+                    }
+
+                    await sendDealerClaimRequest(reqId, cnNo);
+
+                    // Clean up the card UI after submission
+                    card.querySelector('.cn-input-form').remove();
+                    btnRow.style.display = 'flex';
+                });
+            });
+
+            // Function to send the POST request for dealer claims
+            const sendDealerClaimRequest = async (reqId, cnNo) => {
+                showLoader('Submitting CN No. for dealer claim...');
+                const postUrl = 'https://script.google.com/macros/s/AKfycbxKHLxhcxparrfNpCcC8jExol17fJjmL-uuMxia_uld7t8AcsMrDUxZkIrRT-GT9d1AJw/exec';
+                const payload = {
+                    reqId: reqId,
+                    cnNo: cnNo,
+                    action: 'dealerClaim'
+                };
+
+                try {
+                    const response = await fetch(postUrl, {
+                        method: 'POST',
+                        mode: 'no-cors',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    showMessageBox('Success!', `CN No. ${cnNo} submitted for REQ-ID ${reqId}.`);
+                    await loadRequests(); // Reload the list to reflect the change
+                } catch (error) {
+                    console.error('Error sending dealer claim POST request:', error);
+                    showMessageBox('Error', 'Could not submit dealer claim to server.');
+                } finally {
+                    hideLoader();
+                }
+            };
+
+// ---------------------- NEW CODE FOR DEALER CLAIM END ----------------------
+
+        });
+    </script>
 </body>
 </html>
