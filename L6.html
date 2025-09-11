@@ -739,6 +739,9 @@
                         ordersData.forEach((order, index) => {
                             const orderCard = createOrderCard(order, index);
                             container.appendChild(orderCard);
+                        if (typeof setReadOnlyMode === "function") {
+                          setReadOnlyMode();
+                        }
                         });
                         
                         // Removed call to updateStats
