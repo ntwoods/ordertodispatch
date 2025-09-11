@@ -220,6 +220,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
             displayCards(originalData);
             cardContainer.classList.remove('hidden');
+            if (typeof setReadOnlyMode === "function") {
+              setReadOnlyMode();
+            }            
         } catch (err) {
             console.error('fetchData error:', err);
             errorMessage.classList.remove('hidden');
