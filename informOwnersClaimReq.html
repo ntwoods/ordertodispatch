@@ -203,7 +203,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             const url = buildScriptUrl(crmName);
-            const response = await fetch(url, { method: 'GET', mode: 'no-cors' });
+            const response = await fetch(url, { method: 'GET' });
 
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
