@@ -217,13 +217,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Countdown updater
     const startCountdown = (el, deadline, card) => {
+        let timer;
         const update = () => {
             const now = new Date();
             const diff = deadline - now;
             if (diff <= 0) {
                 el.textContent = "Overdue";
                 card.classList.add("overdue");
-                clearInterval(timer);
+                clearInterval(timer); // now timer is already defined
                 return;
             }
             const hrs = Math.floor(diff / 1000 / 60 / 60);
@@ -231,8 +232,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const secs = Math.floor((diff / 1000) % 60);
             el.textContent = `${hrs}h ${mins}m ${secs}s left`;
         };
-        update();
-        const timer = setInterval(update, 1000);
+        timer = setInterval(update, 1000);
+        update(); // call once immediately after timer exists
     };
 
     const displayCards = (data) => {
