@@ -231,31 +231,37 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // --- Network: send data (POST) ---
-    // NOTE: This uses JSON and expects the server to accept CORS & JSON.
-    const sendData = async (payload) => {
-        try {
-            postLoading.classList.remove('hidden');
+// --- Network: send data (POST) ---
+// Switch to FormData so Apps Script gets fields in e.parameter.
+const sendData = async (payload) => {
+  try {
+    postLoading.classList.remove('hidden');
 
-            const response = await fetch(SCRIPT_URL, {
-                method: 'POST',
-                mode: 'no-cors', // requires server CORS
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(payload)
-            });
-            alert(`Claim ${payload.action} successfully!`);
-            // optional: refresh list
-            // fetchData(getCrmFromUI()?getCrmFromUI():null);
-        } catch (error) {
-            console.error('sendData error:', error);
-            alert('Error processing request. Please try again.');
-        } finally {
-            postLoading.classList.add('hidden');
-        }
-    };
+    const fd = new FormData();
+    fd.append('reqId', payload.reqId);
+    fd.append('action', payload.action);
+    if (payload.ownerRemark) fd.append('ownerRemark', payload.ownerRemark);
+    if (payload.action === 'verify' && payload.marketingPerson) {
+      fd.append('marketingPerson', payload.marketingPerson);
+    }
 
+    // Keep no-cors to avoid CORS headaches; you can't read the response, but the server will receive it.
+    await fetch(SCRIPT_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      body: fd
+    });
+
+    alert(`Claim ${payload.action} submitted.`);
+    // Optional: trigger a refresh if your GET endpoint is ready:
+    // fetchData(getCrmFromUI()? getCrmFromUI() : null);
+  } catch (error) {
+    console.error('sendData error:', error);
+    alert('Error processing request. Please try again.');
+  } finally {
+    postLoading.classList.add('hidden');
+  }
+};
     // --- Filtering ---
     const filterCards = () => {
         const selectedStatuses = Array.from(filterCheckboxes)
