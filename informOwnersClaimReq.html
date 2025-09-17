@@ -245,15 +245,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 },
                 body: JSON.stringify(payload)
             });
-
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}`);
-            }
-
-            // read and act on server response
-            const resJson = await response.json();
-            if (resJson && resJson.error) throw new Error(resJson.error);
-
             alert(`Claim ${payload.action} successfully!`);
             // optional: refresh list
             // fetchData(getCrmFromUI()?getCrmFromUI():null);
