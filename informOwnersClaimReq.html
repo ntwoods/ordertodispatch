@@ -252,10 +252,30 @@ document.addEventListener('DOMContentLoaded', () => {
             const ownersInformedAt = item['Owners Informed at'];
             let formattedDate = 'Unknown';
             let requestDateObj = null;
-            try { 
-                requestDateObj = new Date(item['Request Date']);
-                formattedDate = isNaN(requestDateObj) ? 'Unknown' : requestDateObj.toLocaleString('en-GB');
-            } catch (e) {}
+            try {
+                const rawDate = item['Request Date'];
+                if (rawDate) {
+                    // Manual parsing for "M/D/YYYY, hh:mm:ss AM/PM"
+                    const parts = rawDate.split(', ');
+                    if (parts.length === 2) {
+                        const [datePart, timePart] = parts;
+                        const [month, day, year] = datePart.split('/').map(n => parseInt(n));
+                        let [time, meridian] = timePart.split(' ');
+                        let [hours, minutes, seconds] = time.split(':').map(n => parseInt(n));
+                        if (meridian.toLowerCase() === 'pm' && hours < 12) hours += 12;
+                        if (meridian.toLowerCase() === 'am' && hours === 12) hours = 0;
+                        requestDateObj = new Date(year, month - 1, day, hours, minutes, seconds);
+                    } else {
+                        requestDateObj = new Date(rawDate); // fallback
+                    }
+                }
+                formattedDate = requestDateObj && !isNaN(requestDateObj)
+                    ? requestDateObj.toLocaleString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' })
+                    : 'Unknown';
+            } catch (e) {
+                requestDateObj = null;
+                formattedDate = 'Unknown';
+            }
             const card = document.createElement('div');
             card.className = 'p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 border border-slate-200 flex flex-col justify-between relative';
             let colorClass = 'bg-white';
