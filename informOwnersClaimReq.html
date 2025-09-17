@@ -295,6 +295,7 @@ const sendData = async (payload) => {
             // sanitize values
             const product = escapeHtml(item['Product']);
             const dealerName = escapeHtml(item['Dealer Name']);
+            const crmName = escapeHtml(item['CRM Name']);            
             const qty = escapeHtml(item['Qty']);
             const issue = escapeHtml(item['Issue']);
             const reqId = escapeHtml(item['REQ-ID']);
