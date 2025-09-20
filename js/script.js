@@ -8,32 +8,19 @@ let currentStockIndex = null;
 
 // Initialize the app
 document.addEventListener('DOMContentLoaded', function() {
-    if (!document.getElementById('successNotification')) {
-        return;
-    }
-
     updateCurrentTime();
     setInterval(updateCurrentTime, 1000);
     fetchOrders();
 });
 
 function updateCurrentTime() {
-    const display = document.getElementById('currentTime');
-    if (!display) {
-        return;
-    }
-
     const now = new Date();
-    display.textContent = now.toLocaleString();
+    document.getElementById('currentTime').textContent = now.toLocaleString();
 }
 
 function showSuccessNotification(message) {
     const notification = document.getElementById('successNotification');
     const messageElement = document.getElementById('successMessage');
-
-    if (!notification || !messageElement) {
-        return;
-    }
     
     messageElement.textContent = message;
     notification.classList.remove('hide');

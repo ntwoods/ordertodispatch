@@ -9,10 +9,258 @@
   <link href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+    
+    * {
+      font-family: 'Inter', sans-serif;
+    }
+    
+    body {
+      background-color: #e3f2fd; /* Very light blue background */
+      min-height: 100vh;
+      position: relative;
+      overflow-x: hidden;
+    }
+    
+    /* Removed animated-bg as per new theme; static blue background on body is sufficient */
+    
+    .glassmorphism {
+      background: rgba(255, 255, 255, 0.8); /* White with some transparency */
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(144, 202, 249, 0.5); /* Lighter blue border */
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1); /* Softer shadow */
+    }
+    
+    .card-hover {
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .card-hover:hover {
+      transform: translateY(-5px) scale(1.01);
+      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+    }
+    
+    .neon-text {
+      text-shadow: none; /* Removed neon effect */
+      color: #1565c0; /* Darker blue for emphasis */
+    }
+    
+    .pulse-ring {
+      position: absolute;
+      border: 3px solid #64b5f6; /* Medium blue */
+      border-radius: 50%;
+      animation: pulsate 2s ease-out infinite;
+      opacity: 0;
+    }
+    
+    @keyframes pulsate {
+      0% {
+        transform: scale(0.1);
+        opacity: 1;
+      }
+      100% {
+        transform: scale(1.2);
+        opacity: 0;
+      }
+    }
+    
+    .floating {
+      animation: floating 3s ease-in-out infinite;
+    }
+    
+    @keyframes floating {
+      0% { transform: translateY(0px); }
+      50% { transform: translateY(-5px); } /* Reduced floating effect */
+      100% { transform: translateY(0px); }
+    }
+    
+    .gradient-text {
+      background: linear-gradient(45deg, #1976d2, #2196f3, #64b5f6); /* Shades of blue gradient */
+      background-size: 200% 200%;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: gradientShift 3s ease infinite;
+    }
+    
+    .status-badge {
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .status-badge::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+      transition: left 0.5s;
+    }
+    
+    .status-badge:hover::before {
+      left: 100%;
+    }
+    
+    .button-3d {
+      background: linear-gradient(45deg, #1976d2, #1565c0); /* Blue gradient for buttons */
+      border: none;
+      border-radius: 8px;
+      color: white;
+      cursor: pointer;
+      font-weight: 600;
+      padding: 10px 20px;
+      position: relative;
+      text-decoration: none;
+      transition: all 0.3s;
+      box-shadow: 0 4px 15px rgba(25, 118, 210, 0.4);
+    }
+    
+    .button-3d:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 25px rgba(25, 118, 210, 0.6);
+    }
+    
+    .button-3d:active {
+      transform: translateY(0);
+      box-shadow: 0 2px 10px rgba(25, 118, 210, 0.3);
+    }
+    
+    .countdown-glow {
+      text-shadow: none; /* Removed glow effect */
+      color: #0d47a1; /* Dark blue for countdown */
+    }
+    
+    .spinner {
+      width: 50px;
+      height: 50px;
+      border: 5px solid rgba(255, 255, 255, 0.3);
+      border-top: 5px solid #42a5f5; /* Light blue spinner */
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    .particle {
+      position: absolute;
+      width: 3px;
+      height: 3px;
+      background: rgba(144, 202, 249, 0.8); /* Light blue particles */
+      border-radius: 50%;
+      pointer-events: none;
+      animation: float 6s infinite ease-in-out;
+    }
+    
+    @keyframes float {
+      0%, 100% { transform: translateY(0) rotate(0deg); opacity: 1; }
+      50% { transform: translateY(-50px) rotate(180deg); opacity: 0.3; } /* Reduced float distance */
+    }
+    
+    .morphing-card {
+      border-radius: 12px;
+      transition: border-radius 0.3s ease;
+    }
+    
+    .morphing-card:hover {
+      border-radius: 20px;
+    }
 
-  <link rel="stylesheet" href="css/style.css">
+    /* Additional styles for text colors */
+    .text-white {
+      color: #212121; /* Dark gray for general text on light background */
+    }
+
+    .text-white span { /* Specific adjustments for spans within text-white */
+        color: #424242; /* Medium gray */
+    }
+
+    .glassmorphism.rounded-full {
+      background: white; /* White background for status badges */
+      color: #1976d2; /* Blue text for status badges */
+      border: 1px solid #90caf9;
+    }
+
+    .glassmorphism.rounded-3xl {
+        background: white;
+        border: 1px solid #bbdefb;
+    }
+    
+    .glassmorphism.rounded-2xl {
+        background: white;
+        border: 1px solid #bbdefb;
+    }
+
+    /* Card specific text colors */
+    .morphing-card h3 {
+        color: #1976d2; /* Blue for dealer name */
+    }
+
+    .morphing-card p {
+        color: #424242; /* Dark gray for general card text */
+    }
+
+    .morphing-card .bg-white.bg-opacity-20 {
+        background-color: rgba(144, 202, 249, 0.3); /* Light blue for detail spans */
+        color: #1976d2; /* Darker blue for text in detail spans */
+    }
+
+    .morphing-card .bg-black.bg-opacity-30 {
+        background-color: #bbdefb; /* Light blue for countdown section */
+        border: 1px solid #90caf9;
+    }
+
+    .morphing-card .bg-black.bg-opacity-30 p {
+        color: #424242; /* Dark gray for countdown label */
+    }
+
+    .countdown-glow span.text-red-400 {
+        color: #d32f2f; /* Red for urgent countdown */
+    }
+    .countdown-glow span.text-yellow-400 {
+        color: #f57c00; /* Orange for warning countdown */
+    }
+    .countdown-glow span.text-green-400 {
+        color: #2e7d32; /* Green for normal countdown */
+    }
+
+    .morphing-card input[type="date"],
+    .morphing-card input[type="text"] { /* Added text input for remark */
+      background-color: #e3f2fd; /* Very light blue for input */
+      border: 1px solid #90caf9; /* Lighter blue border */
+      color: #212121; /* Dark gray text */
+    }
+    .morphing-card input[type="date"]::placeholder,
+    .morphing-card input[type="text"]::placeholder { /* Added text input for remark */
+      color: #64b5f6; /* Lighter blue placeholder */
+    }
+
+    /* Success modal and error alerts */
+    .glassmorphism.rounded-3xl .text-white {
+        color: #212121; /* Dark gray for modal text */
+    }
+    .glassmorphism.rounded-3xl h3 {
+        color: #1976d2; /* Blue for modal heading */
+    }
+
+    .bg-gradient-to-r.from-red-500.to-red-600 {
+        background: linear-gradient(45deg, #ef5350, #c62828); /* Red for error alerts */
+    }
+    .bg-gradient-to-r.from-yellow-500.to-yellow-600 {
+        background: linear-gradient(45deg, #ffb300, #fb8c00); /* Orange for warning alerts */
+    }
+
+    /* Cursor effect */
+    .fixed.w-2.h-2.bg-white.bg-opacity-50 {
+        background-color: rgba(144, 202, 249, 0.7); /* Light blue cursor particles */
+    }
+  </style>
 </head>
-<body class="page-l3">
+<body>
   <div id="particles" class="absolute inset-0 pointer-events-none z-0"></div>
 
   <div class="relative z-10 pt-8 pb-6">
@@ -53,8 +301,377 @@
       <button onclick="closeModal()" class="button-3d">Awesome!</button>
     </div>
   </div>
-    <script src="js/script.js"></script>
-    <script src="js/L3.js"></script>
-    <script src="js/viewOnly.js"></script>
+
+<script>
+  const API_URL = "https://script.google.com/macros/s/AKfycbxkduAfhEpEtxKXA_HuIm-lZQj62ZPZwXeZ_Fol-v6VrzfhoXY2lffR64pjPahKV2o/exec";
+  const POST_URL = API_URL;
+
+  let globalOrders = [];
+
+  // Initialize AOS
+  AOS.init({
+    duration: 1000,
+    once: false,
+    offset: 100
+  });
+
+  // Create floating particles
+  function createParticles() {
+    const container = document.getElementById('particles');
+    // Check if container exists before trying to append
+    if (!container) {
+        console.error("Particles container not found. Make sure an element with id='particles' exists.");
+        return;
+    }
+    for (let i = 0; i < 20; i++) {
+      const particle = document.createElement('div');
+      particle.className = 'particle';
+      particle.style.left = Math.random() * 100 + '%';
+      particle.style.animationDelay = Math.random() * 6 + 's';
+      particle.style.animationDuration = (Math.random() * 3 + 3) + 's';
+      container.appendChild(particle);
+    }
+  }
+
+  async function fetchOrders() {
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      const crmName = urlParams.get('crm');
+      if (!crmName) {
+        throw new Error('CRM name is missing in URL');
+      }
+      
+      const response = await fetch(`${API_URL}?crm=${encodeURIComponent(crmName)}`);
+      const result = await response.json();
+      
+      if (result.status === "success") {
+        // Animate loader out
+        anime({
+          targets: '#loader',
+          opacity: 0,
+          scale: 0.8,
+          duration: 500,
+          easing: 'easeInOutQuad',
+          complete: () => {
+            document.getElementById("loader").classList.add("hidden");
+            document.getElementById("ordersContainer").classList.remove("hidden");
+            globalOrders = result.data;
+            renderOrders(globalOrders);
+            if (typeof setReadOnlyMode === "function") {
+              setReadOnlyMode();
+            }
+
+          }
+        });
+      } else {
+        throw new Error("Invalid response");
+      }
+    } catch (error) {
+      document.getElementById("loader").innerHTML = `
+        <div class="glassmorphism rounded-2xl p-8 text-center">
+          <div class="text-6xl mb-4">❌</div>
+          <p class='text-red-300 text-xl font-semibold'>Failed to load orders</p>
+          <button onclick="fetchOrders()" class="button-3d mt-4">Retry</button>
+        </div>
+      `;
+      console.error("Fetch error:", error);
+    }
+  }
+
+  function renderOrders(orders) {
+    const container = document.getElementById("ordersContainer");
+    container.innerHTML = "";
+
+    if (!orders || orders.length === 0) {
+      container.innerHTML = `
+        <div class="col-span-full" data-aos="fade-up">
+          <div class="glassmorphism morphing-card p-12 text-center">
+            <div class="text-8xl mb-6 floating">📋</div>
+            <h2 class="text-4xl font-bold mb-4 gradient-text">No Pending Orders</h2>
+            <p class="text-xl opacity-80">All orders processed! Take a well-deserved break ☕</p>
+            <div class="mt-8">
+              <button onclick="fetchOrders()" class="button-3d">
+                🔄 Refresh Dashboard
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+      return;
+    }
+
+    orders.forEach((order, index) => {
+      const deadline = new Date(order.timestamp);
+      deadline.setHours(18, 0, 0, 0);
+      const isOverdue = new Date() > deadline;
+
+      const card = document.createElement("div");
+      card.className = "glassmorphism morphing-card card-hover p-6 relative overflow-hidden";
+      card.setAttribute('data-aos', 'fade-up');
+      card.setAttribute('data-aos-delay', (index * 100).toString());
+
+      const statusColor = isOverdue ? 'from-red-500 to-red-600' : 'from-green-400 to-green-500';
+      const statusIcon = isOverdue ? '🔥' : '✅';
+      const statusText = isOverdue ? 'OVERDUE' : 'ACTIVE';
+
+      card.innerHTML = `
+        
+        <div class="mb-6">
+          <h3 class="flex items-center space-x-2">
+            🏢 ${order.dealerName}
+          </h3>
+          <div class="space-y-2">
+            <p class="flex items-center space-x-2">
+              <span class="font-semibold">👤 Marketing:</span>
+              <span class="bg-white bg-opacity-20 px-2 py-1 rounded-lg">${order.marketingPersonName}</span>
+            </p>
+            <p class="flex items-center space-x-2">
+              <span class="font-semibold">📍 Location:</span>
+              <span class="bg-white bg-opacity-20 px-2 py-1 rounded-lg">${order.location}</span>
+            </p>
+            <p class="flex items-center space-x-2">
+              <span class="font-semibold">💼 CRM:</span>
+              <span class="bg-white bg-opacity-20 px-2 py-1 rounded-lg">${order.crmName}</span>
+            </p>
+            <p class="flex items-center space-x-2">
+              <span class="font-semibold">🧔🏻‍♂️ Con. Owner:</span>
+              <span class="bg-white bg-opacity-20 px-2 py-1 rounded-lg">${order.concernedOwner}</span>
+            </p>
+            <p class="flex items-center space-x-2">
+              <span class="font-semibold">⏰ Deadline:</span>
+              <span class="bg-white bg-opacity-20 px-2 py-1 rounded-lg text-sm">${deadline.toLocaleString()}</span>
+            </p>
+            <button onclick="openMultipleDocuments('${order.fileUploadLink ? order.fileUploadLink.replace(/'/g, "\\'") : ''}', ${index})" class="button-3d">Raw Order</button>            
+            <button onclick="openMultipleDocuments('${order.finalOrderFile ? order.finalOrderFile.replace(/'/g, "\\'") : ''}', ${index})" class="button-3d">Final Order</button>                        
+          </div>
+        </div>
+        
+        <div class="bg-black bg-opacity-30 rounded-xl p-4 mb-4">
+          <p class="font-semibold mb-2">⏱️ Time Remaining:</p>
+          <div id="countdown-${index}" class="text-3xl font-mono font-bold countdown-glow text-center"></div>
+        </div>
+        <div class="editable">        
+        <div class="mb-4">
+          <label class="block font-semibold mb-2">📅 Tentative Dispatch Date:</label>
+          <input type="date" id="dispatch-${index}" 
+            class="w-full bg-white bg-opacity-20 border border-white border-opacity-30 rounded-xl px-4 py-3 placeholder-white placeholder-opacity-70 focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50 transition-all" />
+        </div>
+        
+        <div class="mb-4">
+          <label class="block font-semibold mb-2">📝 Remark:</label>
+          <input type="text" id="remark-${index}" 
+            class="w-full bg-white bg-opacity-20 border border-white border-opacity-30 rounded-xl px-4 py-3 placeholder-white placeholder-opacity-70 focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50 transition-all" 
+            placeholder="Enter remark here" />
+        </div>
+
+        <button onclick="submitOrder(${index})" id="submit-btn-${index}"
+          class="w-full button-3d text-lg font-semibold relative overflow-hidden">
+          <span class="relative z-10">🚀 Set Dispatch Date</span>
+        </button>
+        </div>
+      `;
+
+      container.appendChild(card);
+      startCountdown(deadline, index, isOverdue);
+    });
+
+    // Animate cards in
+    anime({
+      targets: '.card-hover',
+      scale: [0.8, 1],
+      opacity: [0, 1],
+      delay: anime.stagger(100),
+      duration: 800,
+      easing: 'easeOutElastic(1, .8)'
+    });
+  }
+
+  function startCountdown(deadline, index, isOverdue) {
+    const countdownEl = document.getElementById(`countdown-${index}`);
+    
+    function updateCountdown() {
+      const now = new Date();
+      const diff = deadline - now;
+
+      if (diff <= 0) {
+        countdownEl.innerHTML = `
+          <span class="text-red-400 animate-pulse">
+            ⚠️ EXPIRED ⚠️
+          </span>
+        `;
+        return;
+      }
+
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+      const timeString = days > 0 
+        ? `${days}d ${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
+        : `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+
+      const color = diff < 3600000 ? 'text-red-400' : diff < 7200000 ? 'text-yellow-400' : 'text-green-400';
+      
+      countdownEl.innerHTML = `<span class="${color}">${timeString}</span>`;
+    }
+
+    updateCountdown();
+    setInterval(updateCountdown, 1000);
+  }
+
+  async function submitOrder(index) {
+    const dispatchDate = document.getElementById(`dispatch-${index}`).value;
+    const remark = document.getElementById(`remark-${index}`).value; // Get the remark value
+    const button = document.getElementById(`submit-btn-${index}`);
+    
+    if (!dispatchDate) {
+      // Animate error
+      anime({
+        targets: `#dispatch-${index}`,
+        scale: [1, 1.05, 1],
+        duration: 300,
+        easing: 'easeInOutQuad'
+      });
+      
+      // Show custom alert
+      showAlert("Please select a tentative dispatch date! 📅", "warning");
+      return;
+    }
+
+    const order = globalOrders[index];
+    const originalHTML = button.innerHTML;
+    
+    // Animate button
+    button.innerHTML = `
+      <div class="flex items-center justify-center space-x-2">
+        <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+        <span>Launching...</span>
+      </div>
+    `;
+    button.disabled = true;
+
+    const payload = {
+      timestamp: order.timestamp,
+      dispatchDate: dispatchDate,
+      remark: remark // Add remark to the payload
+    };
+
+    try {
+      const response = await fetch(POST_URL, {
+        method: "POST",
+        mode: "no-cors",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+      });
+
+      setTimeout(() => {
+        showSuccessModal();
+        button.innerHTML = `
+          <span class="flex items-center justify-center space-x-2">
+            <span>🎉</span>
+            <span>Launched Successfully!</span>
+          </span>
+        `;
+        button.style.background = "linear-gradient(45deg, #10B981, #059669)";
+        
+        // Animate card out
+        anime({
+          targets: button.closest('.card-hover'),
+          scale: 0.9,
+          opacity: 0.7,
+          duration: 500
+        });
+        
+        setTimeout(() => fetchOrders(), 2000);
+      }, 1500);
+
+    } catch (err) {
+      console.error('Submit error:', err);
+      button.innerHTML = originalHTML;
+      button.disabled = false;
+      showAlert("Launch failed! Please try again 🚀", "error");
+    }
+  }
+
+  function showAlert(message, type) {
+    const alertDiv = document.createElement('div');
+    const bgColor = type === 'error' ? 'from-red-500 to-red-600' : 'from-yellow-500 to-yellow-600';
+    
+    alertDiv.className = `fixed top-6 right-6 bg-gradient-to-r ${bgColor} text-white px-6 py-4 rounded-xl shadow-2xl z-50 animate__animated animate__bounceInRight`;
+    alertDiv.innerHTML = `
+      <div class="flex items-center space-x-3">
+        <span class="text-2xl">${type === 'error' ? '❌' : '⚠️'}</span>
+        <span class="font-semibold">${message}</span>
+      </div>
+    `;
+    
+    document.body.appendChild(alertDiv);
+    
+    setTimeout(() => {
+      alertDiv.classList.remove('animate__bounceInRight');
+      alertDiv.classList.add('animate__bounceOutRight');
+      setTimeout(() => alertDiv.remove(), 500);
+    }, 3000);
+  }
+
+  function showSuccessModal() {
+    document.getElementById('successModal').classList.remove('hidden');
+  }
+
+  function closeModal() {
+    document.getElementById('successModal').classList.add('hidden');
+  }
+
+    function openMultipleDocuments(urlString, index) {
+        // Split the URLs by comma and trim whitespace
+        const urls = urlString.split(',').map(url => url.trim()).filter(url => url.length > 0);
+        
+        if (urls.length === 0) {
+            alert('No valid URLs found');
+            return;
+        }
+        
+        // Show a confirmation if there are multiple URLs
+        if (urls.length > 1) {
+            const confirmed = confirm(`This will open ${urls.length} documents in separate tabs. Continue?`);
+            if (!confirmed) {
+                return;
+            }
+        }
+        
+        // Open each URL in a new tab with a small delay to prevent popup blocker
+        urls.forEach((url, urlIndex) => {
+            setTimeout(() => {
+                window.open(url, '_blank');
+            }, urlIndex * 100); // 100ms delay between each tab opening
+        });
+    }  
+
+  // Initialize everything
+  createParticles();
+  fetchOrders();
+
+  // Add some interactive cursor effects
+  document.addEventListener('mousemove', (e) => {
+    const cursor = document.createElement('div');
+    cursor.className = 'fixed w-2 h-2 bg-white bg-opacity-50 rounded-full pointer-events-none z-50';
+    cursor.style.left = e.clientX + 'px';
+    cursor.style.top = e.clientY + 'px';
+    document.body.appendChild(cursor);
+    
+    anime({
+      targets: cursor,
+      scale: [1, 0],
+      opacity: [1, 0],
+      duration: 1000,
+      easing: 'easeOutQuad',
+      complete: () => cursor.remove()
+    });
+  });
+</script>
+<script src="js/viewOnly.js"></script>
 </body>
 </html>
