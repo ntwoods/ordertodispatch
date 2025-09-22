@@ -206,7 +206,96 @@
                 font-size: 1em;
             }
         }
-    </style>
+       /* Modal Styling */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 999;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal-header {
+            font-size: 1.3em;
+            margin-bottom: 15px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .modal-content input, .modal-content textarea {
+            width: 100%;
+            padding: 10px;
+            margin: 8px 0;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 1em;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+        }
+
+        .modal-actions button {
+            padding: 10px 18px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .btn-update {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .btn-cancel {
+            background-color: var(--secondary-color);
+            color: white;
+        }
+
+        .set-hold-btn {
+            margin-top: 10px;
+            background-color: #ff9800;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-size: 1.05em;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.1s ease;
+            width: 100%;
+            box-shadow: 0 4px 8px rgba(255, 152, 0, 0.2);
+        }
+
+        .set-hold-btn:hover {
+            background-color: #e68900;
+            transform: translateY(-2px);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+    </style>        
+
 </head>
 <body>
     <div class="container">
@@ -215,13 +304,77 @@
         <div id="order-cards-container" class="order-cards-container">
             </div>
     </div>
+    <!-- Modal for Updating Hold Until -->
+    <div id="holdModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">Set New Hold Until</div>
+            <textarea id="holdRemarkInput" placeholder="Enter remark..." required></textarea>
+            <input type="date" id="holdDateInput" required>
+            <div class="modal-actions">
+                <button class="btn-update" onclick="submitHoldUpdate()">Update</button>
+                <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+            </div>
+        </div>
+    </div>    
 
     <script>
-        // JavaScript Functionality
         const BASE_API_URL = "https://script.google.com/macros/s/AKfycbx8Ourjem3diO9CTDl_wdGuJXSksFUImwIvq2gB1tFjeOUdNkLDdUso8he0-6CTlSJc/exec";
-
         const orderCardsContainer = document.getElementById('order-cards-container');
         const loadingIndicator = document.getElementById('loading');
+
+        let currentTimestamp = null; // will hold the timestamp for which we're setting hold
+
+        function openModal(timestamp) {
+            currentTimestamp = timestamp;
+            document.getElementById('holdRemarkInput').value = '';
+            document.getElementById('holdDateInput').value = '';
+            document.getElementById('holdModal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('holdModal').style.display = 'none';
+        }
+
+        async function submitHoldUpdate() {
+            const remark = document.getElementById('holdRemarkInput').value.trim();
+            const newHoldDate = document.getElementById('holdDateInput').value;
+
+            if (!remark || !newHoldDate) {
+                alert("Both fields are required.");
+                return;
+            }
+
+            try {
+                const crmName = getCrmNameFromUrl();
+                let postApiUrl = BASE_API_URL;
+                if (crmName) {
+                    postApiUrl += `?crm=${encodeURIComponent(crmName)}`;
+                }
+
+                const response = await fetch(postApiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: new URLSearchParams({
+                        action: 'update',
+                        timestamp: currentTimestamp,
+                        newHoldUntil: newHoldDate,
+                        remark: remark
+                    }).toString(),
+                });
+
+                const result = await response.json();
+                if (result.status === 'success') {
+                    alert('Hold updated successfully!');
+                    closeModal();
+                    fetchData();
+                } else {
+                    alert('Error updating hold: ' + (result.message || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Error updating hold:', error);
+                alert('Failed to connect to the server.');
+            }
+        }
 
         // Helper function to format date
         function formatDate(dateString) {
@@ -341,71 +494,47 @@
 
         // Function to render order cards
         function renderOrderCards(orders) {
-            orderCardsContainer.innerHTML = ''; // Clear previous cards
+            orderCardsContainer.innerHTML = '';
             if (orders.length === 0) {
-                orderCardsContainer.innerHTML = '<p style="text-align: center; color: var(--secondary-color);">No hold orders found for this CRM or data is unavailable.</p>';
+                orderCardsContainer.innerHTML = '<p style="text-align: center; color: var(--secondary-color);">No hold orders found.</p>';
                 return;
             }
 
-            orders.forEach((order, index) => { // Added 'index' here
+            orders.forEach((order, index) => {
                 const orderCard = document.createElement('div');
                 orderCard.classList.add('order-card');
 
-                // Extract relevant data
                 const dealerName = order.dealerName || 'N/A';
                 const marketingPersonName = order.marketingPersonName || 'N/A';
                 const crmName = order.crmName || 'N/A';
                 const markedHoldOn = formatDate(order.markedHoldOn);
-                const holdUntil = order.holdUntil; // Keep original for countdown
+                const holdUntil = order.holdUntil;
                 const formattedHoldUntil = formatDate(holdUntil);
-                const dealerType = order.dealerType || 'N/A'; // Assuming dealerType is available
-
-                // Determine badge color class based on dealerType
-                let badgeColorClass = '';
-                if (dealerType.toLowerCase() === 'red') {
-                    badgeColorClass = 'bg-red';
-                } else if (dealerType.toLowerCase() === 'yellow') {
-                    badgeColorClass = 'bg-yellow';
-                } else if (dealerType.toLowerCase() === 'green') {
-                    badgeColorClass = 'bg-green';
-                } else {
-                    badgeColorClass = 'bg-gray'; // Default if type is not recognized
-                }
-
-                const dealerTypeBadgeHtml = dealerType !== 'N/A' ?
-                    `<div class="dealer-type-badge ${badgeColorClass}">${dealerType}</div>` : '';
 
                 orderCard.innerHTML = `
                     <div class="order-details">
-                        <p><strong>Dealer Name:</strong> ${dealerName} ${dealerTypeBadgeHtml}</p>
+                        <p><strong>Dealer Name:</strong> ${dealerName}</p>
                         <p><strong>Marketing Person:</strong> ${marketingPersonName}</p>
                         <p><strong>CRM Name:</strong> ${crmName}</p>
-                        <button onclick="openMultipleDocuments('${order.fileUploadLink.replace(/'/g, "\\'")}', ${index})">View File</button>
-                        <p><strong>Hold Remark:</strong> ${order.holdRemark}</p>                        
+                        <p><strong>Hold Remark:</strong> ${order.holdRemark}</p>
                     </div>
                     <div class="date-info">
                         <p><strong>Marked Hold On:</strong> ${markedHoldOn}</p>
                         <p><strong>Hold Until:</strong> ${formattedHoldUntil}</p>
                     </div>
-                    <div class="countdown-timer" id="countdown-${order.timestamp}">
-                        Calculating...
-                    </div>
-                    <div class="editable">		
+                    <div class="countdown-timer" id="countdown-${order.timestamp}">Calculating...</div>
                     <div class="card-actions">
                         <button class="approve-btn" data-timestamp="${order.timestamp}">Approve</button>
-                    </div>
+                        <button class="set-hold-btn" onclick="openModal('${order.timestamp}')">Set New Hold Until</button>
                     </div>
                 `;
 
                 orderCardsContainer.appendChild(orderCard);
-
-                // Start countdown for each card
                 const countdownElement = document.getElementById(`countdown-${order.timestamp}`);
                 startCountdown(holdUntil, countdownElement);
 
-                // Add event listener to the Approve button
-                const approveButton = orderCard.querySelector('.approve-btn');
-                approveButton.addEventListener('click', () => handleApprove(approveButton.dataset.timestamp));
+                orderCard.querySelector('.approve-btn')
+                    .addEventListener('click', () => handleApprove(order.timestamp));
             });
         }
         // Function to fetch data from the API
