@@ -438,6 +438,10 @@
               <span class="bg-white bg-opacity-20 px-2 py-1 rounded-lg">${order.concernedOwner}</span>
             </p>
             <p class="flex items-center space-x-2">
+              <span class="font-semibold">Prev Remarks:</span>
+              <span class="bg-white bg-opacity-20 px-2 py-1 rounded-lg">L-1: ${order.level1Remark} L-2: ${order.level2Remark}</span>
+            </p>
+            <p class="flex items-center space-x-2">
               <span class="font-semibold">⏰ Deadline:</span>
               <span class="bg-white bg-opacity-20 px-2 py-1 rounded-lg text-sm">${deadline.toLocaleString()}</span>
             </p>
@@ -675,3 +679,4 @@
 <script src="js/viewOnly.js"></script>
 </body>
 </html>
+
