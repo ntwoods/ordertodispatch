@@ -153,9 +153,9 @@
         headers: {"Content-Type": "application/json"},
         body: JSON.stringify(payload)
       });
-
       closeModal();
       alert("Submitted successfully!");
+      loadOrders();  // refresh only the table
     });
 
     function toBase64(file) {
