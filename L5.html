@@ -171,7 +171,12 @@ orders.forEach((order, index) => {
     <p><strong>Marketing:</strong> ${order.marketingPersonName}</p>
     <p><strong>Location:</strong> ${order.location}</p>
     <p><strong>CRM:</strong> ${order.crmName}</p>
-    <p><strong>Con. Owner:</strong> ${order.concernedOwner}</p>    
+    <p><strong>Con. Owner:</strong> ${order.concernedOwner}</p> 
+    <p class="flex items-center space-x-2">
+      <span class="font-semibold">Prev Remarks:</span>
+      <span class="bg-white bg-opacity-20 px-2 py-1 rounded-lg">L-1: ${order.level1Remark} L-2: ${order.level2Remark} L-3: ${order.level3Remark} L-4: ${order.level4Remark}</span>
+      </p>
+      
     <p><strong>Expected Delivery:</strong> ${formatDateToDDMMMYYYY(order.expectedDeliveryDate)}</p>
     <p><strong>Dispatch Date & Time:</strong> ${formatDateToDDMMMYYYY(order.timestamp)}</p>
     <p><strong>Deadline:</strong> ${formatDateToDDMMMYYYY(deadline)}</p>
@@ -315,3 +320,4 @@ orders.forEach((order, index) => {
   <script src="js/viewOnly.js"></script>
 </body>
 </html>
+
