@@ -547,6 +547,38 @@
             }
         }
 
+        // Escape HTML to avoid breaking layout
+function escapeHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/[&<>"']/g, m =>
+        ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])
+    );
+}
+
+// Generate cumulative previous remarks
+function getPrevRemarks(order, maxLevels = 10) {
+    let remarks = [];
+    let keys = Object.keys(order)
+        .map(k => {
+            let m = k.match(/^level(\d+)Remark$/i);
+            return m ? { key: k, level: parseInt(m[1], 10) } : null;
+        })
+        .filter(Boolean)
+        .sort((a, b) => a.level - b.level);
+
+    keys.forEach((item, i) => {
+        let prev = [];
+        for (let j = 0; j < i; j++) {
+            let val = order[keys[j].key];
+            if (val && val.trim() !== '') prev.push(val.trim());
+        }
+        if (prev.length > 0) {
+            remarks.push(`<div><strong>L-${item.level}:</strong> ${escapeHtml(prev.join(', '))}</div>`);
+        }
+    });
+    return remarks.join('');
+}
+
         // Create order card HTML
         function createOrderCard(order, index) {
             const orderId = generateOrderId();
@@ -612,6 +644,13 @@
                     <div class="detail-row">
                         <div class="detail-label">📦 Expected:</div>
                         <div class="detail-value">
+                     <div class="detail-row">
+                         <div class="detail-label">📝 Prev Remarks:</div>
+                        <div class="detail-value">
+                             ${getPrevRemarks(order)}
+                     </div>
+                        </div>
+                        
                             <div class="timestamp">${formatTimestamp(order.expectedDeliveryDate)}</div>
                         </div>
                     </div>
