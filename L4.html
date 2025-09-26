@@ -336,7 +336,49 @@
     const API_URL = "https://script.google.com/macros/s/AKfycbxMxIzOQmHv3LPTh6ca6i5uuguyH615cnjA5emEGNT0rmWpJlnrcg-KWNVP1DORkkcX/exec";
 
     let globalOrders = [];
+    // --- safe HTML escape to avoid accidental markup injection ---
+function escapeHtml(str) {
+  if (str === null || str === undefined) return '';
+  return String(str).replace(/[&<>"']/g, function (m) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m];
+  });
+}
 
+/**
+ * getPrevRemarks(order)
+ * - dynamic: ऑटो detect करेगा order में जितने levelNRemark keys हैं (level1Remark, level2Remark...)
+ * - हर L-i के लिए केवल previous levels (L-1..L-(i-1)) दिखाएगा (current L-i का text नहीं)
+ * - return करेगा HTML string (multiple <div> lines)
+ */
+function getPrevRemarks(order, maxLevels = 50) {
+  const levels = Object.keys(order)
+    .map(k => {
+      const m = k.match(/^level(\d+)Remark$/i);
+      return m ? { key: k, level: parseInt(m[1], 10) } : null;
+    })
+    .filter(Boolean)
+    .sort((a, b) => a.level - b.level)
+    .slice(0, maxLevels);
+
+  if (levels.length === 0) return '';
+
+  const lines = [];
+  for (let i = 0; i < levels.length; i++) {
+    const currentLevel = levels[i].level;
+    const previous = [];
+    // collect values of levels before current (1 .. current-1)
+    for (let j = 0; j < i; j++) {
+      const v = order[levels[j].key];
+      if (v !== undefined && String(v).trim() !== '') previous.push(String(v).trim());
+    }
+    // only show L-current if there are previous remarks
+    if (previous.length > 0) {
+      lines.push(`<div><strong>L-${currentLevel}:</strong> ${escapeHtml(previous.join(', '))}</div>`);
+    }
+  }
+
+  return lines.join('');
+}
     async function fetchOrders() {
       try {
         const urlParams = new URLSearchParams(window.location.search);
@@ -477,7 +519,16 @@
             <p class="text-blue-700/80 mb-2"><i class="fas fa-map-marker-alt mr-2 text-blue-500/70"></i>Location: <span class="text-blue-900 font-medium">${order.location}</span></p>
             <p class="text-blue-700/80 mb-2"><i class="fas fa-id-card mr-2 text-blue-500/70"></i>CRM Name: <span class="text-blue-900 font-medium">${order.crmName}</span></p>
             <p class="text-blue-700/80 mb-4"><i class="fas fa-user-tie mr-2 text-blue-500/70"></i>Concerned Owner: <span class="text-blue-900 font-medium">${order.concernedOwner}</span></p>
-          
+              
+              <div class="mb-4">
+              <span class="text-blue-700/80 font-semibold">
+              <i class="fas fa-history mr-2 text-blue-500/70"></i>Prev Remarks:
+              </span>
+              <div class="bg-white bg-opacity-20 px-3 py-2 rounded-lg text-sm text-blue-900 mt-2">
+                  ${getPrevRemarks(order)}
+              </div>
+            </div>
+            
             <div class="flex justify-between items-center mb-4">
               <span class="text-blue-700/80"><i class="fas fa-calendar-alt mr-2 text-blue-500/70"></i>Tentative Dispatch:</span>
               <span class="text-blue-900 font-medium">${order.dispatchDate || 'N/A'}</span>
@@ -696,4 +747,5 @@
   <script src="js/viewOnly.js"></script>
 </body>
 </html>
+
 
