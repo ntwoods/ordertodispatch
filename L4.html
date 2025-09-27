@@ -545,25 +545,18 @@ function parseOrderDate(ts) {
 
     
 function getDeadline(timestamp) {
-  const orderTime = new Date(timestamp);
+  const orderTime = parseOrderDate(timestamp); // use safe parser
 
-  // Create a new Date using only the local year/month/day
-  const deadline = new Date(
+  if (isNaN(orderTime)) return new Date(); // fallback to now
+
+  // deadline = same day at 18:00:00
+  return new Date(
     orderTime.getFullYear(),
     orderTime.getMonth(),
     orderTime.getDate(),
-
-    function formatDateTime(timestamp) {
-      const date = new Date(timestamp);
-      return date.toLocaleString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: true
-      });
-    }
+    18, 0, 0, 0
+  );
+}
 
 function startCountdown(deadline, elementId) {
   const el = document.getElementById(elementId);
@@ -717,6 +710,7 @@ function startCountdown(deadline, elementId) {
   <script src="js/viewOnly.js"></script>
 </body>
 </html>
+
 
 
 
