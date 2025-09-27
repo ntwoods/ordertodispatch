@@ -187,6 +187,9 @@
             </div>
           `;
           table.appendChild(row);
+          if (typeof setReadOnlyMode === "function") {
+            setReadOnlyMode();
+          }          
         });
         updateTimers();
         setInterval(updateTimers,1000);
