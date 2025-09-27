@@ -301,6 +301,10 @@ document.addEventListener('DOMContentLoaded', () => {
             if (payload.action === 'approve' && payload.approvedQty !== undefined) fd.append('approvedQty', String(payload.approvedQty));
             await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: fd });
             alert(`Claim ${payload.action} submitted.`);
+
+            // 👇 Refresh cards only
+            const crmName = new URLSearchParams(window.location.search).get('crm');
+            fetchData(crmName);
         } catch (error) {
             console.error('sendData error:', error);
             alert('Error processing request. Please try again.');
@@ -319,6 +323,10 @@ document.addEventListener('DOMContentLoaded', () => {
             fd.append('attachmentsJson', JSON.stringify(attachments || []));
             await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: fd });
             alert('Verification report submitted.');
+
+            // 👇 Refresh cards only
+            const crmName = new URLSearchParams(window.location.search).get('crm');
+            fetchData(crmName);
         } catch (err) {
             console.error('sendVerificationReport error:', err);
             alert('Error submitting verification report.');
@@ -326,6 +334,7 @@ document.addEventListener('DOMContentLoaded', () => {
             postLoading.classList.add('hidden');
         }
     };
+
 
     const filesToBase64Payload = (fileList) => {
         const toBase64 = (file) =>
