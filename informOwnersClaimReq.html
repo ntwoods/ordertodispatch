@@ -1,362 +1,596 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Claim Request Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <style>
         body { font-family: 'Inter', sans-serif; }
         .overflow-y-scroll::-webkit-scrollbar { width: 8px; }
         .overflow-y-scroll::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 10px; }
         .overflow-y-scroll::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 10px; }
         .overflow-y-scroll::-webkit-scrollbar-thumb:hover { background: #64748b; }
-        .countdown { font-weight: 600; color: #dc2626; } /* Red text for countdown */
-        .overdue { background-color: #fecaca !important; } /* Light red card highlight */
+        .countdown { font-weight: 600; color: #dc2626; }
+        .overdue { background-color: #fecaca !important; }
+        .modal-backdrop { background-color: rgba(0,0,0,0.5); }
+        .file-pill { @apply inline-flex items-center px-2 py-1 text-xs bg-slate-100 rounded mr-2 mb-2; }
     </style>
 </head>
 <body class="bg-gray-50 flex flex-col min-h-screen">
-
-<header class="bg-gradient-to-r from-blue-600 to-blue-800 text-white shadow-lg p-6">
-    <div class="container mx-auto flex items-center justify-between flex-wrap">
-        <h1 id="dashboard-title" class="text-3xl md:text-4xl font-extrabold tracking-tight mb-4 md:mb-0">
-            <i class="fas fa-clipboard-list mr-3"></i>
-            Claim Requests
-        </h1>
-        <div class="flex items-center space-x-4 md:space-x-8 flex-wrap justify-end">
-            <div class="relative inline-block text-left z-10">
-                <button id="filter-dropdown-btn" class="inline-flex justify-center items-center rounded-lg border border-transparent bg-white px-4 py-2 text-sm font-semibold text-blue-800 shadow-sm hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-blue-600 transition-colors">
-                    <i class="fas fa-filter mr-2"></i>
-                    Filter Status
-                    <i class="fas fa-chevron-down ml-2 -mr-1 text-xs"></i>
-                </button>
-                <div id="filter-menu" class="origin-top-right absolute right-0 mt-2 w-56 rounded-lg shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none hidden transition-all duration-200">
-                    <div class="py-1" role="menu" aria-orientation="vertical" aria-labelledby="filter-dropdown-btn">
-                        <label class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer">
-                            <input type="checkbox" name="filter-status" value="reject" class="h-4 w-4 text-red-600 border-gray-300 rounded focus:ring-red-500 mr-2">
-                            <span class="font-medium text-red-600">Rejected</span>
-                        </label>
-                        <label class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer">
-                            <input type="checkbox" name="filter-status" value="approve" class="h-4 w-4 text-green-600 border-gray-300 rounded focus:ring-green-500 mr-2">
-                            <span class="font-medium text-green-600">Pending at A/c</span>
-                        </label>
-                        <label class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer">
-                            <input type="checkbox" name="filter-status" value="verify" class="h-4 w-4 text-yellow-600 border-gray-300 rounded focus:ring-yellow-500 mr-2">
-                            <span class="font-medium text-yellow-600">Pending for Verification Report</span>
-                        </label>
+    <header class="bg-gradient-to-r from-blue-600 to-blue-800 text-white shadow-lg p-6">
+        <div class="container mx-auto flex items-center justify-between flex-wrap">
+            <h1 id="dashboard-title" class="text-3xl md:text-4xl font-extrabold tracking-tight mb-4 md:mb-0">
+                <i class="fas fa-clipboard-list mr-3"></i>
+                Claim Requests
+            </h1>
+            <div class="flex items-center space-x-4 md:space-x-8 flex-wrap justify-end">
+                <div class="relative inline-block text-left z-10">
+                    <button id="filter-dropdown-btn" class="inline-flex justify-center items-center rounded-lg border border-transparent bg-white px-4 py-2 text-sm font-semibold text-blue-800 shadow-sm hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-blue-600 transition-colors">
+                        <i class="fas fa-filter mr-2"></i>
+                        Filter Status
+                        <i class="fas fa-chevron-down ml-2 -mr-1 text-xs"></i>
+                    </button>
+                    <div id="filter-menu" class="origin-top-right absolute right-0 mt-2 w-56 rounded-lg shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none hidden transition-all duration-200">
+                        <div class="py-1" role="menu" aria-orientation="vertical" aria-labelledby="filter-dropdown-btn">
+                            <label class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer">
+                                <input type="checkbox" name="filter-status" value="reject" class="h-4 w-4 text-red-600 border-gray-300 rounded focus:ring-red-500 mr-2" />
+                                <span class="font-medium text-red-600">Rejected</span>
+                            </label>
+                            <label class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer">
+                                <input type="checkbox" name="filter-status" value="approve" class="h-4 w-4 text-green-600 border-gray-300 rounded focus:ring-green-500 mr-2" />
+                                <span class="font-medium text-green-600">Pending at A/c</span>
+                            </label>
+                            <label class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer">
+                                <input type="checkbox" name="filter-status" value="verify" class="h-4 w-4 text-yellow-600 border-gray-300 rounded focus:ring-yellow-500 mr-2" />
+                                <span class="font-medium text-yellow-600">Pending for Verification Report</span>
+                            </label>
+                        </div>
                     </div>
                 </div>
-            </div>
-            <div class="flex items-center space-x-2">
-                <span class="text-sm md:text-base font-medium">CRM:</span>
-                <span id="crm-display" class="text-sm md:text-base font-semibold bg-white text-blue-800 px-3 py-1 rounded-full shadow-inner">N/A</span>
+                <div class="flex items-center space-x-2">
+                    <span class="text-sm md:text-base font-medium">CRM:</span>
+                    <span id="crm-display" class="text-sm md:text-base font-semibold bg-white text-blue-800 px-3 py-1 rounded-full shadow-inner">N/A</span>
+                </div>
             </div>
         </div>
-    </div>
-</header>
+    </header>
 
-<main class="container mx-auto p-6 flex-grow overflow-hidden">
-    <div id="loading" class="text-center py-20 text-blue-500 hidden">
-        <i class="fas fa-spinner fa-spin text-5xl mb-4"></i>
-        <p class="text-lg font-medium">Fetching your claims...</p>
-    </div>
-    <div id="error-message" class="text-center py-20 text-red-500 hidden">
-        <i class="fas fa-exclamation-triangle text-5xl mb-4"></i>
-        <p class="text-lg font-medium">Oops! Something went wrong. Please try again later.</p>
-    </div>
-    <div id="no-data-message" class="text-center py-20 text-gray-500 hidden">
-        <i class="fas fa-box-open text-5xl mb-4"></i>
-        <p class="text-lg font-medium">No claims found for this CRM.</p>
-    </div>
-    <div id="card-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"></div>
-</main>
+    <main class="container mx-auto p-6 flex-grow overflow-hidden">
+        <div id="loading" class="text-center py-20 text-blue-500 hidden">
+            <i class="fas fa-spinner fa-spin text-5xl mb-4"></i>
+            <p class="text-lg font-medium">Fetching your claims...</p>
+        </div>
+        <div id="error-message" class="text-center py-20 text-red-500 hidden">
+            <i class="fas fa-exclamation-triangle text-5xl mb-4"></i>
+            <p class="text-lg font-medium">Oops! Something went wrong. Please try again later.</p>
+        </div>
+        <div id="no-data-message" class="text-center py-20 text-gray-500 hidden">
+            <i class="fas fa-box-open text-5xl mb-4"></i>
+            <p class="text-lg font-medium">No claims found for this CRM.</p>
+        </div>
+        <div id="card-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"></div>
+    </main>
 
-<footer class="bg-slate-100 text-slate-600 text-center py-4 text-sm shadow-inner">
-    &copy; 2024 Claim Request Dashboard. All Rights Reserved.
-</footer>
+    <footer class="bg-slate-100 text-slate-600 text-center py-4 text-sm shadow-inner">&copy; 2024 Claim Request Dashboard. All Rights Reserved.</footer>
 
-<!-- Modal -->
-<div id="modal" class="fixed inset-0 z-50 overflow-y-auto hidden">
-    <div class="flex items-center justify-center min-h-screen px-4 py-8 text-center sm:block sm:p-0">
-        <div class="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75" aria-hidden="true"></div>
-        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-        <div class="inline-block px-4 pt-5 pb-4 overflow-hidden text-left align-bottom transition-all transform bg-white rounded-lg shadow-xl sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
-            <div class="editable">
-                <div class="flex items-center justify-between pb-3 border-b border-gray-200">
-                    <h3 class="text-xl font-bold text-blue-800">
-                        <i class="fas fa-user-check mr-2"></i>Owners Informed
-                    </h3>
-                    <button id="close-modal-btn" class="text-gray-400 hover:text-gray-600 focus:outline-none">
-                        <i class="fas fa-times text-2xl"></i>
+    <!-- Owner Response Modal -->
+    <div id="modal" class="fixed inset-0 z-50 overflow-y-auto hidden">
+        <div class="flex items-center justify-center min-h-screen px-4 py-8 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75" aria-hidden="true"></div>
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+            <div class="inline-block px-4 pt-5 pb-4 overflow-hidden text-left align-bottom transition-all transform bg-white rounded-lg shadow-xl sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
+                <div class="editable">
+                    <div class="flex items-center justify-between pb-3 border-b border-gray-200">
+                        <h3 class="text-xl font-bold text-blue-800">
+                            <i class="fas fa-user-check mr-2"></i>Owner's Response
+                        </h3>
+                        <button id="close-modal-btn" class="text-gray-400 hover:text-gray-600 focus:outline-none"><i class="fas fa-times text-2xl"></i></button>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <div class="mb-4">
+                        <label for="owner-remark" class="block text-sm font-medium text-gray-700 mb-2">Owner's Remark</label>
+                        <textarea id="owner-remark" rows="4" class="block w-full px-3 py-2 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500"></textarea>
+                    </div>
+                    <div id="marketing-person-field" class="mb-4 hidden">
+                        <label for="marketing-person-name" class="block text-sm font-medium text-gray-700 mb-2">Marketing Person's Name</label>
+                        <input type="text" id="marketing-person-name" class="block w-full px-3 py-2 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500" />
+                    </div>
+                    <!-- Approved Qty (only required for Approve) -->
+                    <div id="approved-qty-field" class="mb-4 hidden">
+                        <label for="approved-qty" class="block text-sm font-medium text-gray-700 mb-2">Approved Qty</label>
+                        <input type="number" id="approved-qty" min="0" step="any" class="block w-full px-3 py-2 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500" />
+                        <p class="text-xs text-slate-500 mt-1">Required when approving. Pre-filled with claimed quantity; edit if needed.</p>
+                    </div>
+                </div>
+                <div class="flex flex-col sm:flex-row-reverse sm:justify-start sm:space-x-2 sm:space-x-reverse space-y-2 sm:space-y-0 mt-4">
+                    <button id="approve-claim-btn" class="px-5 py-2 text-sm font-semibold text-white bg-green-500 rounded-lg hover:bg-green-600 transition-colors shadow-sm">
+                        <i class="fas fa-check-circle mr-2"></i>Approve Claim
+                    </button>
+                    <button id="verify-claim-btn" class="px-5 py-2 text-sm font-semibold text-white bg-yellow-500 rounded-lg hover:bg-yellow-600 transition-colors shadow-sm">
+                        <i class="fas fa-info-circle mr-2"></i>Verify Claim
+                    </button>
+                    <button id="reject-claim-btn" class="px-5 py-2 text-sm font-semibold text-white bg-red-500 rounded-lg hover:bg-red-600 transition-colors shadow-sm">
+                        <i class="fas fa-times-circle mr-2"></i>Reject Claim
                     </button>
                 </div>
             </div>
-            <div class="mt-4">
-                <div class="mb-4">
-                    <label for="owner-remark" class="block text-sm font-medium text-gray-700 mb-2">Owner's Remark</label>
-                    <textarea id="owner-remark" rows="4" class="block w-full px-3 py-2 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500"></textarea>
+        </div>
+    </div>
+
+    <!-- Submit Verification Report Modal -->
+    <div id="verification-modal" class="fixed inset-0 z-50 overflow-y-auto hidden">
+        <div class="flex items-center justify-center min-h-screen px-4 py-8 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75" aria-hidden="true"></div>
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+            <div class="inline-block px-4 pt-5 pb-4 overflow-hidden text-left align-bottom transition-all transform bg-white rounded-lg shadow-xl sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
+                <div class="flex items-center justify-between pb-3 border-b border-gray-200">
+                    <h3 class="text-xl font-bold text-blue-800">
+                        <i class="fas fa-file-alt mr-2"></i>Submit Verification Report
+                    </h3>
+                    <button id="close-verification-modal-btn" class="text-gray-400 hover:text-gray-600 focus:outline-none"><i class="fas fa-times text-2xl"></i></button>
                 </div>
-                <div id="marketing-person-field" class="mb-4 hidden">
-                    <label for="marketing-person-name" class="block text-sm font-medium text-gray-700 mb-2">Marketing Person's Name</label>
-                    <input type="text" id="marketing-person-name" class="block w-full px-3 py-2 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500">
+                <div class="mt-4">
+                    <div class="mb-4">
+                        <label for="verification-remark" class="block text-sm font-medium text-gray-700 mb-2">Salesperson Remark</label>
+                        <textarea id="verification-remark" rows="4" class="block w-full px-3 py-2 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500" placeholder="Describe findings from the visit..."></textarea>
+                    </div>
+                    <div class="mb-2">
+                        <label for="verification-files" class="block text-sm font-medium text-gray-700 mb-2">Attach Photos / Files (optional)</label>
+                        <input type="file" id="verification-files" multiple accept="image/*,application/pdf" class="block w-full text-sm text-gray-900 file:mr-4 file:py-2 file:px-3 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
+                        <p class="text-xs text-slate-500 mt-1">You can add multiple images or a PDF. Attachments are uploaded as base64.</p>
+                    </div>
+                    <div id="attachments-preview" class="mt-2"></div>
                 </div>
-            </div>
-            <div class="flex flex-col sm:flex-row-reverse sm:justify-start sm:space-x-2 sm:space-x-reverse space-y-2 sm:space-y-0 mt-4">
-                <button id="approve-claim-btn" class="px-5 py-2 text-sm font-semibold text-white bg-green-500 rounded-lg hover:bg-green-600 transition-colors shadow-sm">
-                    <i class="fas fa-check-circle mr-2"></i>Approve Claim
-                </button>
-                <button id="verify-claim-btn" class="px-5 py-2 text-sm font-semibold text-white bg-yellow-500 rounded-lg hover:bg-yellow-600 transition-colors shadow-sm">
-                    <i class="fas fa-info-circle mr-2"></i>Verify Claim
-                </button>
-                <button id="reject-claim-btn" class="px-5 py-2 text-sm font-semibold text-white bg-red-500 rounded-lg hover:bg-red-600 transition-colors shadow-sm">
-                    <i class="fas fa-times-circle mr-2"></i>Reject Claim
-                </button>
+                <div class="mt-4 flex justify-end space-x-2">
+                    <button id="submit-verification-report-btn" class="px-5 py-2 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors shadow-sm">
+                        <i class="fas fa-paper-plane mr-2"></i>Submit Report
+                    </button>
+                    <button id="cancel-verification-btn" class="px-5 py-2 text-sm font-semibold text-slate-700 bg-slate-200 rounded-lg hover:bg-slate-300 transition-colors shadow-sm">Cancel</button>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-<div id="post-loading" class="fixed inset-0 z-60 flex items-center justify-center bg-black bg-opacity-50 hidden">
-    <div class="bg-white p-6 rounded-lg shadow-xl flex items-center space-x-4">
-        <i class="fas fa-spinner fa-spin text-blue-500 text-2xl"></i>
-        <span class="text-lg font-medium">Processing...</span>
+    <div id="post-loading" class="fixed inset-0 z-60 flex items-center justify-center bg-black bg-opacity-50 hidden">
+        <div class="bg-white p-6 rounded-lg shadow-xl flex items-center space-x-4">
+            <i class="fas fa-spinner fa-spin text-blue-500 text-2xl"></i>
+            <span class="text-lg font-medium">Processing...</span>
+        </div>
     </div>
-</div>
 
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw8K5xr1V52_zKMfy9gJyWZE0kuxsu0Gjoo2bdNfIXz9-zDDxFCHp2i4mdrLDZxs-BFbA/exec';
-    const cardContainer = document.getElementById('card-container');
-    const loadingIndicator = document.getElementById('loading');
-    const errorMessage = document.getElementById('error-message');
-    const noDataMessage = document.getElementById('no-data-message');
-    const crmDisplay = document.getElementById('crm-display');
-    const postLoading = document.getElementById('post-loading');
-    const modal = document.getElementById('modal');
-    const closeModalBtn = document.getElementById('close-modal-btn');
-    const ownerRemarkInput = document.getElementById('owner-remark');
-    const marketingPersonField = document.getElementById('marketing-person-field');
-    const marketingPersonNameInput = document.getElementById('marketing-person-name');
-    const approveBtn = document.getElementById('approve-claim-btn');
-    const verifyBtn = document.getElementById('verify-claim-btn');
-    const rejectBtn = document.getElementById('reject-claim-btn');
-    const filterDropdownBtn = document.getElementById('filter-dropdown-btn');
-    const filterMenu = document.getElementById('filter-menu');
-    const filterCheckboxes = document.querySelectorAll('input[name="filter-status"]');
-    let originalData = [];
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw8K5xr1V52_zKMfy9gJyWZE0kuxsu0Gjoo2bdNfIXz9-zDDxFCHp2i4mdrLDZxs-BFbA/exec';
+            const cardContainer = document.getElementById('card-container');
+            const loadingIndicator = document.getElementById('loading');
+            const errorMessage = document.getElementById('error-message');
+            const noDataMessage = document.getElementById('no-data-message');
+            const crmDisplay = document.getElementById('crm-display');
+            const postLoading = document.getElementById('post-loading');
 
-    const getUrlParams = () => new URLSearchParams(window.location.search);
-    const escapeHtml = (unsafe) => {
-        if (unsafe === undefined || unsafe === null) return '';
-        return String(unsafe).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
-    };
+            // Owner Response modal elements
+            const modal = document.getElementById('modal');
+            const closeModalBtn = document.getElementById('close-modal-btn');
+            const ownerRemarkInput = document.getElementById('owner-remark');
+            const marketingPersonField = document.getElementById('marketing-person-field');
+            const marketingPersonNameInput = document.getElementById('marketing-person-name');
+            const approvedQtyField = document.getElementById('approved-qty-field');
+            const approvedQtyInput = document.getElementById('approved-qty');
+            const approveBtn = document.getElementById('approve-claim-btn');
+            const verifyBtn = document.getElementById('verify-claim-btn');
+            const rejectBtn = document.getElementById('reject-claim-btn');
 
-    const buildScriptUrl = (crmName) => crmName ? `${SCRIPT_URL}?crm=${encodeURIComponent(crmName)}` : SCRIPT_URL;
+            // Verification Report modal elements
+            const vModal = document.getElementById('verification-modal');
+            const vCloseBtn = document.getElementById('close-verification-modal-btn');
+            const vCancelBtn = document.getElementById('cancel-verification-btn');
+            const vRemark = document.getElementById('verification-remark');
+            const vFiles = document.getElementById('verification-files');
+            const vPreview = document.getElementById('attachments-preview');
+            const vSubmitBtn = document.getElementById('submit-verification-report-btn');
 
-    const fetchData = async (crmName = null) => {
-        loadingIndicator.classList.remove('hidden');
-        errorMessage.classList.add('hidden');
-        noDataMessage.classList.add('hidden');
-        cardContainer.classList.add('hidden');
-        try {
-            const url = buildScriptUrl(crmName);
-            const response = await fetch(url, { method: 'GET' });
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
-            const result = await response.json();
-            originalData = Array.isArray(result.data) ? result.data : (Array.isArray(result) ? result : (result.data || []));
-            if (!originalData || originalData.length === 0) {
-                noDataMessage.classList.remove('hidden');
-                cardContainer.innerHTML = '';
-                return;
-            }
-            displayCards(originalData);
-            cardContainer.classList.remove('hidden');
-            if (typeof setReadOnlyMode === "function") setReadOnlyMode();
-        } catch (err) {
-            console.error('fetchData error:', err);
-            errorMessage.classList.remove('hidden');
-        } finally {
-            loadingIndicator.classList.add('hidden');
-        }
-    };
+            const filterDropdownBtn = document.getElementById('filter-dropdown-btn');
+            const filterMenu = document.getElementById('filter-menu');
+            const filterCheckboxes = document.querySelectorAll('input[name="filter-status"]');
 
-    const sendData = async (payload) => {
-        try {
-            postLoading.classList.remove('hidden');
-            const fd = new FormData();
-            fd.append('reqId', payload.reqId);
-            fd.append('action', payload.action);
-            if (payload.ownerRemark) fd.append('ownerRemark', payload.ownerRemark);
-            if (payload.action === 'verify' && payload.marketingPerson) fd.append('marketingPerson', payload.marketingPerson);
-            await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: fd });
-            alert(`Claim ${payload.action} submitted.`);
-        } catch (error) {
-            console.error('sendData error:', error);
-            alert('Error processing request. Please try again.');
-        } finally {
-            postLoading.classList.add('hidden');
-        }
-    };
+            let originalData = [];
+            let isCrmMode = false; // set after reading params
 
-    const filterCards = () => {
-        const selectedStatuses = Array.from(filterCheckboxes).filter(c => c.checked).map(c => c.value.toLowerCase().trim());
-        let filtered = originalData;
-        if (selectedStatuses.length > 0) {
-            filtered = originalData.filter(item => {
-                const resp = (item['Owner Response'] || '').toString().toLowerCase().trim();
-                const normalized = resp.replace(/ed$/,'');
-                return selectedStatuses.includes(normalized) || selectedStatuses.includes(resp);
-            });
-        }
-        displayCards(filtered);
-    };
+            const getUrlParams = () => new URLSearchParams(window.location.search);
+            const escapeHtml = (unsafe) => {
+                if (unsafe === undefined || unsafe === null) return '';
+                return String(unsafe)
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#039;');
+            };
+            const onlyNumber = (val) => {
+                const m = String(val || '').match(/[\d.]+/);
+                return m ? m[0] : '';
+            };
 
-    // Countdown updater
-    const startCountdown = (el, deadline, card) => {
-        let timer;
-        const update = () => {
-            const now = new Date();
-            const diff = deadline - now;
-            if (diff <= 0) {
-                el.textContent = "Overdue";
-                card.classList.add("overdue");
-                clearInterval(timer); // now timer is already defined
-                return;
-            }
-            const hrs = Math.floor(diff / 1000 / 60 / 60);
-            const mins = Math.floor((diff / 1000 / 60) % 60);
-            const secs = Math.floor((diff / 1000) % 60);
-            el.textContent = `${hrs}h ${mins}m ${secs}s left`;
-        };
-        timer = setInterval(update, 1000);
-        update(); // call once immediately after timer exists
-    };
+            const buildScriptUrl = (crmName) => (crmName ? `${SCRIPT_URL}?crm=${encodeURIComponent(crmName)}` : SCRIPT_URL);
 
-    const displayCards = (data) => {
-        cardContainer.innerHTML = '';
-        if (!Array.isArray(data) || data.length === 0) { noDataMessage.classList.remove('hidden'); return; }
-        const frag = document.createDocumentFragment();
-        data.forEach(item => {
-            const product = escapeHtml(item['Product']);
-            const dealerName = escapeHtml(item['Dealer Name']);
-            const crmName = escapeHtml(item['CRM Name']);
-            const qty = escapeHtml(item['Qty']);
-            const issue = escapeHtml(item['Issue']);
-            const reqId = escapeHtml(item['REQ-ID']);
-            const ownerResponse = (item['Owner Response'] || '').toString().toLowerCase().trim();
-            const ownerRemark = escapeHtml(item['Owner Remark'] || '');
-            const ownersInformedAt = item['Owners Informed at'];
-            let formattedDate = 'Unknown';
-            let requestDateObj = null;
-            try {
-                const rawDate = item['Request Date'];
-                if (rawDate) {
-                    // Manual parsing for "M/D/YYYY, hh:mm:ss AM/PM"
-                    const parts = rawDate.split(', ');
-                    if (parts.length === 2) {
-                        const [datePart, timePart] = parts;
-                        const [month, day, year] = datePart.split('/').map(n => parseInt(n));
-                        let [time, meridian] = timePart.split(' ');
-                        let [hours, minutes, seconds] = time.split(':').map(n => parseInt(n));
-                        if (meridian.toLowerCase() === 'pm' && hours < 12) hours += 12;
-                        if (meridian.toLowerCase() === 'am' && hours === 12) hours = 0;
-                        requestDateObj = new Date(year, month - 1, day, hours, minutes, seconds);
-                    } else {
-                        requestDateObj = new Date(rawDate); // fallback
+            const fetchData = async (crmName = null) => {
+                loadingIndicator.classList.remove('hidden');
+                errorMessage.classList.add('hidden');
+                noDataMessage.classList.add('hidden');
+                cardContainer.classList.add('hidden');
+                try {
+                    const url = buildScriptUrl(crmName);
+                    const response = await fetch(url, { method: 'GET' });
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                    const result = await response.json();
+                    originalData = Array.isArray(result.data)
+                        ? result.data
+                        : Array.isArray(result)
+                        ? result
+                        : result.data || [];
+                    if (!originalData || originalData.length === 0) {
+                        noDataMessage.classList.remove('hidden');
+                        cardContainer.innerHTML = '';
+                        return;
                     }
+                    displayCards(originalData);
+                    cardContainer.classList.remove('hidden');
+                    if (typeof setReadOnlyMode === 'function') setReadOnlyMode();
+                } catch (err) {
+                    console.error('fetchData error:', err);
+                    errorMessage.classList.remove('hidden');
+                } finally {
+                    loadingIndicator.classList.add('hidden');
                 }
-                formattedDate = requestDateObj && !isNaN(requestDateObj)
-                    ? requestDateObj.toLocaleString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' })
-                    : 'Unknown';
-            } catch (e) {
-                requestDateObj = null;
-                formattedDate = 'Unknown';
-            }
-            const card = document.createElement('div');
-            card.className = 'p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 border border-slate-200 flex flex-col justify-between relative';
-            let colorClass = 'bg-white';
-            let footerHtml = `<button class="owners-informed-btn w-full px-4 py-2 text-sm font-semibold text-white bg-blue-500 rounded-lg hover:bg-blue-600 transition-colors shadow-md focus:outline-none" data-req-id="${reqId}">
-                                <i class="fas fa-bullhorn mr-2"></i>Owners Informed
-                              </button>`;
-            let statusTagHtml = '';
-            if (ownerResponse === 'reject' || ownerResponse === 'rejected') { colorClass = 'bg-red-100 border-red-400'; footerHtml = ''; statusTagHtml = '<div class="mt-2 text-sm font-semibold text-gray-700">🛈 Rejected</div>'; }
-            else if (ownerResponse === 'verify' || ownerResponse === 'verification pending') { colorClass = 'bg-yellow-100 border-yellow-400'; footerHtml = `<button class="submit-verification-btn w-full px-4 py-2 text-sm font-semibold text-white bg-yellow-500 rounded-lg hover:bg-yellow-600 transition-colors shadow-md focus:outline-none" data-req-id="${reqId}">
+            };
+
+            const sendData = async (payload) => {
+                try {
+                    postLoading.classList.remove('hidden');
+                    const fd = new FormData();
+                    fd.append('reqId', payload.reqId);
+                    fd.append('action', payload.action);
+                    if (payload.ownerRemark) fd.append('ownerRemark', payload.ownerRemark);
+                    if (payload.action === 'verify' && payload.marketingPerson) fd.append('marketingPerson', payload.marketingPerson);
+                    if (payload.action === 'approve' && payload.approvedQty !== undefined) fd.append('approvedQty', String(payload.approvedQty));
+                    await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: fd });
+                    alert(`Claim ${payload.action} submitted.`);
+                } catch (error) {
+                    console.error('sendData error:', error);
+                    alert('Error processing request. Please try again.');
+                } finally {
+                    postLoading.classList.add('hidden');
+                }
+            };
+
+            const sendVerificationReport = async ({ reqId, salespersonRemark, attachments }) => {
+                try {
+                    postLoading.classList.remove('hidden');
+                    const fd = new FormData();
+                    fd.append('action', 'verificationReport');
+                    fd.append('reqId', reqId);
+                    fd.append('salespersonRemark', salespersonRemark || '');
+                    // Send attachments as JSON to keep request simple and CORS-friendly
+                    fd.append('attachmentsJson', JSON.stringify(attachments || []));
+                    await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: fd });
+                    alert('Verification report submitted.');
+                } catch (err) {
+                    console.error('sendVerificationReport error:', err);
+                    alert('Error submitting verification report.');
+                } finally {
+                    postLoading.classList.add('hidden');
+                }
+            };
+
+            const filesToBase64Payload = (fileList) => {
+                const toBase64 = (file) =>
+                    new Promise((resolve, reject) => {
+                        const reader = new FileReader();
+                        reader.onload = () => {
+                            const result = reader.result || '';
+                            const base64 = String(result).includes(',') ? String(result).split(',')[1] : String(result);
+                            resolve({ name: file.name, type: file.type, data: base64 });
+                        };
+                        reader.onerror = reject;
+                        reader.readAsDataURL(file);
+                    });
+                return Promise.all(Array.from(fileList || []).map((f) => toBase64(f)));
+            };
+
+            const filterCards = () => {
+                const selectedStatuses = Array.from(filterCheckboxes)
+                    .filter((c) => c.checked)
+                    .map((c) => c.value.toLowerCase().trim());
+                let filtered = originalData;
+                if (selectedStatuses.length > 0) {
+                    filtered = originalData.filter((item) => {
+                        const resp = (item['Owner Response'] || '').toString().toLowerCase().trim();
+                        const normalized = resp.replace(/ed$/, '');
+                        return selectedStatuses.includes(normalized) || selectedStatuses.includes(resp);
+                    });
+                }
+                displayCards(filtered);
+            };
+
+            // Countdown updater
+            const startCountdown = (el, deadline, card) => {
+                let timer;
+                const update = () => {
+                    const now = new Date();
+                    const diff = deadline - now;
+                    if (diff <= 0) {
+                        el.textContent = 'Overdue';
+                        card.classList.add('overdue');
+                        clearInterval(timer);
+                        return;
+                    }
+                    const hrs = Math.floor(diff / 1000 / 60 / 60);
+                    const mins = Math.floor((diff / 1000 / 60) % 60);
+                    const secs = Math.floor((diff / 1000) % 60);
+                    el.textContent = `${hrs}h ${mins}m ${secs}s left`;
+                };
+                timer = setInterval(update, 1000);
+                update();
+            };
+
+            const displayCards = (data) => {
+                cardContainer.innerHTML = '';
+                if (!Array.isArray(data) || data.length === 0) {
+                    noDataMessage.classList.remove('hidden');
+                    return;
+                }
+                const frag = document.createDocumentFragment();
+                data.forEach((item) => {
+                    const product = escapeHtml(item['Product']);
+                    const dealerName = escapeHtml(item['Dealer Name']);
+                    const crmName = escapeHtml(item['CRM Name']);
+                    const qty = escapeHtml(item['Qty']);
+                    const issue = escapeHtml(item['Issue']);
+                    const reqId = escapeHtml(item['REQ-ID']);
+                    const ownerResponse = (item['Owner Response'] || '').toString().toLowerCase().trim();
+                    const ownerRemark = escapeHtml(item['Owner Remark'] || '');
+                    const ownersInformedAt = item['Owners Informed at'];
+
+                    // Parse Request Date
+                    let formattedDate = 'Unknown';
+                    let requestDateObj = null;
+                    try {
+                        const rawDate = item['Request Date'];
+                        if (rawDate) {
+                            const parts = String(rawDate).split(', ');
+                            if (parts.length === 2) {
+                                const [datePart, timePart] = parts;
+                                const [month, day, year] = datePart.split('/').map((n) => parseInt(n));
+                                let [time, meridian] = timePart.split(' ');
+                                let [hours, minutes, seconds] = time.split(':').map((n) => parseInt(n));
+                                if (meridian.toLowerCase() === 'pm' && hours < 12) hours += 12;
+                                if (meridian.toLowerCase() === 'am' && hours === 12) hours = 0;
+                                requestDateObj = new Date(year, month - 1, day, hours, minutes, seconds);
+                            } else {
+                                requestDateObj = new Date(rawDate);
+                            }
+                        }
+                        formattedDate = requestDateObj && !isNaN(requestDateObj)
+                            ? requestDateObj.toLocaleString('en-GB', {
+                                  day: '2-digit',
+                                  month: '2-digit',
+                                  year: 'numeric',
+                                  hour: '2-digit',
+                                  minute: '2-digit',
+                                  second: '2-digit',
+                              })
+                            : 'Unknown';
+                    } catch (e) {
+                        requestDateObj = null;
+                        formattedDate = 'Unknown';
+                    }
+
+                    const card = document.createElement('div');
+                    card.className = 'p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 border border-slate-200 flex flex-col justify-between relative';
+                    let colorClass = 'bg-white';
+                    let footerHtml = `
+                        <button class="owners-informed-btn w-full px-4 py-2 text-sm font-semibold text-white bg-blue-500 rounded-lg hover:bg-blue-600 transition-colors shadow-md focus:outline-none"
+                                data-req-id="${reqId}" data-qty="${onlyNumber(qty)}">
+                            <i class="fas fa-bullhorn mr-2"></i>Owners Informed
+                        </button>`;
+                    let statusTagHtml = '';
+
+                    if (ownerResponse === 'reject' || ownerResponse === 'rejected') {
+                        colorClass = 'bg-red-100 border-red-400';
+                        footerHtml = '';
+                        statusTagHtml = '<div class="mt-2 text-sm font-semibold text-gray-700">🛈 Rejected</div>';
+                    } else if (ownerResponse === 'verify' || ownerResponse === 'verification pending') {
+                        colorClass = 'bg-yellow-100 border-yellow-400';
+                        footerHtml = `
+                            <button class="submit-verification-btn w-full px-4 py-2 text-sm font-semibold text-white bg-yellow-500 rounded-lg hover:bg-yellow-600 transition-colors shadow-md focus:outline-none" data-req-id="${reqId}">
                                 <i class="fas fa-file-alt mr-2"></i>Submit Verification Report
-                              </button>`; statusTagHtml = '<div class="mt-2 text-sm font-semibold text-gray-700">🛈 Verification Pending</div>'; }
-            else if (ownerResponse === 'approve' || ownerResponse === 'approved') { colorClass = 'bg-green-100 border-green-400'; const dealerCN = (item['Dealer CN Vch No'] || '').toString().trim(); const supplierName = (item['Supplier Name'] || '').toString().trim(); let statusTag = ''; if (!dealerCN && !supplierName) statusTag = "A/c Response Awaiting"; else if (dealerCN && !supplierName) statusTag = "Only Supplier Claim Pending"; else if (!dealerCN && supplierName) statusTag = "Only Dealer Claim Pending"; else statusTag = "Request Clear"; footerHtml = `<span class="inline-flex items-center px-3 py-1 text-sm font-semibold text-green-800 bg-green-200 rounded-full shadow-sm"><i class="fas fa-check-circle mr-2"></i>${escapeHtml(statusTag)}</span>`; }
-            
-            // Build inner HTML
-            card.innerHTML = `
-                <div class="flex-grow">
-                    <div class="flex items-center justify-between mb-4">
-                        <span class="text-sm font-medium text-slate-500">${formattedDate}</span>
-                        <span class="text-sm font-medium text-slate-500">${reqId}</span>
-                    </div>
-                    <h2 class="text-lg md:text-xl font-bold text-blue-800 mb-2">${product}</h2>
-                    <div class="space-y-3 text-slate-700">
-                        <div class="flex items-center space-x-3"><i class="fas fa-building text-blue-500 w-5 text-center"></i><span class="text-sm md:text-base">Dealer: ${dealerName}</span></div>
-                        <div class="flex items-center space-x-3"><span class="text-lg w-5 text-center">👩‍💼</span><span class="text-sm md:text-base">CRM: ${crmName}</span></div>
-                        <div class="flex items-center space-x-3"><i class="fas fa-hashtag text-blue-500 w-5 text-center"></i><span class="text-sm md:text-base">Qty: ${qty}</span></div>
-                        <div class="flex items-start space-x-3"><i class="fas fa-exclamation-circle text-red-500 w-5 text-center mt-1"></i><p class="text-sm md:text-base break-words flex-1">Issue: ${issue}</p></div>
-                        ${ownersInformedAt ? '' : `<div class="mt-2 text-sm"><strong>Deadline:</strong> <span id="deadline-${reqId}" class="countdown"></span></div>`}
-                    </div>
-                    ${ownerRemark ? `<div class="mt-4 border-t pt-4 border-slate-200"><h4 class="text-sm font-semibold text-slate-600 mb-2">Owner's Remark:</h4><p class="text-sm text-slate-800 break-words">${ownerRemark}</p></div>` : ''}
-                    ${statusTagHtml}
-                </div>
-                <div class="mt-4">${footerHtml}</div>
-                <button class="copy-btn absolute bottom-3 right-3 text-white transition-all duration-200 bg-black/20 backdrop-blur-sm rounded-md p-2 shadow-lg hover:bg-black/30"
-                    data-dealer-name="${escapeHtml(item['Dealer Name'])}" data-product="${escapeHtml(item['Product'])}" data-qty="${escapeHtml(item['Qty'])}" data-issue="${escapeHtml(item['Issue'])}" data-issue-date="${escapeHtml(new Date(item['Request Date']).toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' }))}">
-                    <i class="fas fa-copy text-sm"></i>
-                </button>`;
-            card.classList.add(...colorClass.split(' '));
-            frag.appendChild(card);
-            // Setup countdown if required
-            if (!ownersInformedAt && requestDateObj) {
-                const deadline = new Date(requestDateObj.getTime() + 2 * 60 * 60 * 1000);
-                const el = card.querySelector(`#deadline-${reqId}`);
-                if (el) startCountdown(el, deadline, card);
-            }
+                            </button>`;
+                        statusTagHtml = '<div class="mt-2 text-sm font-semibold text-gray-700">🛈 Verification Pending</div>';
+                    } else if (ownerResponse === 'approve' || ownerResponse === 'approved') {
+                        colorClass = 'bg-green-100 border-green-400';
+                        // New tag logic
+                        const dealerClaim = ((item['Dealer Claim'] ?? item['Dealer CN Vch No'] ?? item['Dealer CN No'] ?? '') + '').trim();
+                        const supplierName = ((item['Supplier Name'] ?? '') + '').trim();
+                        let statusTag = '';
+                        if (isCrmMode) {
+                            // CRM-specific: ignore supplier; only dealer claim matters
+                            statusTag = dealerClaim ? 'Request Clear' : 'A/c Response Awaiting';
+                        } else {
+                            // All-cards view: original granular logic
+                            if (!dealerClaim && !supplierName) statusTag = 'A/c Response Awaiting';
+                            else if (dealerClaim && !supplierName) statusTag = 'Only Supplier Claim Pending';
+                            else if (!dealerClaim && supplierName) statusTag = 'Only Dealer Claim Pending';
+                            else statusTag = 'Request Clear';
+                        }
+                        footerHtml = `<span class="inline-flex items-center px-3 py-1 text-sm font-semibold text-green-800 bg-green-200 rounded-full shadow-sm"><i class="fas fa-check-circle mr-2"></i>${escapeHtml(statusTag)}</span>`;
+                    }
+
+                    card.innerHTML = `
+                        <div class="flex-grow">
+                            <div class="flex items-center justify-between mb-4">
+                                <span class="text-sm font-medium text-slate-500">${formattedDate}</span>
+                                <span class="text-sm font-medium text-slate-500">${reqId}</span>
+                            </div>
+                            <h2 class="text-lg md:text-xl font-bold text-blue-800 mb-2">${product}</h2>
+                            <div class="space-y-3 text-slate-700">
+                                <div class="flex items-center space-x-3"><i class="fas fa-building text-blue-500 w-5 text-center"></i><span class="text-sm md:text-base">Dealer: ${dealerName}</span></div>
+                                <div class="flex items-center space-x-3"><span class="text-lg w-5 text-center">👩‍💼</span><span class="text-sm md:text-base">CRM: ${crmName}</span></div>
+                                <div class="flex items-center space-x-3"><i class="fas fa-hashtag text-blue-500 w-5 text-center"></i><span class="text-sm md:text-base">Qty: ${qty}</span></div>
+                                <div class="flex items-start space-x-3"><i class="fas fa-exclamation-circle text-red-500 w-5 text-center mt-1"></i><p class="text-sm md:text-base break-words flex-1">Issue: ${issue}</p></div>
+                                ${ownersInformedAt ? '' : `<div class="mt-2 text-sm"><strong>Deadline:</strong> <span id="deadline-${reqId}" class="countdown"></span></div>`}
+                            </div>
+                            ${ownerRemark ? `<div class="mt-4 border-t pt-4 border-slate-200"><h4 class="text-sm font-semibold text-slate-600 mb-2">Owner's Remark:</h4><p class="text-sm text-slate-800 break-words">${ownerRemark}</p></div>` : ''}
+                            ${statusTagHtml}
+                        </div>
+                        <div class="mt-4">${footerHtml}</div>
+                        <button class="copy-btn absolute bottom-3 right-3 text-white transition-all duration-200 bg-black/20 backdrop-blur-sm rounded-md p-2 shadow-lg hover:bg-black/30"
+                            data-dealer-name="${escapeHtml(item['Dealer Name'])}" data-product="${escapeHtml(item['Product'])}" data-qty="${escapeHtml(item['Qty'])}" data-issue="${escapeHtml(item['Issue'])}"
+                            data-issue-date="${escapeHtml(new Date(item['Request Date']).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }))}">
+                            <i class="fas fa-copy text-sm"></i>
+                        </button>`;
+
+                    card.classList.add(...colorClass.split(' '));
+                    frag.appendChild(card);
+
+                    if (!ownersInformedAt && requestDateObj) {
+                        const deadline = new Date(requestDateObj.getTime() + 2 * 60 * 60 * 1000);
+                        const el = card.querySelector(`#deadline-${reqId}`);
+                        if (el) startCountdown(el, deadline, card);
+                    }
+                });
+                cardContainer.appendChild(frag);
+            };
+
+            // Delegated clicks
+            cardContainer.addEventListener('click', async (e) => {
+                const ownersBtn = e.target.closest('.owners-informed-btn');
+                if (ownersBtn) {
+                    modal.dataset.reqId = ownersBtn.dataset.reqId;
+                    modal.dataset.claimQty = ownersBtn.dataset.qty || '';
+                    marketingPersonField.classList.add('hidden');
+                    approvedQtyField.classList.add('hidden');
+                    ownerRemarkInput.value = '';
+                    marketingPersonNameInput.value = '';
+                    approvedQtyInput.value = ownersBtn.dataset.qty || '';
+                    modal.classList.remove('hidden');
+                    return;
+                }
+
+                const copyBtn = e.target.closest('.copy-btn');
+                if (copyBtn) {
+                    const content = `Dealer: ${copyBtn.dataset.dealerName}\nProduct: ${copyBtn.dataset.product}\nQty: ${copyBtn.dataset.qty}\nIssue: ${copyBtn.dataset.issue}\nIssueDate: ${copyBtn.dataset.issueDate}`;
+                    navigator.clipboard?.writeText(content)
+                        .then(() => alert('📋 Details copied to clipboard!'))
+                        .catch(() => alert('Failed to copy. Please try again.'));
+                    return;
+                }
+
+                const verificationBtn = e.target.closest('.submit-verification-btn');
+                if (verificationBtn) {
+                    vModal.dataset.reqId = verificationBtn.dataset.reqId;
+                    vRemark.value = '';
+                    vFiles.value = '';
+                    vPreview.innerHTML = '';
+                    vModal.classList.remove('hidden');
+                    return;
+                }
+            });
+
+            // Modal close handlers
+            const closeOwnerModal = () => {
+                modal.classList.add('hidden');
+                approvedQtyField.classList.add('hidden');
+            };
+            closeModalBtn.addEventListener('click', closeOwnerModal);
+            modal.addEventListener('click', (e) => { if (e.target === modal) closeOwnerModal(); });
+
+            const closeVModal = () => vModal.classList.add('hidden');
+            vCloseBtn.addEventListener('click', closeVModal);
+            vCancelBtn.addEventListener('click', closeVModal);
+            vModal.addEventListener('click', (e) => { if (e.target === vModal) closeVModal(); });
+
+            // Owner Response actions
+            approveBtn.addEventListener('click', () => {
+                // Show Approved Qty field first if hidden
+                if (approvedQtyField.classList.contains('hidden')) {
+                    approvedQtyInput.value = modal.dataset.claimQty || '';
+                    approvedQtyField.classList.remove('hidden');
+                    approvedQtyInput.focus();
+                    return;
+                }
+                const qtyVal = approvedQtyInput.value.trim();
+                if (!qtyVal) {
+                    alert('Approved Qty is required to approve this claim.');
+                    approvedQtyInput.focus();
+                    return;
+                }
+                sendData({
+                    action: 'approve',
+                    ownerRemark: ownerRemarkInput.value || '',
+                    reqId: modal.dataset.reqId,
+                    approvedQty: qtyVal,
+                });
+                closeOwnerModal();
+            });
+
+            verifyBtn.addEventListener('click', () => {
+                if (marketingPersonField.classList.contains('hidden')) {
+                    marketingPersonField.classList.remove('hidden');
+                    return;
+                }
+                sendData({
+                    action: 'verify',
+                    ownerRemark: ownerRemarkInput.value || '',
+                    marketingPerson: marketingPersonNameInput.value || '',
+                    reqId: modal.dataset.reqId,
+                });
+                closeOwnerModal();
+            });
+
+            rejectBtn.addEventListener('click', () => {
+                sendData({ action: 'reject', ownerRemark: ownerRemarkInput.value || '', reqId: modal.dataset.reqId });
+                closeOwnerModal();
+            });
+
+            // Verification report submit
+            vFiles.addEventListener('change', () => {
+                vPreview.innerHTML = '';
+                Array.from(vFiles.files || []).forEach((f) => {
+                    const pill = document.createElement('div');
+                    pill.className = 'file-pill';
+                    pill.textContent = `${f.name}`;
+                    vPreview.appendChild(pill);
+                });
+            });
+            vSubmitBtn.addEventListener('click', async () => {
+                const reqId = vModal.dataset.reqId;
+                const remark = vRemark.value.trim();
+                const attachments = await filesToBase64Payload(vFiles.files);
+                await sendVerificationReport({ reqId, salespersonRemark: remark, attachments });
+                closeVModal();
+            });
+
+            // Filters UI
+            filterDropdownBtn.addEventListener('click', () => filterMenu.classList.toggle('hidden'));
+            filterCheckboxes.forEach((cb) => cb.addEventListener('change', filterCards));
+            window.addEventListener('click', (e) => {
+                if (!filterDropdownBtn.contains(e.target) && !filterMenu.contains(e.target)) filterMenu.classList.add('hidden');
+            });
+
+            // Start
+            const params = getUrlParams();
+            const crmName = params.get('crm');
+            isCrmMode = !!crmName;
+            crmName ? ((crmDisplay.textContent = crmName), fetchData(crmName)) : ((crmDisplay.textContent = 'All CRMs'), fetchData(null));
         });
-        cardContainer.appendChild(frag);
-    };
+    </script>
 
-    cardContainer.addEventListener('click', (e) => {
-        const ownersBtn = e.target.closest('.owners-informed-btn');
-        if (ownersBtn) { modal.dataset.reqId = ownersBtn.dataset.reqId; marketingPersonField.classList.add('hidden'); ownerRemarkInput.value = ''; marketingPersonNameInput.value = ''; modal.classList.remove('hidden'); return; }
-        const copyBtn = e.target.closest('.copy-btn');
-        if (copyBtn) {
-            const content = `Dealer: ${copyBtn.dataset.dealerName}\nProduct: ${copyBtn.dataset.product}\nQty: ${copyBtn.dataset.qty}\nIssue: ${copyBtn.dataset.issue}\nIssueDate: ${copyBtn.dataset.issueDate}`;
-            navigator.clipboard?.writeText(content).then(() => alert('📋 Details copied to clipboard!')).catch(() => alert('Failed to copy. Please try again.'));
-            return;
-        }
-        const verificationBtn = e.target.closest('.submit-verification-btn');
-        if (verificationBtn) { modal.dataset.reqId = verificationBtn.dataset.reqId; marketingPersonField.classList.remove('hidden'); modal.classList.remove('hidden'); return; }
-    });
-
-    closeModalBtn.addEventListener('click', () => modal.classList.add('hidden'));
-    modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.add('hidden'); });
-
-    approveBtn.addEventListener('click', () => { sendData({ action: 'approve', ownerRemark: ownerRemarkInput.value || '', reqId: modal.dataset.reqId }); modal.classList.add('hidden'); });
-    verifyBtn.addEventListener('click', () => {
-        if (marketingPersonField.classList.contains('hidden')) { marketingPersonField.classList.remove('hidden'); return; }
-        sendData({ action: 'verify', ownerRemark: ownerRemarkInput.value || '', marketingPerson: marketingPersonNameInput.value || '', reqId: modal.dataset.reqId });
-        modal.classList.add('hidden');
-    });
-    rejectBtn.addEventListener('click', () => { sendData({ action: 'reject', ownerRemark: ownerRemarkInput.value || '', reqId: modal.dataset.reqId }); modal.classList.add('hidden'); });
-
-    filterDropdownBtn.addEventListener('click', () => filterMenu.classList.toggle('hidden'));
-    filterCheckboxes.forEach(cb => cb.addEventListener('change', filterCards));
-    window.addEventListener('click', (e) => { if (!filterDropdownBtn.contains(e.target) && !filterMenu.contains(e.target)) filterMenu.classList.add('hidden'); });
-
-    const params = getUrlParams();
-    const crmName = params.get('crm');
-    crmName ? (crmDisplay.textContent = crmName, fetchData(crmName)) : (crmDisplay.textContent = 'All CRMs', fetchData(null));
-});
-</script>
-<script src="https://ntwoods.github.io/ordertodispatch/js/viewOnly.js"></script>
+    <script src="https://ntwoods.github.io/ordertodispatch/js/viewOnly.js"></script>
 </body>
 </html>
