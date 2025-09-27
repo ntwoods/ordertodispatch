@@ -520,6 +520,11 @@ document.addEventListener('DOMContentLoaded', () => {
             discussModal.dataset.qty = discussBtn.dataset.qty;
             discussRemark.value = '';
             discussApprovedQtyField.classList.add('hidden');
+        
+            // NEW: show salesperson remark in modal
+            const remarkText = discussBtn.dataset.salespersonRemark || 'No remark provided';
+            document.getElementById('discuss-salesperson-remark').textContent = remarkText;
+        
             discussModal.classList.remove('hidden');
             return;
         }
