@@ -450,7 +450,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     footerHtml = `<span class="inline-flex items-center px-3 py-1 text-sm font-semibold text-green-800 bg-green-200 rounded-full shadow-sm"><i class="fas fa-check-circle mr-2"></i>Request Clear</span>`;
                 } else {
                     // Case 2: CN blank → fallback to Owner Response
-                    if (ownerResponse === 'reject' || ownerResponse === 'rejected') {
+                    if (ownerResponse === 'reject' || ownerResponse === 'rejected' || ownerResponse === 'rejectverification') {
                         colorClass = 'bg-red-100 border-red-400';
                         footerHtml = '';
                         statusTagHtml = '<div class="mt-2 text-sm font-semibold text-gray-700">❌ Rejected</div>';
@@ -472,7 +472,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <i class="fas fa-comments mr-2"></i>Discuss Verification Report with Owners
                             </button>`;
                         statusTagHtml = '<div class="mt-2 text-sm font-semibold text-gray-700">🛈 Report Submitted</div>';
-                    } else if (ownerResponse === 'approve' || ownerResponse === 'approved') {
+                    } else if (ownerResponse === 'approve' || ownerResponse === 'approved' || ownerResponse === 'approveverification') {
                         colorClass = 'bg-gray-100 border-gray-400';
                         footerHtml = `<span class="inline-flex items-center px-3 py-1 text-sm font-semibold text-gray-800 bg-gray-200 rounded-full shadow-sm"><i class="fas fa-hourglass-half mr-2"></i>A/c Response Awaiting</span>`;
                     }
@@ -481,20 +481,16 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 // ================= PC / All Requests View =================
                 if (dealerCN && supplierName) {
-                    // Case 1: Both present → Request Clear
                     colorClass = 'bg-green-100 border-green-400';
                     footerHtml = `<span class="inline-flex items-center px-3 py-1 text-sm font-semibold text-green-800 bg-green-200 rounded-full shadow-sm"><i class="fas fa-check-circle mr-2"></i>Request Clear</span>`;
                 } else if (dealerCN && !supplierName) {
-                    // Case 2: CN present, Supplier missing
                     colorClass = 'bg-yellow-100 border-yellow-400';
                     footerHtml = `<span class="inline-flex items-center px-3 py-1 text-sm font-semibold text-yellow-800 bg-yellow-200 rounded-full shadow-sm"><i class="fas fa-exclamation-circle mr-2"></i>Only Supplier Claim Pending</span>`;
                 } else if (!dealerCN && supplierName) {
-                    // Case 3: Supplier present, CN missing
                     colorClass = 'bg-yellow-100 border-yellow-400';
                     footerHtml = `<span class="inline-flex items-center px-3 py-1 text-sm font-semibold text-yellow-800 bg-yellow-200 rounded-full shadow-sm"><i class="fas fa-exclamation-circle mr-2"></i>Only Dealer Claim Pending</span>`;
                 } else {
-                    // Case 4: Both blank → fallback to Owner Response
-                    if (ownerResponse === 'reject' || ownerResponse === 'rejected') {
+                    if (ownerResponse === 'reject' || ownerResponse === 'rejected' || ownerResponse === 'rejectverification') {
                         colorClass = 'bg-red-100 border-red-400';
                         footerHtml = '';
                         statusTagHtml = '<div class="mt-2 text-sm font-semibold text-gray-700">❌ Rejected</div>';
@@ -516,13 +512,12 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <i class="fas fa-comments mr-2"></i>Discuss Verification Report with Owners
                             </button>`;
                         statusTagHtml = '<div class="mt-2 text-sm font-semibold text-gray-700">🛈 Report Submitted</div>';
-                    } else if (ownerResponse === 'approve' || ownerResponse === 'approved') {
+                    } else if (ownerResponse === 'approve' || ownerResponse === 'approved' || ownerResponse === 'approveverification') {
                         colorClass = 'bg-gray-100 border-gray-400';
                         footerHtml = `<span class="inline-flex items-center px-3 py-1 text-sm font-semibold text-gray-800 bg-gray-200 rounded-full shadow-sm"><i class="fas fa-hourglass-half mr-2"></i>A/c Response Awaiting</span>`;
                     }
                 }
             }
-
 
             card.innerHTML = `
                 <div class="flex-grow">
