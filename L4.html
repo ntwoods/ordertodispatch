@@ -530,6 +530,20 @@
       });
     }
 
+function parseOrderDate(ts) {
+  if (!ts) return new Date(NaN);
+  if (typeof ts === 'string') {
+    const m = ts.trim().match(/^(\d{2})[\/-](\d{2})[\/-](\d{4})$/); // dd-mm-yyyy or dd/mm/yyyy
+    if (m) {
+      const d = +m[1], mo = +m[2] - 1, y = +m[3];
+      return new Date(y, mo, d); // local date (no TZ shift)
+    }
+  }
+  return new Date(ts); // ISO strings, Date objects, etc.
+}
+
+
+    
 function getDeadline(timestamp) {
   const orderTime = new Date(timestamp);
 
@@ -538,11 +552,6 @@ function getDeadline(timestamp) {
     orderTime.getFullYear(),
     orderTime.getMonth(),
     orderTime.getDate(),
-    18, 0, 0, 0  // 6:00 PM local time
-  );
-
-  return deadline;
-}
 
     function formatDateTime(timestamp) {
       const date = new Date(timestamp);
@@ -556,31 +565,36 @@ function getDeadline(timestamp) {
       });
     }
 
-    function startCountdown(deadline, elementId) {
-      const countdownElement = document.getElementById(elementId);
+function startCountdown(deadline, elementId) {
+  const el = document.getElementById(elementId);
 
-      function update() {
-        const now = new Date();
-        const timeLeft = deadline - now;
+  function render() {
+    const now = new Date();
+    const ms = deadline - now;
 
-        if (timeLeft <= 0) {
-          countdownElement.textContent = "EXPIRED!";
-          countdownElement.classList.remove('countdown-active');
-          countdownElement.classList.add('countdown-danger');
-          return;
-        }
-
-        const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-        const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
-        const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
-
-        countdownElement.textContent = 
-          `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-      }
-
-      update();
-      setInterval(update, 1000);
+    if (ms <= 0) {
+      el.textContent = "00:00:00:00";
+      el.classList.remove('countdown-active');
+      el.classList.add('countdown-danger');
+      return;
     }
+
+    const days    = Math.floor(ms / 86400000);
+    const hours   = Math.floor((ms % 86400000) / 3600000);
+    const minutes = Math.floor((ms % 3600000) / 60000);
+    const seconds = Math.floor((ms % 60000) / 1000);
+
+    el.textContent =
+      `${String(days).padStart(2,'0')}:` +
+      `${String(hours).padStart(2,'0')}:` +
+      `${String(minutes).padStart(2,'0')}:` +
+      `${String(seconds).padStart(2,'0')}`;
+  }
+
+  render();
+  setInterval(render, 1000);
+}
+
 
     function enableSubmit(index) {
       const submitBtn = document.getElementById(`submit-btn-${index}`);
@@ -703,6 +717,7 @@ function getDeadline(timestamp) {
   <script src="js/viewOnly.js"></script>
 </body>
 </html>
+
 
 
 
