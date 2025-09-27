@@ -157,6 +157,40 @@
         </div>
     </div>
 
+<!-- Discuss Visit Report with Owners Modal -->
+<div id="discuss-modal" class="fixed inset-0 z-50 overflow-y-auto hidden">
+  <div class="flex items-center justify-center min-h-screen px-4 py-8">
+    <div class="fixed inset-0 bg-gray-500 bg-opacity-75"></div>
+    <div class="inline-block px-4 pt-5 pb-4 bg-white rounded-lg shadow-xl sm:max-w-lg sm:w-full sm:p-6">
+      <div class="flex items-center justify-between pb-3 border-b">
+        <h3 class="text-xl font-bold text-blue-800">
+          <i class="fas fa-handshake mr-2"></i>Discuss Visit Report with Owners
+        </h3>
+        <button id="close-discuss-modal-btn" class="text-gray-400 hover:text-gray-600">
+          <i class="fas fa-times text-2xl"></i>
+        </button>
+      </div>
+      <div class="mt-4">
+        <label class="block text-sm mb-2">Owner's Remark</label>
+        <textarea id="discuss-remark" rows="4" class="w-full border rounded-lg"></textarea>
+
+        <label class="block text-sm mt-4 mb-2">Approved Qty</label>
+        <input type="number" id="discuss-approved-qty" class="w-full border rounded-lg" />
+      </div>
+      <div class="flex justify-end mt-4 space-x-2">
+        <button id="discuss-approve-btn" class="px-5 py-2 text-sm font-semibold text-white bg-green-500 rounded-lg hover:bg-green-600">
+          <i class="fas fa-check-circle mr-2"></i>Approve Claim
+        </button>
+        <button id="discuss-reject-btn" class="px-5 py-2 text-sm font-semibold text-white bg-red-500 rounded-lg hover:bg-red-600">
+          <i class="fas fa-times-circle mr-2"></i>Reject Claim
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
     <div id="post-loading" class="fixed inset-0 z-60 flex items-center justify-center bg-black bg-opacity-50 hidden">
         <div class="bg-white p-6 rounded-lg shadow-xl flex items-center space-x-4">
             <i class="fas fa-spinner fa-spin text-blue-500 text-2xl"></i>
@@ -218,6 +252,46 @@
             };
 
             const buildScriptUrl = (crmName) => (crmName ? `${SCRIPT_URL}?crm=${encodeURIComponent(crmName)}` : SCRIPT_URL);
+            const dModal = document.getElementById('discuss-modal');
+            const dCloseBtn = document.getElementById('close-discuss-modal-btn');
+            const dRemark = document.getElementById('discuss-remark');
+            const dApprovedQty = document.getElementById('discuss-approved-qty');
+            const dApproveBtn = document.getElementById('discuss-approve-btn');
+            const dRejectBtn = document.getElementById('discuss-reject-btn');
+            
+            document.getElementById('card-container').addEventListener('click', (e) => {
+              const discussBtn = e.target.closest('.discuss-btn');
+              if (discussBtn) {
+                dModal.dataset.reqId = discussBtn.dataset.reqId;
+                dApprovedQty.value = discussBtn.dataset.qty || '';
+                dRemark.value = '';
+                dModal.classList.remove('hidden');
+              }
+            });
+            
+            dCloseBtn.addEventListener('click', () => dModal.classList.add('hidden'));
+            
+            dApproveBtn.addEventListener('click', () => {
+              const qtyVal = dApprovedQty.value.trim();
+              if (!qtyVal) { alert('Approved Qty is required'); return; }
+              sendData({
+                action: 'approve',
+                ownerRemark: dRemark.value || '',
+                reqId: dModal.dataset.reqId,
+                approvedQty: qtyVal
+              });
+              window.location.reload();
+            });
+            
+            dRejectBtn.addEventListener('click', () => {
+              sendData({
+                action: 'reject',
+                ownerRemark: dRemark.value || '',
+                reqId: dModal.dataset.reqId
+              });
+              window.location.reload();
+            });
+            
 
             const fetchData = async (crmName = null) => {
                 loadingIndicator.classList.remove('hidden');
@@ -454,7 +528,23 @@
                             data-issue-date="${escapeHtml(new Date(item['Request Date']).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }))}">
                             <i class="fas fa-copy text-sm"></i>
                         </button>`;
-
+                    if (req.status === "Verification Pending" && !req.salespersonRemark) {
+                      // Show Submit Verification Report button
+                      card.innerHTML += `
+                        <button class="verify-btn bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded mt-2"
+                                data-req-id="${req.reqId}">
+                          Submit Verification Report
+                        </button>
+                      `;
+                    } else if (req.salespersonRemark) {
+                      // Show Discuss Visit Report with Owners button
+                      card.innerHTML += `
+                        <button class="discuss-btn bg-indigo-500 hover:bg-indigo-600 text-white px-3 py-1 rounded mt-2"
+                                data-req-id="${req.reqId}" data-qty="${req.qty}">
+                          Discuss Visit Report with Owners
+                        </button>
+                      `;
+                    }
                     card.classList.add(...colorClass.split(' '));
                     frag.appendChild(card);
 
