@@ -182,7 +182,9 @@
             <td class="px-4 py-2">${order.marketingPersonName}</td>
             <td class="px-4 py-2"><a href="${order.fileUploadLink}" target="_blank" class="text-blue-300 underline">View File</a></td>
             <td class="px-4 py-2" data-deadline="${deadline.toISOString()}"></td>
+            <div class="editable">
             <td class="px-4 py-2"><button onclick="openModal('${order.timestamp}')" class="bg-indigo-600 px-3 py-1 rounded">Submit</button></td>
+            </div>
           `;
           table.appendChild(row);
         });
@@ -190,5 +192,6 @@
         setInterval(updateTimers,1000);
       });
   </script>
+  <script src="https://ntwoods.github.io/ordertodispatch/js/viewOnly.js"></script>
 </body>
 </html>
