@@ -1,313 +1,387 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dealer Data Dashboard</title>
-    <meta http-equiv="refresh" content="60">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        /* Custom styles to ensure Inter font and responsive table behavior */
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f3f4f6; /* Light gray background */
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        th, td {
-            padding: 12px 15px;
-            text-align: left;
-            border-bottom: 1px solid #e5e7eb; /* Light gray border */
-        }
-        th {
-            background-color: #e0e7ff; /* Light blue header */
-            color: #1f2937; /* Dark text for header */
-            font-weight: 600;
-            cursor: pointer; /* Indicate sortable columns */
-        }
-        tr:nth-child(even) {
-            background-color: #f9fafb; /* Slightly darker for even rows */
-        }
-        tr:hover {
-            background-color: #eef2ff; /* Hover effect */
-        }
-        /* Responsive table behavior for smaller screens */
-        @media (max-width: 768px) {
-            table, thead, tbody, th, td, tr {
-                display: block;
-            }
-            thead tr {
-                position: absolute;
-                top: -9999px;
-                left: -9999px;
-            }
-            tr {
-                border: 1px solid #e5e7eb;
-                margin-bottom: 10px;
-                border-radius: 8px; /* Rounded corners for rows on mobile */
-            }
-            td {
-                border: none;
-                position: relative;
-                padding-left: 50%;
-                text-align: right;
-            }
-            td:before {
-                position: absolute;
-                top: 0;
-                left: 6px;
-                width: 45%;
-                padding-right: 10px;
-                white-space: nowrap;
-                text-align: left;
-                font-weight: 600;
-                content: attr(data-label); /* Use data-label for column names */
-            }
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dealer Data Dashboard — O2D Journey</title>
+  <meta http-equiv="refresh" content="60" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #e5e7eb; }
+    th { background-color: #e0e7ff; color: #1f2937; font-weight: 600; cursor: pointer; user-select: none; }
+    tr:nth-child(even) { background-color: #f9fafb; }
+    tr:hover { background-color: #eef2ff; }
+    .th-sort::after { content: ' \25B2\25BC'; opacity: 0.3; margin-left: 6px; }
+    .th-sort.asc::after { content: ' \25B2'; opacity: 0.9; }
+    .th-sort.desc::after { content: ' \25BC'; opacity: 0.9; }
+    @media (max-width: 768px) {
+      table, thead, tbody, th, td, tr { display: block; }
+      thead tr { position: absolute; top: -9999px; left: -9999px; }
+      tr { border: 1px solid #e5e7eb; margin-bottom: 10px; border-radius: 8px; }
+      td { border: none; position: relative; padding-left: 50%; text-align: right; }
+      td:before { position: absolute; top: 0; left: 6px; width: 45%; padding-right: 10px; white-space: nowrap; text-align: left; font-weight: 600; content: attr(data-label); }
+    }
+  </style>
 </head>
 <body class="p-4 md:p-8 flex items-center justify-center min-h-screen">
-    <div class="container mx-auto bg-white shadow-lg rounded-lg p-6 md:p-8 max-w-6xl w-full">
-        <h1 class="text-3xl font-bold text-gray-800 mb-6 text-center">Sales Orders Tracking</h1>
+  <div class="container mx-auto bg-white shadow-lg rounded-lg p-6 md:p-8 max-w-7xl w-full">
+    <h1 class="text-3xl font-bold text-gray-800 mb-2 text-center">Sales Orders Tracking</h1>
 
-        <div id="loading" class="text-center text-blue-600 text-lg mb-4 hidden">Loading data...</div>
-        <div id="error" class="text-center text-red-600 text-lg mb-4 hidden"></div>
-
-        <div class="flex flex-col sm:flex-row justify-end items-center mb-4 space-y-2 sm:space-y-0 sm:space-x-4">
-            <div class="flex items-center space-x-2">
-                <label for="crmFilter" class="font-semibold text-gray-700">Filter by CRM:</label>
-                <select id="crmFilter" class="p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                    <option value="all">All CRMs</option>
-                    </select>
-            </div>
-        </div>
-
-        <div class="overflow-x-auto rounded-lg shadow-md">
-            <table id="dataTable" class="min-w-full bg-white rounded-lg">
-                <thead>
-                    <tr>
-                        <th class="py-3 px-4 text-xs sm:text-sm" data-column="dealerName">Dealer Name</th>
-                        <th class="py-3 px-4 text-xs sm:text-sm" data-column="marketingPerson">Marketing Person</th>
-                        <th class="py-3 px-4 text-xs sm:text-sm" data-column="location">Location</th>
-                        <th class="py-3 px-4 text-xs sm:text-sm" data-column="crmName">CRM</th>
-                        <th class="py-3 px-4 text-xs sm:text-sm" data-column="status">Delivery Date</th>
-                    </tr>
-                </thead>
-                <tbody id="tableBody">
-                    </tbody>
-            </table>
-        </div>
+    <!-- KPIs / Summary -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+      <div class="p-4 rounded-lg bg-blue-50 border border-blue-200">
+        <div class="text-sm text-slate-500">Total Orders</div>
+        <div id="kpiTotal" class="text-2xl font-extrabold text-blue-800">0</div>
+      </div>
+      <div class="p-4 rounded-lg bg-emerald-50 border border-emerald-200">
+        <div class="text-sm text-slate-500">Avg. Assign Time (Order → CRM)</div>
+        <div id="kpiAvgAssign" class="text-2xl font-extrabold text-emerald-800">00:00:00</div>
+      </div>
+      <div class="p-4 rounded-lg bg-indigo-50 border border-indigo-200">
+        <div class="text-sm text-slate-500 mb-1">Orders by CRM (filtered)</div>
+        <div id="kpiCrmBreakup" class="text-sm text-indigo-900 leading-6"></div>
+      </div>
     </div>
 
-    <script>
-        // API URL provided by the user
-        const API_URL = 'https://script.google.com/macros/s/AKfycbxsuZ7LEZkhC7qzxXvUDFxa76K5OXY2sPJ5yjYhI5X63dzO7WeUerQXhT_wQAXzbk1xEQ/exec';
+    <div id="loading" class="text-center text-blue-600 text-lg mb-4 hidden">Loading data...</div>
+    <div id="error" class="text-center text-red-600 text-lg mb-4 hidden"></div>
 
-        // Get references to HTML elements
-        const loadingElement = document.getElementById('loading');
-        const errorElement = document.getElementById('error');
-        const tableBody = document.getElementById('tableBody');
-        const crmFilter = document.getElementById('crmFilter');
-        const tableHeaders = document.querySelectorAll('#dataTable th');
+    <!-- Filters Row -->
+    <div class="space-y-3 md:space-y-0 md:grid md:grid-cols-12 md:gap-4 mb-4">
+      <div class="md:col-span-3 flex items-center space-x-2">
+        <label for="crmFilter" class="font-semibold text-gray-700 whitespace-nowrap">CRM:</label>
+        <select id="crmFilter" class="p-2 border border-gray-300 rounded-md shadow-sm w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+          <option value="all">All CRMs</option>
+        </select>
+      </div>
 
-        let allTableData = []; // Store the original fetched data
-        let currentSortColumn = null;
-        let currentSortDirection = 'asc'; // 'asc' or 'desc'
+      <!-- Order Date Range -->
+      <div class="md:col-span-3">
+        <label class="block text-sm font-semibold text-slate-700 mb-1">Order Date (From → To)</label>
+        <div class="flex space-x-2">
+          <input id="orderFrom" type="datetime-local" class="p-2 border rounded w-1/2" />
+          <input id="orderTo" type="datetime-local" class="p-2 border rounded w-1/2" />
+        </div>
+      </div>
 
-        /**
-         * Formats an ISO date string to 'dd-mmm-yy' format.
-         * @param {string} isoDateString - The date string in ISO 8601 format (e.g., "2025-06-03T12:02:53.000Z").
-         * @returns {string} The formatted date string (e.g., "03-Jun-25") or an empty string if invalid.
-         */
-        function formatGoodsDeliveredDate(isoDateString) {
-            if (!isoDateString) {
-                return '';
-            }
-            try {
-                const date = new Date(isoDateString);
+      <!-- Assigned Date Range -->
+      <div class="md:col-span-3">
+        <label class="block text-sm font-semibold text-slate-700 mb-1">Assigned Date (From → To)</label>
+        <div class="flex space-x-2">
+          <input id="assignedFrom" type="datetime-local" class="p-2 border rounded w-1/2" />
+          <input id="assignedTo" type="datetime-local" class="p-2 border rounded w-1/2" />
+        </div>
+      </div>
 
-                // Check if the date is valid
-                if (isNaN(date.getTime())) {
-                    console.warn('Invalid date string provided:', isoDateString);
-                    return ''; // Return empty string for invalid dates
-                }
+      <!-- Delivered Date Range -->
+      <div class="md:col-span-3">
+        <label class="block text-sm font-semibold text-slate-700 mb-1">Delivered Date (From → To)</label>
+        <div class="flex space-x-2">
+          <input id="deliveredFrom" type="datetime-local" class="p-2 border rounded w-1/2" />
+          <input id="deliveredTo" type="datetime-local" class="p-2 border rounded w-1/2" />
+        </div>
+      </div>
+    </div>
 
-                const day = String(date.getDate()).padStart(2, '0');
-                const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
-                                    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-                const month = monthNames[date.getMonth()];
-                const year = String(date.getFullYear()).slice(-2); // Get last two digits of the year
+    <div class="mb-4 flex space-x-2">
+      <button id="clearFilters" class="px-3 py-2 rounded bg-slate-200 hover:bg-slate-300 text-slate-800">Clear Filters</button>
+    </div>
 
-                return `${day}-${month}-${year}`;
-            } catch (e) {
-                console.error('Error formatting date:', e);
-                return ''; // Return empty string on error
-            }
+    <div class="overflow-x-auto rounded-lg shadow-md">
+      <table id="dataTable" class="min-w-full bg-white rounded-lg">
+        <thead>
+          <tr>
+            <th class="py-3 px-4 text-xs sm:text-sm th-sort" data-column="orderDate">Order Date</th>
+            <th class="py-3 px-4 text-xs sm:text-sm th-sort" data-column="crmAssigned">CRM Assigned</th>
+            <th class="py-3 px-4 text-xs sm:text-sm th-sort" data-column="dealerName">Dealer Name</th>
+            <th class="py-3 px-4 text-xs sm:text-sm th-sort" data-column="marketingPerson">Marketing Person</th>
+            <th class="py-3 px-4 text-xs sm:text-sm th-sort" data-column="location">Location</th>
+            <th class="py-3 px-4 text-xs sm:text-sm th-sort" data-column="crmName">CRM</th>
+            <th class="py-3 px-4 text-xs sm:text-sm th-sort" data-column="goodsDelivered">Delivered Date</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    // ====== Config ======
+    const API_URL = 'https://script.google.com/macros/s/AKfycbxsuZ7LEZkhC7qzxXvUDFxa76K5OXY2sPJ5yjYhI5X63dzO7WeUerQXhT_wQAXzbk1xEQ/exec';
+
+    // ====== Elements ======
+    const loadingElement = document.getElementById('loading');
+    const errorElement = document.getElementById('error');
+    const tableBody = document.getElementById('tableBody');
+    const crmFilter = document.getElementById('crmFilter');
+    const tableHeaders = document.querySelectorAll('#dataTable th');
+
+    const orderFrom = document.getElementById('orderFrom');
+    const orderTo = document.getElementById('orderTo');
+    const assignedFrom = document.getElementById('assignedFrom');
+    const assignedTo = document.getElementById('assignedTo');
+    const deliveredFrom = document.getElementById('deliveredFrom');
+    const deliveredTo = document.getElementById('deliveredTo');
+    const clearFiltersBtn = document.getElementById('clearFilters');
+
+    const kpiTotal = document.getElementById('kpiTotal');
+    const kpiAvgAssign = document.getElementById('kpiAvgAssign');
+    const kpiCrmBreakup = document.getElementById('kpiCrmBreakup');
+
+    // ====== State ======
+    let allTableData = [];
+    let currentSortColumn = null;
+    let currentSortDirection = 'asc'; // 'asc' | 'desc'
+
+    // ====== Utils ======
+    function parseDateSafe(v) {
+      if (!v) return null;
+      const d = new Date(v);
+      return isNaN(d) ? null : d;
+    }
+
+    function fmt2(n) { return String(n).padStart(2, '0'); }
+
+    // dd-mm-yyyy hh:mm:ss (local time)
+    function formatDateTime(v) {
+      const d = parseDateSafe(v);
+      if (!d) return '';
+      return `${fmt2(d.getDate())}-${fmt2(d.getMonth()+1)}-${d.getFullYear()} ${fmt2(d.getHours())}:${fmt2(d.getMinutes())}:${fmt2(d.getSeconds())}`;
+    }
+
+    function msToHMS(ms) {
+      if (!ms || ms < 0) return '00:00:00';
+      const totalSec = Math.floor(ms / 1000);
+      const h = Math.floor(totalSec / 3600);
+      const m = Math.floor((totalSec % 3600) / 60);
+      const s = totalSec % 60;
+      return `${fmt2(h)}:${fmt2(m)}:${fmt2(s)}`;
+    }
+
+    // For blank-last sorting regardless of direction
+    function compareWithBlanksLast(aKey, bKey, direction, isDate=false) {
+      const aBlank = aKey === null || aKey === undefined || aKey === '' || (isDate && aKey === null);
+      const bBlank = bKey === null || bKey === undefined || bKey === '' || (isDate && bKey === null);
+      if (aBlank && bBlank) return 0;
+      if (aBlank && !bBlank) return 1; // a goes after b (blank last)
+      if (!aBlank && bBlank) return -1; // b goes after a (blank last)
+      if (isDate) {
+        const aT = aKey instanceof Date ? aKey.getTime() : new Date(aKey).getTime();
+        const bT = bKey instanceof Date ? bKey.getTime() : new Date(bKey).getTime();
+        if (aT === bT) return 0;
+        return direction === 'asc' ? (aT < bT ? -1 : 1) : (aT > bT ? -1 : 1);
+      } else {
+        const aV = ('' + aKey).toLowerCase();
+        const bV = ('' + bKey).toLowerCase();
+        if (aV === bV) return 0;
+        return direction === 'asc' ? (aV < bV ? -1 : 1) : (aV > bV ? -1 : 1);
+      }
+    }
+
+    // ====== Rendering ======
+    function populateTable(data) {
+      tableBody.innerHTML = '';
+      if (!Array.isArray(data) || data.length === 0) {
+        const noDataRow = document.createElement('tr');
+        noDataRow.innerHTML = `<td colspan="7" class="text-center py-4 text-gray-500">No data available.</td>`;
+        tableBody.appendChild(noDataRow);
+        updateKpis([]);
+        return;
+      }
+
+      const frag = document.createDocumentFragment();
+      data.forEach(item => {
+        const row = document.createElement('tr');
+
+        // Delivered column content: either date or Status button (legacy behaviour)
+        let deliveredCell = '';
+        if (item.goodsDelivered) {
+          deliveredCell = formatDateTime(item.goodsDelivered);
+        } else if (item.level) {
+          deliveredCell = `<button onclick="window.open('${item.level}', '_blank')" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50">Status</button>`;
         }
 
-        /**
-         * Populates the table with the given data.
-         * @param {Array} dataToDisplay - The array of data objects to display.
-         */
-        function populateTable(dataToDisplay) {
-            tableBody.innerHTML = ''; // Clear existing table rows
+        row.innerHTML = `
+          <td data-label="Order Date" class="py-2 px-4 text-sm sm:text-base">${formatDateTime(item.orderDate)}</td>
+          <td data-label="CRM Assigned" class="py-2 px-4 text-sm sm:text-base">${formatDateTime(item.crmAssigned)}</td>
+          <td data-label="Dealer Name" class="py-2 px-4 text-sm sm:text-base">${item.dealerName || ''}</td>
+          <td data-label="Marketing Person" class="py-2 px-4 text-sm sm:text-base">${item.marketingPerson || ''}</td>
+          <td data-label="Location" class="py-2 px-4 text-sm sm:text-base">${item.location || ''}</td>
+          <td data-label="CRM" class="py-2 px-4 text-sm sm:text-base">${item.crmName || ''}</td>
+          <td data-label="Delivered Date" class="py-2 px-4 text-sm sm:text-base">${deliveredCell}</td>`;
+        frag.appendChild(row);
+      });
+      tableBody.appendChild(frag);
+      updateKpis(data);
+    }
 
-            if (dataToDisplay && Array.isArray(dataToDisplay) && dataToDisplay.length > 0) {
-                dataToDisplay.forEach(item => {
-                    const row = document.createElement('tr');
+    function updateKpis(data) {
+      // Total Orders (count rows)
+      kpiTotal.textContent = data.length.toString();
 
-                    // Determine content for the Status column based on new logic
-                    let statusContent = '';
-                    if (item.goodsDelivered) {
-                        // If goodsDelivered has a value, format and display it
-                        statusContent = formatGoodsDeliveredDate(item.goodsDelivered);
-                    } else if (item.level) {
-                        // If goodsDelivered is empty, but level has a value, display the Status button
-                        statusContent = `
-                            <button onclick="window.open('${item.level}', '_blank')"
-                                     class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50">
-                                Status
-                            </button>
-                        `;
-                    }
-                    // If both goodsDelivered and level are empty, statusContent remains blank
+      // CRM breakup
+      const map = new Map();
+      data.forEach(r => {
+        const key = r.crmName || '—';
+        map.set(key, (map.get(key) || 0) + 1);
+      });
+      if (map.size === 0) {
+        kpiCrmBreakup.textContent = '—';
+      } else {
+        kpiCrmBreakup.innerHTML = Array.from(map.entries())
+          .sort((a,b)=>a[0].localeCompare(b[0]))
+          .map(([k,v]) => `<span class="inline-block bg-indigo-100 text-indigo-800 rounded px-2 py-0.5 mr-2 mb-1">${k}: <b>${v}</b></span>`)
+          .join('');
+      }
 
-                    // Create table cells for each data point
-                    // Using data-label for responsive table on mobile
-                    row.innerHTML = `
-                        <td data-label="Dealer Name" class="py-2 px-4 text-sm sm:text-base">${item.dealerName || ''}</td>
-                        <td data-label="Marketing Person" class="py-2 px-4 text-sm sm:text-base">${item.marketingPerson || ''}</td>
-                        <td data-label="Location" class="py-2 px-4 text-sm sm:text-base">${item.location || ''}</td>
-                        <td data-label="CRM" class="py-2 px-4 text-sm sm:text-base">${item.crmName || ''}</td>
-                        <td data-label="Status" class="py-2 px-4 text-sm sm:text-base">
-                            ${statusContent}
-                        </td>
-                    `;
-                    tableBody.appendChild(row);
-                });
-            } else {
-                // Display a message if no data is found
-                const noDataRow = document.createElement('tr');
-                noDataRow.innerHTML = `<td colspan="6" class="text-center py-4 text-gray-500">No data available.</td>`;
-                tableBody.appendChild(noDataRow);
-            }
+      // Average Order → CRM Assigned time
+      const diffs = data
+        .map(r => {
+          const o = parseDateSafe(r.orderDate);
+          const a = parseDateSafe(r.crmAssigned);
+          return (o && a) ? (a.getTime() - o.getTime()) : null;
+        })
+        .filter(ms => ms !== null && ms >= 0);
+      if (diffs.length === 0) {
+        kpiAvgAssign.textContent = '00:00:00';
+      } else {
+        const avg = Math.floor(diffs.reduce((p,c)=>p+c,0) / diffs.length);
+        kpiAvgAssign.textContent = msToHMS(avg);
+      }
+    }
+
+    // ====== Filtering & Sorting ======
+    function withinRange(d, fromInput, toInput) {
+      if (!fromInput && !toInput) return true;
+      if (!d) return false; // if we filter by a date and row has blank, exclude
+      const t = d.getTime();
+      if (fromInput) {
+        const f = new Date(fromInput);
+        if (!isNaN(f)) {
+          const fT = f.getTime();
+          if (t < fT) return false;
         }
-
-        /**
-         * Filters the table data based on the selected CRM.
-         */
-        function filterTable() {
-            const selectedCrm = crmFilter.value;
-            let filteredData = [];
-
-            if (selectedCrm === 'all') {
-                filteredData = [...allTableData]; // Show all data
-            } else {
-                filteredData = allTableData.filter(item => item.crmName === selectedCrm);
-            }
-            applySortAndPopulate(filteredData);
+      }
+      if (toInput) {
+        const to = new Date(toInput);
+        if (!isNaN(to)) {
+          const toT = to.getTime();
+          if (t > toT) return false;
         }
+      }
+      return true;
+    }
 
-        /**
-         * Sorts the data based on the column and direction, then populates the table.
-         * @param {Array} data - The data array to sort.
-         */
-        function applySortAndPopulate(data) {
-            if (currentSortColumn) {
-                data.sort((a, b) => {
-                    const aValue = a[currentSortColumn] || '';
-                    const bValue = b[currentSortColumn] || '';
+    function filterData() {
+      const selectedCrm = crmFilter.value;
+      let data = allTableData.slice();
 
-                    // Handle status column sorting separately as it contains HTML
-                    if (currentSortColumn === 'status') {
-                        // For status, we'll sort by goodsDelivered date if available, otherwise by level string
-                        const aStatus = a.goodsDelivered ? new Date(a.goodsDelivered).getTime() : (a.level || '').toLowerCase();
-                        const bStatus = b.goodsDelivered ? new Date(b.goodsDelivered).getTime() : (b.level || '').toLowerCase();
+      // CRM filter
+      if (selectedCrm !== 'all') {
+        data = data.filter(x => (x.crmName || '') === selectedCrm);
+      }
 
-                        if (aStatus < bStatus) return currentSortDirection === 'asc' ? -1 : 1;
-                        if (aStatus > bStatus) return currentSortDirection === 'asc' ? 1 : -1;
-                        return 0;
-                    } else {
-                        // Default string comparison for other columns
-                        if (aValue < bValue) return currentSortDirection === 'asc' ? -1 : 1;
-                        if (aValue > bValue) return currentSortDirection === 'asc' ? 1 : -1;
-                        return 0;
-                    }
-                });
-            }
-            populateTable(data);
-        }
+      // Date range filters
+      data = data.filter(x => {
+        const od = parseDateSafe(x.orderDate);
+        const ad = parseDateSafe(x.crmAssigned);
+        const dd = parseDateSafe(x.goodsDelivered);
+        const passOrder = withinRange(od, orderFrom.value, orderTo.value);
+        const passAssigned = withinRange(ad, assignedFrom.value, assignedTo.value);
+        const passDelivered = withinRange(dd, deliveredFrom.value, deliveredTo.value);
+        return passOrder && passAssigned && passDelivered;
+      });
 
-        /**
-         * Handles column header clicks for sorting.
-         * @param {Event} event - The click event.
-         */
-        function handleColumnHeaderClick(event) {
-            const column = event.target.dataset.column;
-            if (!column) return; // Not a sortable column
+      // Sort
+      if (currentSortColumn) {
+        const col = currentSortColumn;
+        const dir = currentSortDirection;
+        data.sort((a,b) => {
+          if (col === 'orderDate' || col === 'crmAssigned' || col === 'goodsDelivered') {
+            return compareWithBlanksLast(parseDateSafe(a[col]), parseDateSafe(b[col]), dir, true);
+          } else if (col === 'status') {
+            // kept for compatibility if needed later
+            return 0;
+          } else {
+            return compareWithBlanksLast(a[col], b[col], dir, false);
+          }
+        });
+      }
+      return data;
+    }
 
-            if (currentSortColumn === column) {
-                currentSortDirection = currentSortDirection === 'asc' ? 'desc' : 'asc';
-            } else {
-                currentSortColumn = column;
-                currentSortDirection = 'asc';
-            }
-            filterTable(); // Re-filter and re-sort the currently filtered data
-        }
+    function refresh() {
+      const data = filterData();
+      populateTable(data);
+    }
 
-        /**
-         * Fetches data from the API and populates the table and CRM filter.
-         */
-        async function fetchData() {
-            loadingElement.classList.remove('hidden'); // Show loading indicator
-            errorElement.classList.add('hidden');     // Hide any previous error
+    function handleColumnHeaderClick(e) {
+      const th = e.currentTarget;
+      const column = th.dataset.column;
+      if (!column) return;
 
-            try {
-                const response = await fetch(API_URL);
+      // toggle class indicators
+      document.querySelectorAll('#dataTable th').forEach(h => h.classList.remove('asc','desc'));
 
-                // Check if the response is OK (status code 200-299)
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
+      if (currentSortColumn === column) {
+        currentSortDirection = currentSortDirection === 'asc' ? 'desc' : 'asc';
+      } else {
+        currentSortColumn = column;
+        currentSortDirection = 'asc';
+      }
+      th.classList.add(currentSortDirection);
+      refresh();
+    }
 
-                const result = await response.json();
+    // ====== Data Fetch ======
+    async function fetchData() {
+      loadingElement.classList.remove('hidden');
+      errorElement.classList.add('hidden');
+      try {
+        const res = await fetch(API_URL);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const result = await res.json();
+        const rows = (result && Array.isArray(result.data)) ? result.data : [];
 
-                if (result.data && Array.isArray(result.data) && result.data.length > 0) {
-                    allTableData = result.data; // Store the original data
+        // Expecting fields: orderDate, crmAssigned, dealerName, marketingPerson, location, crmName, goodsDelivered, level
+        allTableData = rows;
 
-                    // Populate CRM filter dropdown
-                    const crmNames = [...new Set(allTableData.map(item => item.crmName).filter(name => name))]; // Get unique non-empty CRM names
-                    crmNames.sort().forEach(crm => {
-                        const option = document.createElement('option');
-                        option.value = crm;
-                        option.textContent = crm;
-                        crmFilter.appendChild(option);
-                    });
-
-                    filterTable(); // Apply initial filter (all CRMs) and sort
-                } else {
-                    tableBody.innerHTML = `<td colspan="6" class="text-center py-4 text-gray-500">No data available.</td>`;
-                }
-
-            } catch (error) {
-                console.error('Error fetching data:', error);
-                errorElement.textContent = `Failed to load data: ${error.message}. Please try again later.`;
-                errorElement.classList.remove('hidden'); // Show error message
-            } finally {
-                loadingElement.classList.add('hidden'); // Hide loading indicator
-            }
-        }
-
-        // Event Listeners
-        crmFilter.addEventListener('change', filterTable);
-        tableHeaders.forEach(header => {
-            header.addEventListener('click', handleColumnHeaderClick);
+        // Populate CRM filter options
+        const set = new Set(rows.map(r => r.crmName).filter(Boolean));
+        const options = Array.from(set).sort();
+        options.forEach(crm => {
+          const opt = document.createElement('option');
+          opt.value = crm; opt.textContent = crm; crmFilter.appendChild(opt);
         });
 
-        // Fetch data when the page loads
-        window.onload = fetchData;
-    </script>
+        // Initial sort by Order Date desc (optional)
+        currentSortColumn = 'orderDate';
+        currentSortDirection = 'desc';
+        document.querySelector('th[data-column="orderDate"]').classList.add('desc');
+        refresh();
+      } catch (err) {
+        console.error(err);
+        errorElement.textContent = `Failed to load data: ${err.message}. Please try again later.`;
+        errorElement.classList.remove('hidden');
+      } finally {
+        loadingElement.classList.add('hidden');
+      }
+    }
+
+    // ====== Events ======
+    crmFilter.addEventListener('change', refresh);
+    ;[orderFrom, orderTo, assignedFrom, assignedTo, deliveredFrom, deliveredTo].forEach(el => el.addEventListener('change', refresh));
+    clearFiltersBtn.addEventListener('click', () => {
+      crmFilter.value = 'all';
+      [orderFrom, orderTo, assignedFrom, assignedTo, deliveredFrom, deliveredTo].forEach(el => el.value = '');
+      refresh();
+    });
+    tableHeaders.forEach(h => h.addEventListener('click', handleColumnHeaderClick));
+
+    // ====== Start ======
+    window.onload = fetchData;
+  </script>
 </body>
 </html>
