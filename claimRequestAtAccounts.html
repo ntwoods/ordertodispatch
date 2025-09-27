@@ -300,55 +300,85 @@
                 }
             };
             
-            // Function to render a single claim request card
-            const createClaimCard = (request) => {
-              const card = document.createElement('div');
-              card.className = 'card p-4 rounded-lg shadow-md hover:shadow-lg';
-              card.dataset.reqId = request["REQ-ID"] || '';
-              card.dataset.product = request["Product"] || '';
-              card.dataset.qty = request["Qty"] || '';
-              card.dataset.issue = request["Issue"] || '';
-            
-              const pReq = document.createElement('p');
-              pReq.className = 'text-xs font-semibold text-gray-500 mb-1';
-              pReq.innerHTML = `Request ID: <span class="font-medium text-blue-600">${String(request["REQ-ID"]||'')}</span>`;
-            
-              const h2 = document.createElement('h2');
-              h2.className = 'text-base font-bold text-blue-900 mt-1';
-              h2.textContent = request["Dealer Name"] || '';
-            
-              const pProduct = document.createElement('p');
-              pProduct.className = 'text-gray-700 text-xs mt-1';
-              pProduct.innerHTML = `Product: <span class="font-medium">${String(request["Product"]||'')}</span>`;
-            
-              const pQty = document.createElement('p');
-              pQty.className = 'text-gray-700 text-xs';
-              pQty.innerHTML = `Quantity: <span class="font-medium">${String(request["Qty"]||'')}</span>`;
-            
-              const pCrm = document.createElement('p');
-              pCrm.className = 'text-gray-700 text-xs';
-              pCrm.innerHTML = `CRM: <span class="font-medium">${String(request["CRM Name"]||'')}</span>`;
-            
-              const pIssue = document.createElement('p');
-              pIssue.className = 'text-gray-700 text-xs';
-              pIssue.innerHTML = `Issue: <span class="font-medium">${String(request["Issue"]||'')}</span>`;
-            
-              const remarkBox = document.createElement('div');
-              // FIX: Add the "remark-box" class to the element to allow the script to find it.
-              remarkBox.className = 'remark-box mt-3 p-2 bg-blue-50 border border-blue-200 rounded-md';
-              remarkBox.innerHTML = `<p class="text-xs font-semibold text-blue-800">Remark:</p>
-                                     <p class="text-xs text-blue-700 italic">${String(request["Owner Remark"]||'')}</p>`;
-            
-              const btnRow = document.createElement('div');
-              btnRow.className = 'flex mt-4 space-x-1';
-              const btnDealer = document.createElement('button'); btnDealer.className = 'btn btn-dealer'; btnDealer.dataset.id = request["REQ-ID"]||''; btnDealer.textContent = 'Dealer Claim';
-              const btnSupplier = document.createElement('button'); btnSupplier.className = 'btn btn-supplier supplier-claim-btn'; btnSupplier.dataset.id = request["REQ-ID"]||''; btnSupplier.textContent = 'Supplier Claim';
-              const btnClear = document.createElement('button'); btnClear.className = 'btn btn-clear'; btnClear.dataset.id = request["REQ-ID"]||''; btnClear.textContent = 'Clear';
-              btnRow.append(btnDealer, btnSupplier, btnClear);
-            
-              card.append(pReq, h2, pProduct, pQty, pCrm, pIssue, remarkBox, btnRow);
-              requestsContainer.appendChild(card);
-            };
+// Function to render a single claim request card
+const createClaimCard = (request) => {
+  const card = document.createElement('div');
+  card.className = 'card p-4 rounded-lg shadow-md hover:shadow-lg';
+  card.dataset.reqId = request["REQ-ID"] || '';
+  card.dataset.product = request["Product"] || '';
+  card.dataset.qty = request["Qty"] || '';
+  card.dataset.issue = request["Issue"] || '';
+
+  const pReq = document.createElement('p');
+  pReq.className = 'text-xs font-semibold text-gray-500 mb-1';
+  pReq.innerHTML = `Request ID: <span class="font-medium text-blue-600">${String(request["REQ-ID"]||'')}</span>`;
+
+  const h2 = document.createElement('h2');
+  h2.className = 'text-base font-bold text-blue-900 mt-1';
+  h2.textContent = request["Dealer Name"] || '';
+
+  const pProduct = document.createElement('p');
+  pProduct.className = 'text-gray-700 text-xs mt-1';
+  pProduct.innerHTML = `Product: <span class="font-medium">${String(request["Product"]||'')}</span>`;
+
+  const pQty = document.createElement('p');
+  pQty.className = 'text-gray-700 text-xs';
+  pQty.innerHTML = `Quantity: <span class="font-medium">${String(request["Qty"]||'')}</span>`;
+
+  const pCrm = document.createElement('p');
+  pCrm.className = 'text-gray-700 text-xs';
+  pCrm.innerHTML = `CRM: <span class="font-medium">${String(request["CRM Name"]||'')}</span>`;
+
+  const pIssue = document.createElement('p');
+  pIssue.className = 'text-gray-700 text-xs';
+  pIssue.innerHTML = `Issue: <span class="font-medium">${String(request["Issue"]||'')}</span>`;
+
+  const remarkBox = document.createElement('div');
+  remarkBox.className = 'remark-box mt-3 p-2 bg-blue-50 border border-blue-200 rounded-md';
+  remarkBox.innerHTML = `<p class="text-xs font-semibold text-blue-800">Remark:</p>
+                         <p class="text-xs text-blue-700 italic">${String(request["Owner Remark"]||'')}</p>`;
+
+  const btnRow = document.createElement('div');
+  btnRow.className = 'flex mt-4 space-x-1';
+
+  // --- Dealer Claim ---
+  if (request["Dealer CN Vch No"]) {
+    const dealerLabel = document.createElement('span');
+    dealerLabel.className = 'px-3 py-1 text-xs font-semibold text-green-700 bg-green-100 rounded';
+    dealerLabel.textContent = 'Dealer Claim Done';
+    btnRow.appendChild(dealerLabel);
+  } else {
+    const btnDealer = document.createElement('button');
+    btnDealer.className = 'btn btn-dealer';
+    btnDealer.dataset.id = request["REQ-ID"]||'';
+    btnDealer.textContent = 'Dealer Claim';
+    btnRow.appendChild(btnDealer);
+  }
+
+  // --- Supplier Claim ---
+  if (request["Supplier Name"]) {
+    const supplierLabel = document.createElement('span');
+    supplierLabel.className = 'px-3 py-1 text-xs font-semibold text-green-700 bg-green-100 rounded';
+    supplierLabel.textContent = 'Supplier Claim Done';
+    btnRow.appendChild(supplierLabel);
+  } else {
+    const btnSupplier = document.createElement('button');
+    btnSupplier.className = 'btn btn-supplier supplier-claim-btn';
+    btnSupplier.dataset.id = request["REQ-ID"]||'';
+    btnSupplier.textContent = 'Supplier Claim';
+    btnRow.appendChild(btnSupplier);
+  }
+
+  // --- Clear button always visible ---
+  const btnClear = document.createElement('button');
+  btnClear.className = 'btn btn-clear';
+  btnClear.dataset.id = request["REQ-ID"]||'';
+  btnClear.textContent = 'Clear';
+  btnRow.appendChild(btnClear);
+
+  card.append(pReq, h2, pProduct, pQty, pCrm, pIssue, remarkBox, btnRow);
+  requestsContainer.appendChild(card);
+};
 
             // Main function to load and render requests
             const loadRequests = async () => {
