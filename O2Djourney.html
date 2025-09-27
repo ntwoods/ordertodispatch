@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Dealer Data Dashboard — O2D Journey</title>
-  <meta http-equiv="refresh" content="60" />
+  <meta http-equiv="refresh" content="60" id="metaRefresh" />
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
@@ -27,7 +27,10 @@
 </head>
 <body class="p-4 md:p-8 flex items-center justify-center min-h-screen">
   <div class="container mx-auto bg-white shadow-lg rounded-lg p-6 md:p-8 max-w-7xl w-full">
-    <h1 class="text-3xl font-bold text-gray-800 mb-2 text-center">Sales Orders Tracking</h1>
+    <div class="flex justify-between items-center mb-4">
+      <h1 class="text-3xl font-bold text-gray-800">Sales Orders Tracking</h1>
+      <button id="toggleRefresh" class="px-4 py-2 rounded bg-indigo-600 hover:bg-indigo-700 text-white shadow">Disable Auto Refresh</button>
+    </div>
 
     <!-- KPIs / Summary -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
@@ -107,6 +110,22 @@
     </div>
   </div>
 
+  <script>
+    const toggleRefreshBtn = document.getElementById('toggleRefresh');
+    const metaRefresh = document.getElementById('metaRefresh');
+    let autoRefreshEnabled = true;
+
+    toggleRefreshBtn.addEventListener('click', () => {
+      autoRefreshEnabled = !autoRefreshEnabled;
+      if (autoRefreshEnabled) {
+        metaRefresh.setAttribute('content','60');
+        toggleRefreshBtn.textContent = 'Disable Auto Refresh';
+      } else {
+        metaRefresh.removeAttribute('content');
+        toggleRefreshBtn.textContent = 'Enable Auto Refresh';
+      }
+    });
+  </script>
   <script>
     // ====== Config ======
     const API_URL = 'https://script.google.com/macros/s/AKfycbxsuZ7LEZkhC7qzxXvUDFxa76K5OXY2sPJ5yjYhI5X63dzO7WeUerQXhT_wQAXzbk1xEQ/exec';
