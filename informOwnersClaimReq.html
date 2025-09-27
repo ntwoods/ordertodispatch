@@ -187,440 +187,421 @@
             <span class="text-lg font-medium">Processing...</span>
         </div>
     </div>
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw8K5xr1V52_zKMfy9gJyWZE0kuxsu0Gjoo2bdNfIXz9-zDDxFCHp2i4mdrLDZxs-BFbA/exec';
-            const cardContainer = document.getElementById('card-container');
-            const loadingIndicator = document.getElementById('loading');
-            const errorMessage = document.getElementById('error-message');
-            const noDataMessage = document.getElementById('no-data-message');
-            const crmDisplay = document.getElementById('crm-display');
-            const postLoading = document.getElementById('post-loading');
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw8K5xr1V52_zKMfy9gJyWZE0kuxsu0Gjoo2bdNfIXz9-zDDxFCHp2i4mdrLDZxs-BFbA/exec';
+    const cardContainer = document.getElementById('card-container');
+    const loadingIndicator = document.getElementById('loading');
+    const errorMessage = document.getElementById('error-message');
+    const noDataMessage = document.getElementById('no-data-message');
+    const crmDisplay = document.getElementById('crm-display');
+    const postLoading = document.getElementById('post-loading');
 
-                  // Discuss modal elements
-          const discussModal = document.getElementById('discuss-modal');
-          const closeDiscussBtn = document.getElementById('close-discuss-btn');
-          const discussRemark = document.getElementById('discuss-remark');
-          const discussApprovedQtyField = document.getElementById('discuss-approved-qty-field');
-          const discussApprovedQtyInput = document.getElementById('discuss-approved-qty');
-          const discussApproveBtn = document.getElementById('discuss-approve-btn');
-          const discussRejectBtn = document.getElementById('discuss-reject-btn');
-            // Owner Response modal elements
-            const modal = document.getElementById('modal');
-            const closeModalBtn = document.getElementById('close-modal-btn');
-            const ownerRemarkInput = document.getElementById('owner-remark');
-            const marketingPersonField = document.getElementById('marketing-person-field');
-            const marketingPersonNameInput = document.getElementById('marketing-person-name');
-            const approvedQtyField = document.getElementById('approved-qty-field');
-            const approvedQtyInput = document.getElementById('approved-qty');
-            const approveBtn = document.getElementById('approve-claim-btn');
-            const verifyBtn = document.getElementById('verify-claim-btn');
-            const rejectBtn = document.getElementById('reject-claim-btn');
+    // Owner Response modal elements
+    const modal = document.getElementById('modal');
+    const closeModalBtn = document.getElementById('close-modal-btn');
+    const ownerRemarkInput = document.getElementById('owner-remark');
+    const marketingPersonField = document.getElementById('marketing-person-field');
+    const marketingPersonNameInput = document.getElementById('marketing-person-name');
+    const approvedQtyField = document.getElementById('approved-qty-field');
+    const approvedQtyInput = document.getElementById('approved-qty');
+    const approveBtn = document.getElementById('approve-claim-btn');
+    const verifyBtn = document.getElementById('verify-claim-btn');
+    const rejectBtn = document.getElementById('reject-claim-btn');
 
-            // Verification Report modal elements
-            const vModal = document.getElementById('verification-modal');
-            const vCloseBtn = document.getElementById('close-verification-modal-btn');
-            const vCancelBtn = document.getElementById('cancel-verification-btn');
-            const vRemark = document.getElementById('verification-remark');
-            const vFiles = document.getElementById('verification-files');
-            const vPreview = document.getElementById('attachments-preview');
-            const vSubmitBtn = document.getElementById('submit-verification-report-btn');
+    // Verification Report modal elements
+    const vModal = document.getElementById('verification-modal');
+    const vCloseBtn = document.getElementById('close-verification-modal-btn');
+    const vCancelBtn = document.getElementById('cancel-verification-btn');
+    const vRemark = document.getElementById('verification-remark');
+    const vFiles = document.getElementById('verification-files');
+    const vPreview = document.getElementById('attachments-preview');
+    const vSubmitBtn = document.getElementById('submit-verification-report-btn');
 
-            const filterDropdownBtn = document.getElementById('filter-dropdown-btn');
-            const filterMenu = document.getElementById('filter-menu');
-            const filterCheckboxes = document.querySelectorAll('input[name="filter-status"]');
+    // Discuss Verification Report modal elements
+    const discussModal = document.getElementById('discuss-modal');
+    const closeDiscussBtn = document.getElementById('close-discuss-btn');
+    const discussRemark = document.getElementById('discuss-remark');
+    const discussApprovedQtyField = document.getElementById('discuss-approved-qty-field');
+    const discussApprovedQtyInput = document.getElementById('discuss-approved-qty');
+    const discussApproveBtn = document.getElementById('discuss-approve-btn');
+    const discussRejectBtn = document.getElementById('discuss-reject-btn');
 
-            let originalData = [];
-            let isCrmMode = false; // set after reading params
+    const filterDropdownBtn = document.getElementById('filter-dropdown-btn');
+    const filterMenu = document.getElementById('filter-menu');
+    const filterCheckboxes = document.querySelectorAll('input[name="filter-status"]');
 
-            const getUrlParams = () => new URLSearchParams(window.location.search);
-            const escapeHtml = (unsafe) => {
-                if (unsafe === undefined || unsafe === null) return '';
-                return String(unsafe)
-                    .replace(/&/g, '&amp;')
-                    .replace(/</g, '&lt;')
-                    .replace(/>/g, '&gt;')
-                    .replace(/"/g, '&quot;')
-                    .replace(/'/g, '&#039;');
-            };
-            const onlyNumber = (val) => {
-                const m = String(val || '').match(/[\d.]+/);
-                return m ? m[0] : '';
-            };
+    let originalData = [];
+    let isCrmMode = false; // set after reading params
 
-            const buildScriptUrl = (crmName) => (crmName ? `${SCRIPT_URL}?crm=${encodeURIComponent(crmName)}` : SCRIPT_URL);
+    const getUrlParams = () => new URLSearchParams(window.location.search);
+    const escapeHtml = (unsafe) => {
+        if (unsafe === undefined || unsafe === null) return '';
+        return String(unsafe)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    };
+    const onlyNumber = (val) => {
+        const m = String(val || '').match(/[\d.]+/);
+        return m ? m[0] : '';
+    };
 
-            const fetchData = async (crmName = null) => {
-                loadingIndicator.classList.remove('hidden');
-                errorMessage.classList.add('hidden');
-                noDataMessage.classList.add('hidden');
-                cardContainer.classList.add('hidden');
-                try {
-                    const url = buildScriptUrl(crmName);
-                    const response = await fetch(url, { method: 'GET' });
-                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-                    const result = await response.json();
-                    originalData = Array.isArray(result.data)
-                        ? result.data
-                        : Array.isArray(result)
-                        ? result
-                        : result.data || [];
-                    if (!originalData || originalData.length === 0) {
-                        noDataMessage.classList.remove('hidden');
-                        cardContainer.innerHTML = '';
-                        return;
-                    }
-                    displayCards(originalData);
-                    cardContainer.classList.remove('hidden');
-                    if (typeof setReadOnlyMode === 'function') setReadOnlyMode();
-                } catch (err) {
-                    console.error('fetchData error:', err);
-                    errorMessage.classList.remove('hidden');
-                } finally {
-                    loadingIndicator.classList.add('hidden');
-                }
-            };
+    const buildScriptUrl = (crmName) => (crmName ? `${SCRIPT_URL}?crm=${encodeURIComponent(crmName)}` : SCRIPT_URL);
 
-            const sendData = async (payload) => {
-                try {
-                    postLoading.classList.remove('hidden');
-                    const fd = new FormData();
-                    fd.append('reqId', payload.reqId);
-                    fd.append('action', payload.action);
-                    if (payload.ownerRemark) fd.append('ownerRemark', payload.ownerRemark);
-                    if (payload.action === 'verify' && payload.marketingPerson) fd.append('marketingPerson', payload.marketingPerson);
-                    if (payload.action === 'approve' && payload.approvedQty !== undefined) fd.append('approvedQty', String(payload.approvedQty));
-                    await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: fd });
-                    alert(`Claim ${payload.action} submitted.`);
-                } catch (error) {
-                    console.error('sendData error:', error);
-                    alert('Error processing request. Please try again.');
-                } finally {
-                    postLoading.classList.add('hidden');
-                }
-            };
-
-            const sendVerificationReport = async ({ reqId, salespersonRemark, attachments }) => {
-                try {
-                    postLoading.classList.remove('hidden');
-                    const fd = new FormData();
-                    fd.append('action', 'verificationReport');
-                    fd.append('reqId', reqId);
-                    fd.append('salespersonRemark', salespersonRemark || '');
-                    // Send attachments as JSON to keep request simple and CORS-friendly
-                    fd.append('attachmentsJson', JSON.stringify(attachments || []));
-                    await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: fd });
-                    alert('Verification report submitted.');
-                } catch (err) {
-                    console.error('sendVerificationReport error:', err);
-                    alert('Error submitting verification report.');
-                } finally {
-                    postLoading.classList.add('hidden');
-                }
-            };
-
-            const filesToBase64Payload = (fileList) => {
-                const toBase64 = (file) =>
-                    new Promise((resolve, reject) => {
-                        const reader = new FileReader();
-                        reader.onload = () => {
-                            const result = reader.result || '';
-                            const base64 = String(result).includes(',') ? String(result).split(',')[1] : String(result);
-                            resolve({ name: file.name, type: file.type, data: base64 });
-                        };
-                        reader.onerror = reject;
-                        reader.readAsDataURL(file);
-                    });
-                return Promise.all(Array.from(fileList || []).map((f) => toBase64(f)));
-            };
-
-            const filterCards = () => {
-                const selectedStatuses = Array.from(filterCheckboxes)
-                    .filter((c) => c.checked)
-                    .map((c) => c.value.toLowerCase().trim());
-                let filtered = originalData;
-                if (selectedStatuses.length > 0) {
-                    filtered = originalData.filter((item) => {
-                        const resp = (item['Owner Response'] || '').toString().toLowerCase().trim();
-                        const normalized = resp.replace(/ed$/, '');
-                        return selectedStatuses.includes(normalized) || selectedStatuses.includes(resp);
-                    });
-                }
-                displayCards(filtered);
-            };
-
-            // Countdown updater
-            const startCountdown = (el, deadline, card) => {
-                let timer;
-                const update = () => {
-                    const now = new Date();
-                    const diff = deadline - now;
-                    if (diff <= 0) {
-                        el.textContent = 'Overdue';
-                        card.classList.add('overdue');
-                        clearInterval(timer);
-                        return;
-                    }
-                    const hrs = Math.floor(diff / 1000 / 60 / 60);
-                    const mins = Math.floor((diff / 1000 / 60) % 60);
-                    const secs = Math.floor((diff / 1000) % 60);
-                    el.textContent = `${hrs}h ${mins}m ${secs}s left`;
-                };
-                timer = setInterval(update, 1000);
-                update();
-            };
-
-            const displayCards = (data) => {
+    const fetchData = async (crmName = null) => {
+        loadingIndicator.classList.remove('hidden');
+        errorMessage.classList.add('hidden');
+        noDataMessage.classList.add('hidden');
+        cardContainer.classList.add('hidden');
+        try {
+            const url = buildScriptUrl(crmName);
+            const response = await fetch(url, { method: 'GET' });
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            const result = await response.json();
+            originalData = Array.isArray(result.data)
+                ? result.data
+                : Array.isArray(result)
+                ? result
+                : result.data || [];
+            if (!originalData || originalData.length === 0) {
+                noDataMessage.classList.remove('hidden');
                 cardContainer.innerHTML = '';
-                if (!Array.isArray(data) || data.length === 0) {
-                    noDataMessage.classList.remove('hidden');
-                    return;
-                }
-                const frag = document.createDocumentFragment();
-                data.forEach((item) => {
-                    const product = escapeHtml(item['Product']);
-                    const dealerName = escapeHtml(item['Dealer Name']);
-                    const crmName = escapeHtml(item['CRM Name']);
-                    const qty = escapeHtml(item['Qty']);
-                    const issue = escapeHtml(item['Issue']);
-                    const reqId = escapeHtml(item['REQ-ID']);
-                    const ownerResponse = (item['Owner Response'] || '').toString().toLowerCase().trim();
-                    const ownerRemark = escapeHtml(item['Owner Remark'] || '');
-                    const ownersInformedAt = item['Owners Informed at'];
+                return;
+            }
+            displayCards(originalData);
+            cardContainer.classList.remove('hidden');
+            if (typeof setReadOnlyMode === 'function') setReadOnlyMode();
+        } catch (err) {
+            console.error('fetchData error:', err);
+            errorMessage.classList.remove('hidden');
+        } finally {
+            loadingIndicator.classList.add('hidden');
+        }
+    };
 
-                    // Parse Request Date
-                    let formattedDate = 'Unknown';
-                    let requestDateObj = null;
-                    try {
-                        const rawDate = item['Request Date'];
-                        if (rawDate) {
-                            const parts = String(rawDate).split(', ');
-                            if (parts.length === 2) {
-                                const [datePart, timePart] = parts;
-                                const [month, day, year] = datePart.split('/').map((n) => parseInt(n));
-                                let [time, meridian] = timePart.split(' ');
-                                let [hours, minutes, seconds] = time.split(':').map((n) => parseInt(n));
-                                if (meridian.toLowerCase() === 'pm' && hours < 12) hours += 12;
-                                if (meridian.toLowerCase() === 'am' && hours === 12) hours = 0;
-                                requestDateObj = new Date(year, month - 1, day, hours, minutes, seconds);
-                            } else {
-                                requestDateObj = new Date(rawDate);
-                            }
-                        }
-                        formattedDate = requestDateObj && !isNaN(requestDateObj)
-                            ? requestDateObj.toLocaleString('en-GB', {
-                                  day: '2-digit',
-                                  month: '2-digit',
-                                  year: 'numeric',
-                                  hour: '2-digit',
-                                  minute: '2-digit',
-                                  second: '2-digit',
-                              })
-                            : 'Unknown';
-                    } catch (e) {
-                        requestDateObj = null;
-                        formattedDate = 'Unknown';
-                    }
+    const sendData = async (payload) => {
+        try {
+            postLoading.classList.remove('hidden');
+            const fd = new FormData();
+            fd.append('reqId', payload.reqId);
+            fd.append('action', payload.action);
+            if (payload.ownerRemark) fd.append('ownerRemark', payload.ownerRemark);
+            if (payload.action === 'verify' && payload.marketingPerson) fd.append('marketingPerson', payload.marketingPerson);
+            if (payload.action === 'approve' && payload.approvedQty !== undefined) fd.append('approvedQty', String(payload.approvedQty));
+            await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: fd });
+            alert(`Claim ${payload.action} submitted.`);
+        } catch (error) {
+            console.error('sendData error:', error);
+            alert('Error processing request. Please try again.');
+        } finally {
+            postLoading.classList.add('hidden');
+        }
+    };
 
-                    const card = document.createElement('div');
-                    card.className = 'p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 border border-slate-200 flex flex-col justify-between relative';
-                    let colorClass = 'bg-white';
-                    let footerHtml = `
-                        <button class="owners-informed-btn w-full px-4 py-2 text-sm font-semibold text-white bg-blue-500 rounded-lg hover:bg-blue-600 transition-colors shadow-md focus:outline-none"
-                                data-req-id="${reqId}" data-qty="${onlyNumber(qty)}">
-                            <i class="fas fa-bullhorn mr-2"></i>Owners Informed
-                        </button>`;
-                    let statusTagHtml = '';
+    const sendVerificationReport = async ({ reqId, salespersonRemark, attachments }) => {
+        try {
+            postLoading.classList.remove('hidden');
+            const fd = new FormData();
+            fd.append('action', 'verificationReport');
+            fd.append('reqId', reqId);
+            fd.append('salespersonRemark', salespersonRemark || '');
+            fd.append('attachmentsJson', JSON.stringify(attachments || []));
+            await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: fd });
+            alert('Verification report submitted.');
+        } catch (err) {
+            console.error('sendVerificationReport error:', err);
+            alert('Error submitting verification report.');
+        } finally {
+            postLoading.classList.add('hidden');
+        }
+    };
 
-                    if (ownerResponse === 'reject' || ownerResponse === 'rejected') {
-                        colorClass = 'bg-red-100 border-red-400';
-                        footerHtml = '';
-                        statusTagHtml = '<div class="mt-2 text-sm font-semibold text-gray-700">🛈 Rejected</div>';
-                    } else if (ownerResponse === 'verify' || ownerResponse === 'verification pending') {
-                        colorClass = 'bg-yellow-100 border-yellow-400';
-                        footerHtml = `
-                            <button class="submit-verification-btn w-full px-4 py-2 text-sm font-semibold text-white bg-yellow-500 rounded-lg hover:bg-yellow-600 transition-colors shadow-md focus:outline-none" data-req-id="${reqId}">
-                                <i class="fas fa-file-alt mr-2"></i>Submit Verification Report
-                            </button>`;
-                        statusTagHtml = '<div class="mt-2 text-sm font-semibold text-gray-700">🛈 Verification Pending</div>';
-                    } else if (ownerResponse === 'approve' || ownerResponse === 'approved') {
-                        colorClass = 'bg-green-100 border-green-400';
-                        // New tag logic
-                        const dealerClaim = ((item['Dealer Claim'] ?? item['Dealer CN Vch No'] ?? item['Dealer CN No'] ?? '') + '').trim();
-                        const supplierName = ((item['Supplier Name'] ?? '') + '').trim();
-                        let statusTag = '';
-                        if (isCrmMode) {
-                            // CRM-specific: ignore supplier; only dealer claim matters
-                            statusTag = dealerClaim ? 'Request Clear' : 'A/c Response Awaiting';
-                        } else {
-                            // All-cards view: original granular logic
-                            if (!dealerClaim && !supplierName) statusTag = 'A/c Response Awaiting';
-                            else if (dealerClaim && !supplierName) statusTag = 'Only Supplier Claim Pending';
-                            else if (!dealerClaim && supplierName) statusTag = 'Only Dealer Claim Pending';
-                            else statusTag = 'Request Clear';
-                        }
-                        footerHtml = `<span class="inline-flex items-center px-3 py-1 text-sm font-semibold text-green-800 bg-green-200 rounded-full shadow-sm"><i class="fas fa-check-circle mr-2"></i>${escapeHtml(statusTag)}</span>`;
-                    }
-
-                    card.innerHTML = `
-                        <div class="flex-grow">
-                            <div class="flex items-center justify-between mb-4">
-                                <span class="text-sm font-medium text-slate-500">${formattedDate}</span>
-                                <span class="text-sm font-medium text-slate-500">${reqId}</span>
-                            </div>
-                            <h2 class="text-lg md:text-xl font-bold text-blue-800 mb-2">${product}</h2>
-                            <div class="space-y-3 text-slate-700">
-                                <div class="flex items-center space-x-3"><i class="fas fa-building text-blue-500 w-5 text-center"></i><span class="text-sm md:text-base">Dealer: ${dealerName}</span></div>
-                                <div class="flex items-center space-x-3"><span class="text-lg w-5 text-center">👩‍💼</span><span class="text-sm md:text-base">CRM: ${crmName}</span></div>
-                                <div class="flex items-center space-x-3"><i class="fas fa-hashtag text-blue-500 w-5 text-center"></i><span class="text-sm md:text-base">Qty: ${qty}</span></div>
-                                <div class="flex items-start space-x-3"><i class="fas fa-exclamation-circle text-red-500 w-5 text-center mt-1"></i><p class="text-sm md:text-base break-words flex-1">Issue: ${issue}</p></div>
-                                ${ownersInformedAt ? '' : `<div class="mt-2 text-sm"><strong>Deadline:</strong> <span id="deadline-${reqId}" class="countdown"></span></div>`}
-                            </div>
-                            ${ownerRemark ? `<div class="mt-4 border-t pt-4 border-slate-200"><h4 class="text-sm font-semibold text-slate-600 mb-2">Owner's Remark:</h4><p class="text-sm text-slate-800 break-words">${ownerRemark}</p></div>` : ''}
-                            ${statusTagHtml}
-                        </div>
-                        <div class="mt-4">${footerHtml}</div>
-                        <button class="copy-btn absolute bottom-3 right-3 text-white transition-all duration-200 bg-black/20 backdrop-blur-sm rounded-md p-2 shadow-lg hover:bg-black/30"
-                            data-dealer-name="${escapeHtml(item['Dealer Name'])}" data-product="${escapeHtml(item['Product'])}" data-qty="${escapeHtml(item['Qty'])}" data-issue="${escapeHtml(item['Issue'])}"
-                            data-issue-date="${escapeHtml(new Date(item['Request Date']).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }))}">
-                            <i class="fas fa-copy text-sm"></i>
-                        </button>`;
-
-                    card.classList.add(...colorClass.split(' '));
-                    frag.appendChild(card);
-
-                    if (!ownersInformedAt && requestDateObj) {
-                        const deadline = new Date(requestDateObj.getTime() + 2 * 60 * 60 * 1000);
-                        const el = card.querySelector(`#deadline-${reqId}`);
-                        if (el) startCountdown(el, deadline, card);
-                    }
-                });
-                cardContainer.appendChild(frag);
-            };
-
-            // Delegated clicks
-            cardContainer.addEventListener('click', async (e) => {
-                const ownersBtn = e.target.closest('.owners-informed-btn');
-                if (ownersBtn) {
-                    modal.dataset.reqId = ownersBtn.dataset.reqId;
-                    modal.dataset.claimQty = ownersBtn.dataset.qty || '';
-                    marketingPersonField.classList.add('hidden');
-                    approvedQtyField.classList.add('hidden');
-                    ownerRemarkInput.value = '';
-                    marketingPersonNameInput.value = '';
-                    approvedQtyInput.value = ownersBtn.dataset.qty || '';
-                    modal.classList.remove('hidden');
-                    return;
-                }
-
-                const copyBtn = e.target.closest('.copy-btn');
-                if (copyBtn) {
-                    const content = `Dealer: ${copyBtn.dataset.dealerName}\nProduct: ${copyBtn.dataset.product}\nQty: ${copyBtn.dataset.qty}\nIssue: ${copyBtn.dataset.issue}\nIssueDate: ${copyBtn.dataset.issueDate}`;
-                    navigator.clipboard?.writeText(content)
-                        .then(() => alert('📋 Details copied to clipboard!'))
-                        .catch(() => alert('Failed to copy. Please try again.'));
-                    return;
-                }
-
-                const verificationBtn = e.target.closest('.submit-verification-btn');
-                if (verificationBtn) {
-                    vModal.dataset.reqId = verificationBtn.dataset.reqId;
-                    vRemark.value = '';
-                    vFiles.value = '';
-                    vPreview.innerHTML = '';
-                    vModal.classList.remove('hidden');
-                    return;
-                }
+    const filesToBase64Payload = (fileList) => {
+        const toBase64 = (file) =>
+            new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => {
+                    const result = reader.result || '';
+                    const base64 = String(result).includes(',') ? String(result).split(',')[1] : String(result);
+                    resolve({ name: file.name, type: file.type, data: base64 });
+                };
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
             });
+        return Promise.all(Array.from(fileList || []).map((f) => toBase64(f)));
+    };
 
-            // Modal close handlers
-            const closeOwnerModal = () => {
-                modal.classList.add('hidden');
-                approvedQtyField.classList.add('hidden');
-            };
-            closeModalBtn.addEventListener('click', closeOwnerModal);
-            modal.addEventListener('click', (e) => { if (e.target === modal) closeOwnerModal(); });
+    const filterCards = () => {
+        const selectedStatuses = Array.from(filterCheckboxes)
+            .filter((c) => c.checked)
+            .map((c) => c.value.toLowerCase().trim());
+        let filtered = originalData;
+        if (selectedStatuses.length > 0) {
+            filtered = originalData.filter((item) => {
+                const resp = (item['Owner Response'] || '').toString().toLowerCase().trim();
+                const normalized = resp.replace(/ed$/, '');
+                return selectedStatuses.includes(normalized) || selectedStatuses.includes(resp);
+            });
+        }
+        displayCards(filtered);
+    };
 
-            const closeVModal = () => vModal.classList.add('hidden');
-            vCloseBtn.addEventListener('click', closeVModal);
-            vCancelBtn.addEventListener('click', closeVModal);
-            vModal.addEventListener('click', (e) => { if (e.target === vModal) closeVModal(); });
+    // Countdown updater
+    const startCountdown = (el, deadline, card) => {
+        let timer;
+        const update = () => {
+            const now = new Date();
+            const diff = deadline - now;
+            if (diff <= 0) {
+                el.textContent = 'Overdue';
+                card.classList.add('overdue');
+                clearInterval(timer);
+                return;
+            }
+            const hrs = Math.floor(diff / 1000 / 60 / 60);
+            const mins = Math.floor((diff / 1000 / 60) % 60);
+            const secs = Math.floor((diff / 1000) % 60);
+            el.textContent = `${hrs}h ${mins}m ${secs}s left`;
+        };
+        timer = setInterval(update, 1000);
+        update();
+    };
 
-            // Owner Response actions
-            approveBtn.addEventListener('click', () => {
-                // Show Approved Qty field first if hidden
-                if (approvedQtyField.classList.contains('hidden')) {
-                    approvedQtyInput.value = modal.dataset.claimQty || '';
-                    approvedQtyField.classList.remove('hidden');
-                    approvedQtyInput.focus();
-                    return;
+    const displayCards = (data) => {
+        cardContainer.innerHTML = '';
+        if (!Array.isArray(data) || data.length === 0) {
+            noDataMessage.classList.remove('hidden');
+            return;
+        }
+        const frag = document.createDocumentFragment();
+        data.forEach((item) => {
+            const product = escapeHtml(item['Product']);
+            const dealerName = escapeHtml(item['Dealer Name']);
+            const crmName = escapeHtml(item['CRM Name']);
+            const qty = escapeHtml(item['Qty']);
+            const issue = escapeHtml(item['Issue']);
+            const reqId = escapeHtml(item['REQ-ID']);
+            const ownerResponse = (item['Owner Response'] || '').toString().toLowerCase().trim();
+            const ownerRemark = escapeHtml(item['Owner Remark'] || '');
+            const ownersInformedAt = item['Owners Informed at'];
+
+            // Date parsing logic unchanged...
+            let formattedDate = 'Unknown';
+            let requestDateObj = null;
+            try {
+                const rawDate = item['Request Date'];
+                if (rawDate) {
+                    requestDateObj = new Date(rawDate);
                 }
-                const qtyVal = approvedQtyInput.value.trim();
-                if (!qtyVal) {
-                    alert('Approved Qty is required to approve this claim.');
-                    approvedQtyInput.focus();
-                    return;
-                }
-                sendData({
-                    action: 'approve',
-                    ownerRemark: ownerRemarkInput.value || '',
-                    reqId: modal.dataset.reqId,
-                    approvedQty: qtyVal,
-                });
-                closeOwnerModal();
-            });
+                formattedDate = requestDateObj && !isNaN(requestDateObj)
+                    ? requestDateObj.toLocaleString('en-GB', {
+                          day: '2-digit',
+                          month: '2-digit',
+                          year: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                          second: '2-digit',
+                      })
+                    : 'Unknown';
+            } catch (e) {
+                requestDateObj = null;
+                formattedDate = 'Unknown';
+            }
 
-            verifyBtn.addEventListener('click', () => {
-                if (marketingPersonField.classList.contains('hidden')) {
-                    marketingPersonField.classList.remove('hidden');
-                    return;
-                }
-                sendData({
-                    action: 'verify',
-                    ownerRemark: ownerRemarkInput.value || '',
-                    marketingPerson: marketingPersonNameInput.value || '',
-                    reqId: modal.dataset.reqId,
-                });
-                closeOwnerModal();
-            });
+            const card = document.createElement('div');
+            card.className = 'p-6 rounded-xl shadow-lg border border-slate-200 flex flex-col justify-between relative';
+            let colorClass = 'bg-white';
+            let footerHtml = `
+                <button class="owners-informed-btn w-full px-4 py-2 text-sm font-semibold text-white bg-blue-500 rounded-lg hover:bg-blue-600 transition-colors shadow-md"
+                        data-req-id="${reqId}" data-qty="${onlyNumber(qty)}">
+                    <i class="fas fa-bullhorn mr-2"></i>Owners Informed
+                </button>`;
 
-            rejectBtn.addEventListener('click', () => {
-                sendData({ action: 'reject', ownerRemark: ownerRemarkInput.value || '', reqId: modal.dataset.reqId });
-                closeOwnerModal();
-            });
+            let statusTagHtml = '';
 
-            // Verification report submit
-            vFiles.addEventListener('change', () => {
-                vPreview.innerHTML = '';
-                Array.from(vFiles.files || []).forEach((f) => {
-                    const pill = document.createElement('div');
-                    pill.className = 'file-pill';
-                    pill.textContent = `${f.name}`;
-                    vPreview.appendChild(pill);
-                });
-            });
-            vSubmitBtn.addEventListener('click', async () => {
-                const reqId = vModal.dataset.reqId;
-                const remark = vRemark.value.trim();
-                const attachments = await filesToBase64Payload(vFiles.files);
-                await sendVerificationReport({ reqId, salespersonRemark: remark, attachments });
-                closeVModal();
-            });
+            if (ownerResponse === 'reject' || ownerResponse === 'rejected') {
+                colorClass = 'bg-red-100 border-red-400';
+                footerHtml = '';
+                statusTagHtml = '<div class="mt-2 text-sm font-semibold text-gray-700">🛈 Rejected</div>';
+            } else if (ownerResponse === 'verify' || ownerResponse === 'verification pending') {
+                colorClass = 'bg-yellow-100 border-yellow-400';
+                footerHtml = `
+                    <button class="submit-verification-btn w-full px-4 py-2 text-sm font-semibold text-white bg-yellow-500 rounded-lg hover:bg-yellow-600 transition-colors shadow-md" data-req-id="${reqId}">
+                        <i class="fas fa-file-alt mr-2"></i>Submit Verification Report
+                    </button>`;
+                statusTagHtml = '<div class="mt-2 text-sm font-semibold text-gray-700">🛈 Verification Pending</div>';
+            } else if (ownerResponse === 'verificationreport') {
+                colorClass = 'bg-blue-100 border-blue-400';
+                footerHtml = `
+                    <button class="discuss-btn w-full px-4 py-2 text-sm font-semibold text-white bg-blue-500 rounded-lg hover:bg-blue-600 transition-colors shadow-md"
+                            data-req-id="${reqId}" data-qty="${onlyNumber(qty)}">
+                        <i class="fas fa-comments mr-2"></i>Discuss Verification Report with Owners
+                    </button>`;
+                statusTagHtml = '<div class="mt-2 text-sm font-semibold text-gray-700">🛈 Report Submitted</div>';
+            } else if (ownerResponse === 'approve' || ownerResponse === 'approved') {
+                colorClass = 'bg-green-100 border-green-400';
+                footerHtml = `<span class="inline-flex items-center px-3 py-1 text-sm font-semibold text-green-800 bg-green-200 rounded-full shadow-sm"><i class="fas fa-check-circle mr-2"></i>Request Clear</span>`;
+            }
 
-            // Filters UI
-            filterDropdownBtn.addEventListener('click', () => filterMenu.classList.toggle('hidden'));
-            filterCheckboxes.forEach((cb) => cb.addEventListener('change', filterCards));
-            window.addEventListener('click', (e) => {
-                if (!filterDropdownBtn.contains(e.target) && !filterMenu.contains(e.target)) filterMenu.classList.add('hidden');
-            });
+            card.innerHTML = `
+                <div class="flex-grow">
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="text-sm font-medium text-slate-500">${formattedDate}</span>
+                        <span class="text-sm font-medium text-slate-500">${reqId}</span>
+                    </div>
+                    <h2 class="text-lg font-bold text-blue-800 mb-2">${product}</h2>
+                    <div class="space-y-3 text-slate-700">
+                        <div>Dealer: ${dealerName}</div>
+                        <div>CRM: ${crmName}</div>
+                        <div>Qty: ${qty}</div>
+                        <div>Issue: ${issue}</div>
+                    </div>
+                    ${ownerRemark ? `<div class="mt-4"><strong>Owner's Remark:</strong> ${ownerRemark}</div>` : ''}
+                    ${statusTagHtml}
+                </div>
+                <div class="mt-4">${footerHtml}</div>`;
 
-            // Start
-            const params = getUrlParams();
-            const crmName = params.get('crm');
-            isCrmMode = !!crmName;
-            crmName ? ((crmDisplay.textContent = crmName), fetchData(crmName)) : ((crmDisplay.textContent = 'All CRMs'), fetchData(null));
+            card.classList.add(...colorClass.split(' '));
+            frag.appendChild(card);
+
+            if (!ownersInformedAt && requestDateObj) {
+                const deadline = new Date(requestDateObj.getTime() + 2 * 60 * 60 * 1000);
+                const el = card.querySelector(`#deadline-${reqId}`);
+                if (el) startCountdown(el, deadline, card);
+            }
         });
-    </script>
+        cardContainer.appendChild(frag);
+    };
+
+    // Delegated clicks
+    cardContainer.addEventListener('click', (e) => {
+        const ownersBtn = e.target.closest('.owners-informed-btn');
+        if (ownersBtn) {
+            modal.dataset.reqId = ownersBtn.dataset.reqId;
+            modal.dataset.claimQty = ownersBtn.dataset.qty || '';
+            marketingPersonField.classList.add('hidden');
+            approvedQtyField.classList.add('hidden');
+            ownerRemarkInput.value = '';
+            marketingPersonNameInput.value = '';
+            approvedQtyInput.value = ownersBtn.dataset.qty || '';
+            modal.classList.remove('hidden');
+            return;
+        }
+
+        const verificationBtn = e.target.closest('.submit-verification-btn');
+        if (verificationBtn) {
+            vModal.dataset.reqId = verificationBtn.dataset.reqId;
+            vRemark.value = '';
+            vFiles.value = '';
+            vPreview.innerHTML = '';
+            vModal.classList.remove('hidden');
+            return;
+        }
+
+        const discussBtn = e.target.closest('.discuss-btn');
+        if (discussBtn) {
+            discussModal.dataset.reqId = discussBtn.dataset.reqId;
+            discussModal.dataset.qty = discussBtn.dataset.qty;
+            discussRemark.value = '';
+            discussApprovedQtyField.classList.add('hidden');
+            discussModal.classList.remove('hidden');
+            return;
+        }
+    });
+
+    // Close modals
+    closeModalBtn.addEventListener('click', () => modal.classList.add('hidden'));
+    vCloseBtn.addEventListener('click', () => vModal.classList.add('hidden'));
+    vCancelBtn.addEventListener('click', () => vModal.classList.add('hidden'));
+    closeDiscussBtn.addEventListener('click', () => discussModal.classList.add('hidden'));
+
+    // Owner Response actions
+    approveBtn.addEventListener('click', () => {
+        if (approvedQtyField.classList.contains('hidden')) {
+            approvedQtyInput.value = modal.dataset.claimQty || '';
+            approvedQtyField.classList.remove('hidden');
+            return;
+        }
+        if (!approvedQtyInput.value.trim()) {
+            alert('Approved Qty is required.');
+            return;
+        }
+        sendData({ action: 'approve', ownerRemark: ownerRemarkInput.value, reqId: modal.dataset.reqId, approvedQty: approvedQtyInput.value });
+        modal.classList.add('hidden');
+    });
+
+    verifyBtn.addEventListener('click', () => {
+        if (marketingPersonField.classList.contains('hidden')) {
+            marketingPersonField.classList.remove('hidden');
+            return;
+        }
+        sendData({ action: 'verify', ownerRemark: ownerRemarkInput.value, marketingPerson: marketingPersonNameInput.value, reqId: modal.dataset.reqId });
+        modal.classList.add('hidden');
+    });
+
+    rejectBtn.addEventListener('click', () => {
+        sendData({ action: 'reject', ownerRemark: ownerRemarkInput.value, reqId: modal.dataset.reqId });
+        modal.classList.add('hidden');
+    });
+
+    // Discuss modal actions
+    discussRejectBtn.addEventListener('click', () => {
+        if (!discussRemark.value.trim()) return alert('Remark is mandatory.');
+        sendData({ action: 'reject', ownerRemark: discussRemark.value, reqId: discussModal.dataset.reqId });
+        discussModal.classList.add('hidden');
+    });
+
+    discussApproveBtn.addEventListener('click', () => {
+        if (!discussRemark.value.trim()) return alert('Remark is mandatory.');
+        if (discussApprovedQtyField.classList.contains('hidden')) {
+            discussApprovedQtyInput.value = discussModal.dataset.qty || '';
+            discussApprovedQtyField.classList.remove('hidden');
+            return;
+        }
+        if (!discussApprovedQtyInput.value.trim()) {
+            alert('Approved Qty is required.');
+            return;
+        }
+        sendData({ action: 'approve', ownerRemark: discussRemark.value, reqId: discussModal.dataset.reqId, approvedQty: discussApprovedQtyInput.value });
+        discussModal.classList.add('hidden');
+    });
+
+    // Verification report submit
+    vFiles.addEventListener('change', () => {
+        vPreview.innerHTML = '';
+        Array.from(vFiles.files || []).forEach((f) => {
+            const pill = document.createElement('div');
+            pill.className = 'file-pill';
+            pill.textContent = `${f.name}`;
+            vPreview.appendChild(pill);
+        });
+    });
+
+    vSubmitBtn.addEventListener('click', async () => {
+        const reqId = vModal.dataset.reqId;
+        const remark = vRemark.value.trim();
+        const attachments = await filesToBase64Payload(vFiles.files);
+        await sendVerificationReport({ reqId, salespersonRemark: remark, attachments });
+        vModal.classList.add('hidden');
+    });
+
+    // Filters
+    filterDropdownBtn.addEventListener('click', () => filterMenu.classList.toggle('hidden'));
+    filterCheckboxes.forEach((cb) => cb.addEventListener('change', filterCards));
+    window.addEventListener('click', (e) => {
+        if (!filterDropdownBtn.contains(e.target) && !filterMenu.contains(e.target)) filterMenu.classList.add('hidden');
+    });
+
+    // Start
+    const params = getUrlParams();
+    const crmName = params.get('crm');
+    isCrmMode = !!crmName;
+    crmName ? ((crmDisplay.textContent = crmName), fetchData(crmName)) : ((crmDisplay.textContent = 'All CRMs'), fetchData(null));
+});
+</script>
 
     <script src="https://ntwoods.github.io/ordertodispatch/js/viewOnly.js"></script>
 </body>
