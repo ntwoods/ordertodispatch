@@ -568,7 +568,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Discuss modal actions
     discussRejectBtn.addEventListener('click', () => {
         if (!discussRemark.value.trim()) return alert('Remark is mandatory.');
-        sendData({ action: 'reject', ownerRemark: discussRemark.value, reqId: discussModal.dataset.reqId });
+        sendData({ action: 'rejectVerification', ownerRemark: discussRemark.value, reqId: discussModal.dataset.reqId });
         discussModal.classList.add('hidden');
     });
 
@@ -583,7 +583,7 @@ document.addEventListener('DOMContentLoaded', () => {
             alert('Approved Qty is required.');
             return;
         }
-        sendData({ action: 'approve', ownerRemark: discussRemark.value, reqId: discussModal.dataset.reqId, approvedQty: discussApprovedQtyInput.value });
+        sendData({ action: 'approveVerification', ownerRemark: discussRemark.value, reqId: discussModal.dataset.reqId, approvedQty: discussApprovedQtyInput.value });
         discussModal.classList.add('hidden');
     });
 
