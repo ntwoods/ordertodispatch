@@ -818,7 +818,7 @@ async function submitOrder(orderIndex, actionType) {
             fetchOrders();
 
             // Auto-refresh every 5 minutes
-            setInterval(fetchOrders, 5 * 60 * 1000);
+            setInterval(fetchOrders, 10 * 60 * 1000);
         });
 
         // Cleanup interval when page is unloaded
