@@ -10,8 +10,15 @@
   <div class="p-6">
     <h1 class="text-4xl font-bold mb-6 text-center">Sales Orders (Tabular)</h1>
 
+    <!-- Refresh Button -->
+    <div class="flex justify-end mb-4">
+      <button onclick="loadOrders()" class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700">
+        Refresh
+      </button>
+    </div>
+
     <!-- Orders Table -->
-    <div class="overflow-x-auto bg-white/10 rounded-lg shadow-lg">
+    <div class="overflow-x-auto bg-white/10 rounded-lg shadow-lg relative">
       <table class="min-w-full divide-y divide-gray-600">
         <thead class="bg-indigo-700">
           <tr>
@@ -24,9 +31,18 @@
             <th class="px-4 py-2 text-left">Action</th>
           </tr>
         </thead>
-        <tbody id="ordersTable" class="divide-y divide-gray-700"></tbody>
+        <tbody id="ordersTable" class="divide-y divide-gray-700">
+          <tr id="noDataRow" class="hidden">
+            <td colspan="7" class="text-center py-6 text-gray-400">No data found</td>
+          </tr>
+        </tbody>
       </table>
     </div>
+  </div>
+
+  <!-- Loader Overlay -->
+  <div id="loader" class="fixed inset-0 bg-black/60 flex items-center justify-center z-50 hidden">
+    <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-indigo-400 border-solid"></div>
   </div>
 
   <!-- Modal -->
@@ -167,13 +183,29 @@
       });
     }
 
-    fetch(apiUrl)
-      .then(res => res.json())
-      .then(data => {
-        const table = document.getElementById("ordersTable");
+    async function loadOrders() {
+      const loader = document.getElementById("loader");
+      const table = document.getElementById("ordersTable");
+      const noDataRow = document.getElementById("noDataRow");
+
+      table.innerHTML = ""; // clear old rows
+      loader.classList.remove("hidden");
+
+      try {
+        const res = await fetch(apiUrl);
+        if (!res.ok) throw new Error(`HTTP error: ${res.status}`);
+        const data = await res.json();
+
+        if (!data.data || data.data.length === 0) {
+          noDataRow.classList.remove("hidden");
+          return;
+        }
+
+        noDataRow.classList.add("hidden");
         data.data.forEach(order => {
           const received = formatDateTime(order.timestamp);
-          const deadline = new Date(new Date(order.timestamp).getTime() + 45*60000);
+          const deadline = new Date(new Date(order.timestamp).getTime() + 45 * 60000);
+
           const row = document.createElement("tr");
           row.innerHTML = `
             <td class="px-4 py-2">${received}</td>
@@ -182,18 +214,26 @@
             <td class="px-4 py-2">${order.marketingPersonName}</td>
             <td class="px-4 py-2"><a href="${order.fileUploadLink}" target="_blank" class="text-blue-300 underline">View File</a></td>
             <td class="px-4 py-2" data-deadline="${deadline.toISOString()}"></td>
-            <div class="editable">
-            <td class="px-4 py-2"><button onclick="openModal('${order.timestamp}')" class="bg-indigo-600 px-3 py-1 rounded">Submit</button></td>
-            </div>
+            <td class="px-4 py-2">
+              <button onclick="openModal('${order.timestamp}')" class="bg-indigo-600 px-3 py-1 rounded">Submit</button>
+            </td>
           `;
           table.appendChild(row);
-          if (typeof setReadOnlyMode === "function") {
-            setReadOnlyMode();
-          }          
         });
+
         updateTimers();
-        setInterval(updateTimers,1000);
-      });
+        setInterval(updateTimers, 1000);
+      } catch (err) {
+        console.error("Failed to load orders:", err);
+        noDataRow.classList.remove("hidden");
+        noDataRow.innerHTML = `<td colspan="7" class="text-center py-6 text-red-400">Error loading data</td>`;
+      } finally {
+        loader.classList.add("hidden");
+      }
+    }
+
+    // Initial load
+    document.addEventListener("DOMContentLoaded", loadOrders);
   </script>
   <script src="https://ntwoods.github.io/ordertodispatch/js/viewOnly.js"></script>
 </body>
