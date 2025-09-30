@@ -163,33 +163,14 @@
             }
         }
 
-        function formatDispatchDate(dateString) {
-            if (!dateString) return 'N/A';
+		function formatDateToDDMMYYYY(dateValue) {
+		  const date = new Date(dateValue);
+		  const day = String(date.getDate()).padStart(2, "0");
+		  const month = String(date.getMonth() + 1).padStart(2, "0"); 
+		  const year = date.getFullYear();
+		  return `${day}/${month}/${year}`;
+		}
 
-            try {
-                const standardized = dateString.replace(/\//g, '-');
-                const parts = standardized.split('-');
-                if (parts.length !== 3) return dateString;
-
-                const year = parseInt(parts[0], 10);
-                const month = parseInt(parts[1], 10);
-                const day = parseInt(parts[2], 10) + 1;
-
-                if (isNaN(year) || isNaN(month) || isNaN(day)) return dateString;
-
-                const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
-                                    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-
-                const monthShort = monthNames[month - 1];
-                if (!monthShort) return dateString;
-
-                return `${day} ${monthShort} ${year}`;
-
-            } catch (e) {
-                console.error('Error formatting dispatch date:', dateString, e);
-                return dateString;
-            }
-        }
 
         // Function to convert file to base64
         function fileToBase64(file) {
@@ -466,7 +447,7 @@ orders.forEach((order, index) => {
                         <p class="text-gray-600"><strong class="font-medium">Location:</strong> ${order.location || 'N/A'}</p>
                     </div>
                     <div class="border-t pt-4 mb-4">
-                        <p class="text-sm text-gray-500 mb-1"><strong class="font-medium">Expected Dispatch:</strong> <span class="text-blue-500">${order.dispatchDate}</span></p>
+					<p class="text-sm text-gray-500 mb-1"><strong class="font-medium">Expected Dispatch:</strong><span class="text-blue-500">${formatDateToDDMMYYYY(order.dispatchDate)}</span></p>
                         <p class="text-sm text-gray-500 mb-2"><strong class="font-medium">Order Timestamp:</strong> ${formatTimestamp(order.timestamp)}</p>
                         ${order.fileUploadLink ? `
                             <p class="text-sm text-gray-500">
@@ -679,5 +660,6 @@ orders.forEach((order, index) => {
     <script src="js/viewOnly.js"></script>
 </body>
 </html>
+
 
 
