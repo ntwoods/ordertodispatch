@@ -466,7 +466,7 @@ orders.forEach((order, index) => {
                         <p class="text-gray-600"><strong class="font-medium">Location:</strong> ${order.location || 'N/A'}</p>
                     </div>
                     <div class="border-t pt-4 mb-4">
-                        <p class="text-sm text-gray-500 mb-1"><strong class="font-medium">Expected Dispatch:</strong> <span class="text-blue-500">${formatDispatchDate(order.dispatchDate)}</span></p>
+                        <p class="text-sm text-gray-500 mb-1"><strong class="font-medium">Expected Dispatch:</strong> <span class="text-blue-500">${order.dispatchDate}</span></p>
                         <p class="text-sm text-gray-500 mb-2"><strong class="font-medium">Order Timestamp:</strong> ${formatTimestamp(order.timestamp)}</p>
                         ${order.fileUploadLink ? `
                             <p class="text-sm text-gray-500">
@@ -679,4 +679,5 @@ orders.forEach((order, index) => {
     <script src="js/viewOnly.js"></script>
 </body>
 </html>
+
 
