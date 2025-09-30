@@ -465,15 +465,13 @@ orders.forEach((order, index) => {
 			    </p>
 			  ` : ''}
 			
-			  <!-- Toggle button -->
-			  <button onclick="toggleDetails(${index})" 
-			    class="mt-3 w-full flex items-center justify-between bg-gradient-to-r from-indigo-500 to-blue-600 text-white px-4 py-2 rounded-lg shadow hover:from-indigo-600 hover:to-blue-700 transition duration-200 font-medium">
-			    <span>Show Dispatch Details</span>
-			    <svg id="toggle-icon-${index}" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 transform transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-			      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-			    </svg>
-			  </button>
-			</div>
+			<button id="toggle-btn-${index}" onclick="toggleDetails(${index})" 
+			  class="mt-3 w-full flex items-center justify-between bg-gradient-to-r from-indigo-500 to-blue-600 text-white px-4 py-2 rounded-lg shadow hover:from-indigo-600 hover:to-blue-700 transition duration-200 font-medium">
+			  <span>Show Dispatch Details</span>
+			  <svg id="toggle-icon-${index}" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 transform transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+			    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+			  </svg>
+			</button>
 			
 			<!-- Hidden details -->
 			<div id="details-${index}" class="editable hidden mt-4">
@@ -563,22 +561,21 @@ orders.forEach((order, index) => {
 	}
 
 
-		function toggleDetails(index) {
-  const details = document.getElementById(`details-${index}`);
-  const icon = document.getElementById(`toggle-icon-${index}`);
-  const button = details.previousElementSibling.querySelector("span");
-
-  if (details.classList.contains("hidden")) {
-    details.classList.remove("hidden");
-    button.textContent = "Hide Dispatch Details";
-    icon.classList.add("rotate-180");
-  } else {
-    details.classList.add("hidden");
-    button.textContent = "Show Dispatch Details";
-    icon.classList.remove("rotate-180");
-  }
-}
-
+	function toggleDetails(index) {
+	  const details = document.getElementById(`details-${index}`);
+	  const icon = document.getElementById(`toggle-icon-${index}`);
+	  const button = document.querySelector(`#toggle-btn-${index} span`); // select only the span inside the button
+	
+	  if (details.classList.contains("hidden")) {
+		details.classList.remove("hidden");
+		button.textContent = "Hide Dispatch Details";
+		icon.classList.add("rotate-180");
+	  } else {
+		details.classList.add("hidden");
+		button.textContent = "Show Dispatch Details";
+		icon.classList.remove("rotate-180");
+	  }
+	}
 
 	    
         // Function to open the detail modal
@@ -683,6 +680,7 @@ orders.forEach((order, index) => {
     <script src="js/viewOnly.js"></script>
 </body>
 </html>
+
 
 
 
