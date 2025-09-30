@@ -83,6 +83,11 @@
   <script>
     const apiUrl = "https://script.google.com/macros/s/AKfycbwWKHlGOSpQ5Jcof9bqCDQp-Tnl8J4lCZZT7DnGIEg75DjXYjVrvRbbjefyjdKDDPpi/exec";
 
+    // detect URL params
+    const params = new URLSearchParams(window.location.search);
+    const isPowerEA = params.get("power") === "ea";
+    const isViewOnly = params.get("mode") === "view";
+
     function formatDateTime(ts) {
       const d = new Date(ts);
       const dd = String(d.getDate()).padStart(2,'0');
@@ -114,6 +119,7 @@
     }
 
     function openModal(timestamp) {
+      if (isViewOnly) return; // block modal opening in view-only mode
       document.getElementById("modalTimestamp").value = timestamp;
       document.getElementById("submitModal").classList.remove("hidden");
       document.getElementById("submitModal").classList.add("flex");
@@ -128,14 +134,22 @@
     document.getElementById("submitForm").addEventListener("submit", async (e) => {
       e.preventDefault();
       const ts = document.getElementById("modalTimestamp").value;
-      const file = document.getElementById("preparedFile").files[0];
+      const fileInput = document.getElementById("preparedFile");
+      const file = fileInput.files[0];
       const owner = document.getElementById("ownerSelect").value;
       const crm = document.getElementById("crmSelect").value;
       const type = document.getElementById("typeSelect").value;
 
-      if (!file) return alert("File required");
+      // handle file validation based on mode
+      if (!isPowerEA && !file) {
+        return alert("File required");
+      }
 
-      const base64 = await toBase64(file);
+      let base64 = null, fileName = null;
+      if (file) {
+        base64 = await toBase64(file);
+        fileName = file.name;
+      }
 
       const payload = {
         timestamp: ts,
@@ -143,7 +157,7 @@
         crmName: crm,
         type: type,
         fileData: base64,
-        fileName: file.name,
+        fileName: fileName,
         action: "assignCRM"
       };
 
@@ -155,7 +169,7 @@
       });
       closeModal();
       alert("Submitted successfully!");
-      loadOrders();  // refresh only the table
+      loadOrders();
     });
 
     function toBase64(file) {
@@ -167,33 +181,41 @@
       });
     }
 
-    fetch(apiUrl)
-      .then(res => res.json())
-      .then(data => {
-        const table = document.getElementById("ordersTable");
-        data.data.forEach(order => {
-          const received = formatDateTime(order.timestamp);
-          const deadline = new Date(new Date(order.timestamp).getTime() + 45*60000);
-          const row = document.createElement("tr");
-          row.innerHTML = `
-            <td class="px-4 py-2">${received}</td>
-            <td class="px-4 py-2">${order.dealerName}</td>
-            <td class="px-4 py-2">${order.location}</td>
-            <td class="px-4 py-2">${order.marketingPersonName}</td>
-            <td class="px-4 py-2"><a href="${order.fileUploadLink}" target="_blank" class="text-blue-300 underline">View File</a></td>
-            <td class="px-4 py-2" data-deadline="${deadline.toISOString()}"></td>
-            <div class="editable">
-            <td class="px-4 py-2"><button onclick="openModal('${order.timestamp}')" class="bg-indigo-600 px-3 py-1 rounded">Submit</button></td>
-            </div>
-          `;
-          table.appendChild(row);
-          if (typeof setReadOnlyMode === "function") {
-            setReadOnlyMode();
-          }          
+    function loadOrders() {
+      fetch(apiUrl)
+        .then(res => res.json())
+        .then(data => {
+          const table = document.getElementById("ordersTable");
+          table.innerHTML = ""; // clear old rows
+          data.data.forEach(order => {
+            const received = formatDateTime(order.timestamp);
+            const deadline = new Date(new Date(order.timestamp).getTime() + 45*60000);
+            const row = document.createElement("tr");
+            row.innerHTML = `
+              <td class="px-4 py-2">${received}</td>
+              <td class="px-4 py-2">${order.dealerName}</td>
+              <td class="px-4 py-2">${order.location}</td>
+              <td class="px-4 py-2">${order.marketingPersonName}</td>
+              <td class="px-4 py-2"><a href="${order.fileUploadLink}" target="_blank" class="text-blue-300 underline">View File</a></td>
+              <td class="px-4 py-2" data-deadline="${deadline.toISOString()}"></td>
+              <td class="px-4 py-2">
+                <button onclick="openModal('${order.timestamp}')" class="bg-indigo-600 px-3 py-1 rounded ${isViewOnly ? 'opacity-50 cursor-not-allowed' : ''}" ${isViewOnly ? 'disabled' : ''}>Submit</button>
+              </td>
+            `;
+            table.appendChild(row);
+          });
+          updateTimers();
+          setInterval(updateTimers,1000);
         });
-        updateTimers();
-        setInterval(updateTimers,1000);
-      });
+    }
+
+    // Adjust required attribute on load
+    window.addEventListener("DOMContentLoaded", () => {
+      if (isPowerEA) {
+        document.getElementById("preparedFile").removeAttribute("required");
+      }
+      loadOrders();
+    });
   </script>
   <script src="https://ntwoods.github.io/ordertodispatch/js/viewOnly.js"></script>
 </body>
