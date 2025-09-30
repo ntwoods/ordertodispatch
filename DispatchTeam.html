@@ -380,26 +380,34 @@
 
 function startCountdown(index, dispatchDateStr) {
   const countdownEl = document.getElementById(`countdown-${index}`);
-  if (!countdownEl) return;
+  if (!countdownEl || !dispatchDateStr) return;
 
   try {
-    // Parse the dispatch date string (assumed dd/mm/yyyy or yyyy/mm/dd)
-    let parts = dispatchDateStr.includes("/") ? dispatchDateStr.split("/") : dispatchDateStr.split("-");
-    let year, month, day;
-
-    if (parts[0].length === 4) {
-      // yyyy/mm/dd
-      year = parseInt(parts[0], 10);
-      month = parseInt(parts[1], 10) - 1;
-      day = parseInt(parts[2], 10);
+    // Force dd/mm/yyyy parsing
+    let day, month, year;
+    if (dispatchDateStr.includes("/")) {
+      const parts = dispatchDateStr.split("/");
+      if (parts[0].length === 4) {
+        // yyyy/mm/dd
+        year = parseInt(parts[0], 10);
+        month = parseInt(parts[1], 10) - 1;
+        day = parseInt(parts[2], 10);
+      } else {
+        // dd/mm/yyyy
+        day = parseInt(parts[0], 10);
+        month = parseInt(parts[1], 10) - 1;
+        year = parseInt(parts[2], 10);
+      }
     } else {
-      // dd/mm/yyyy
-      day = parseInt(parts[0], 10);
-      month = parseInt(parts[1], 10) - 1;
-      year = parseInt(parts[2], 10);
+      // fallback: try ISO
+      const d = new Date(dispatchDateStr);
+      day = d.getDate();
+      month = d.getMonth();
+      year = d.getFullYear();
     }
 
-    const deadline = new Date(year, month, day, 21, 0, 0); // 21:00:00 same day
+    const deadline = new Date(year, month, day, 21, 0, 0);
+
 
     function updateTimer() {
       const now = new Date();
@@ -496,13 +504,16 @@ orders.forEach((order, index) => {
 
                 orderCard.setAttribute('data-order-index', index);
                 orderCard.innerHTML = `
-                    <div class="mb-4">
-                        <h3 class="text-xl font-semibold text-blue-700 mb-2">${order.dealerName || 'N/A'}</h3>
-                        <p class="text-gray-600"><strong class="font-medium">Marketing Person:</strong> ${order.marketingPersonName || 'N/A'}</p>
-						<p class="text-gray-600"><strong class="font-medium">CRM Name:</strong> ${order.crmName || 'N/A'}</p>
-                        <p class="text-gray-600"><strong class="font-medium">Location:</strong> ${order.location || 'N/A'}</p>
-						<span id="countdown-${index}" class="text-sm font-bold text-gray-700 bg-gray-100 px-2 py-1 rounded self-start"></span>						
-                    </div>
+				<div class="mb-4 flex justify-between items-start">
+				  <div>
+				    <h3 class="text-xl font-semibold text-blue-700 mb-2">${order.dealerName || 'N/A'}</h3>
+				    <p class="text-gray-600"><strong class="font-medium">Marketing Person:</strong> ${order.marketingPersonName || 'N/A'}</p>
+				    <p class="text-gray-600"><strong class="font-medium">CRM Name:</strong> ${order.crmName || 'N/A'}</p>
+				    <p class="text-gray-600"><strong class="font-medium">Location:</strong> ${order.location || 'N/A'}</p>
+				  </div>
+				  <span id="countdown-${index}" class="text-sm font-bold text-gray-700 bg-gray-100 px-2 py-1 rounded"></span>
+				</div>
+
 			<div class="border-t pt-4 mb-4">
 			  <p class="text-sm text-gray-500 mb-1">
 			    <strong class="font-medium">Expected Dispatch:</strong>
@@ -737,6 +748,7 @@ orders.forEach((order, index) => {
     <script src="js/viewOnly.js"></script>
 </body>
 </html>
+
 
 
 
