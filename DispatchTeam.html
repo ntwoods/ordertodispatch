@@ -446,81 +446,86 @@ orders.forEach((order, index) => {
 			<p class="text-gray-600"><strong class="font-medium">CRM Name:</strong> ${order.crmName || 'N/A'}</p>
                         <p class="text-gray-600"><strong class="font-medium">Location:</strong> ${order.location || 'N/A'}</p>
                     </div>
-                    <div class="border-t pt-4 mb-4">
-					<p class="text-sm text-gray-500 mb-1"><strong class="font-medium">Expected Dispatch:</strong><span class="text-blue-500">${formatDateToDDMMYYYY(order.dispatchDate)}</span></p>
-                        <p class="text-sm text-gray-500 mb-2"><strong class="font-medium">Order Timestamp:</strong> ${formatTimestamp(order.timestamp)}</p>
-                        ${order.fileUploadLink ? `
-                            <p class="text-sm text-gray-500">
-                                <a href="${order.fileUploadLink}" target="_blank" class="text-blue-500 hover:underline flex items-center" onclick="event.stopPropagation();">
-                                    <strong class="font-medium">Download Order File</strong>
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                                    </svg>
-                                </a>
-                            </p>
-                        ` : ''}
-			${order.additionalOrder ? `
+			<div class="border-t pt-4 mb-4">
+			  <p class="text-sm text-gray-500 mb-1">
+			    <strong class="font-medium">Expected Dispatch:</strong>
+			    <span class="text-blue-500">${formatDateToDDMMYYYY(order.dispatchDate)}</span>
+			  </p>
+			  <p class="text-sm text-gray-500 mb-2">
+			    <strong class="font-medium">Order Timestamp:</strong> ${formatTimestamp(order.timestamp)}
+			  </p>
+			  ${order.fileUploadLink ? `
 			    <p class="text-sm text-gray-500">
-				<button onclick="event.stopPropagation(); openMultipleDocuments('${order.additionalOrder.replace(/'/g, "\\'")}', ${index})"
-					class="text-red-500 hover:underline flex items-center bg-transparent border-none cursor-pointer p-0 m-0">
-				    <strong class="font-medium">Additional Order</strong>
-				    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-				    </svg>
-				</button>
+			      <a href="${order.fileUploadLink}" target="_blank" class="text-blue-500 hover:underline flex items-center" onclick="event.stopPropagation();">
+			        <strong class="font-medium">Download Order File</strong>
+			        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+			          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+			        </svg>
+			      </a>
 			    </p>
-			` : ''}
+			  ` : ''}
 			
-                    </div>
-                    <div class="editable">
-                    <div onclick="event.stopPropagation();">
-                        <div class="mb-3">
-                            <label class="block text-sm font-medium mb-1 text-gray-700">Expected Delivery Date:</label>
-                            <input type="date" id="delivery-${index}" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required/>
-                        </div>
-                        
-                        <!-- New sub-section for Dispatch Team Remark -->
-                        <div class="mb-3 p-4 border border-gray-200 rounded-md bg-gray-50">
-                            <h4 class="text-md font-semibold text-gray-700 mb-3">Dispatch Details</h4>
-                            <div class="mb-2">
-                                <label class="block text-sm font-medium mb-1 text-gray-700">General Remark:</label>
-                                <input type="text" id="generalRemark-${index}" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter general remarks..."/>
-                            </div>
-                            <div class="mb-2">
-                                <label class="block text-sm font-medium mb-1 text-gray-700">Vehicle No.:</label>
-                                <input type="text" id="vehicleNo-${index}" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g., UP16AB1234"/>
-                            </div>
-                            <div class="mb-2">
-                                <label class="block text-sm font-medium mb-1 text-gray-700">Freight:</label>
-                                <input type="number" id="freight-${index}" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter freight amount"/>
-                            </div>
-                            <div class="mb-2">
-                                <label class="block text-sm font-medium mb-1 text-gray-700">Driver Name:</label>
-                                <input type="text" id="driverName-${index}" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter driver's name"/>
-                            </div>
-                            <div class="mb-2">
-                                <label class="block text-sm font-medium mb-1 text-gray-700">Driver Mob:</label>
-                                <input type="tel" id="driverMob-${index}" pattern="[0-9]{10}" maxlength="10" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter 10-digit mobile number"/>
-                            </div>
-                        </div>
-                        
-                        <div class="mb-4">
-                            <label class="file-upload-label">Attach LR Receipt:</label> <!-- Changed label -->
-                            <input type="file" class="file-input" id="file-${index}" multiple onchange="handleFileSelect(${index})" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.xlsx,.xls">
-                            <div class="file-selected" id="file-selected-${index}">✓ File selected</div>
-                        </div>
+			  <!-- Toggle button -->
+			  <button onclick="toggleDetails(${index})" 
+			    class="mt-3 w-full flex items-center justify-between bg-gradient-to-r from-indigo-500 to-blue-600 text-white px-4 py-2 rounded-lg shadow hover:from-indigo-600 hover:to-blue-700 transition duration-200 font-medium">
+			    <span>Show Dispatch Details</span>
+			    <svg id="toggle-icon-${index}" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 transform transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+			      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+			    </svg>
+			  </button>
+			</div>
+			
+			<!-- Hidden details -->
+			<div id="details-${index}" class="editable hidden mt-4">
+			  <div onclick="event.stopPropagation();">
+			    <div class="mb-3">
+			      <label class="block text-sm font-medium mb-1 text-gray-700">Expected Delivery Date:</label>
+			      <input type="date" id="delivery-${index}" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required/>
+			    </div>
+			
+			    <!-- Dispatch Details -->
+			    <div class="mb-3 p-4 border border-gray-200 rounded-md bg-gray-50">
+			      <h4 class="text-md font-semibold text-gray-700 mb-3">Dispatch Details</h4>
+			      <div class="mb-2">
+			        <label class="block text-sm font-medium mb-1 text-gray-700">General Remark:</label>
+			        <input type="text" id="generalRemark-${index}" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter general remarks..."/>
+			      </div>
+			      <div class="mb-2">
+			        <label class="block text-sm font-medium mb-1 text-gray-700">Vehicle No.:</label>
+			        <input type="text" id="vehicleNo-${index}" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g., UP16AB1234"/>
+			      </div>
+			      <div class="mb-2">
+			        <label class="block text-sm font-medium mb-1 text-gray-700">Freight:</label>
+			        <input type="number" id="freight-${index}" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter freight amount"/>
+			      </div>
+			      <div class="mb-2">
+			        <label class="block text-sm font-medium mb-1 text-gray-700">Driver Name:</label>
+			        <input type="text" id="driverName-${index}" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter driver's name"/>
+			      </div>
+			      <div class="mb-2">
+			        <label class="block text-sm font-medium mb-1 text-gray-700">Driver Mob:</label>
+			        <input type="tel" id="driverMob-${index}" pattern="[0-9]{10}" maxlength="10" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter 10-digit mobile number"/>
+			      </div>
+			    </div>
+			
+			    <div class="mb-4">
+			      <label class="file-upload-label">Attach LR Receipt:</label>
+			      <input type="file" class="file-input" id="file-${index}" multiple onchange="handleFileSelect(${index})" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.xlsx,.xls">
+			      <div class="file-selected" id="file-selected-${index}">✓ File selected</div>
+			    </div>
+			
+			    <div class="mb-4">
+			      <label class="file-upload-label">Attach Invoice:</label>
+			      <input type="file" class="file-input" id="file1-${index}" multiple onchange="handleFileSelect1(${index})" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.xlsx,.xls">
+			      <div class="file-selected" id="file-selected1-${index}">✓ File selected</div>
+			    </div>
+			
+			    <button onclick="markDone(${index})" class="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition duration-200 font-medium">
+			      Mark Done
+			    </button>
+			  </div>
+			</div>
 
-                        <div class="mb-4">
-                            <label class="file-upload-label">Attach Invoice:</label>
-                            <input type="file" class="file-input" id="file1-${index}" multiple onchange="handleFileSelect1(${index})" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.xlsx,.xls">
-                            <div class="file-selected" id="file-selected1-${index}">✓ File selected</div>
-                        </div>
-                        
-                        <button onclick="markDone(${index})" class="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition duration-200 font-medium">
-                            Mark Done
-                        </button>
-                    </div>
-		    </div>
                 `;
 
                 orderCard.addEventListener('click', (event) => {
@@ -556,6 +561,24 @@ orders.forEach((order, index) => {
 		}, urlIndex * 100); // 100ms delay between each tab opening
 	    });
 	}
+
+
+		function toggleDetails(index) {
+  const details = document.getElementById(`details-${index}`);
+  const icon = document.getElementById(`toggle-icon-${index}`);
+  const button = details.previousElementSibling.querySelector("span");
+
+  if (details.classList.contains("hidden")) {
+    details.classList.remove("hidden");
+    button.textContent = "Hide Dispatch Details";
+    icon.classList.add("rotate-180");
+  } else {
+    details.classList.add("hidden");
+    button.textContent = "Show Dispatch Details";
+    icon.classList.remove("rotate-180");
+  }
+}
+
 
 	    
         // Function to open the detail modal
@@ -660,6 +683,7 @@ orders.forEach((order, index) => {
     <script src="js/viewOnly.js"></script>
 </body>
 </html>
+
 
 
 
