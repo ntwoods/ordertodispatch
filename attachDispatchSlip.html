@@ -1,299 +1,320 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <title>Orders — Final/Additional Sales Orders</title>
+  <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Orders – Final / Additional Sales Orders</title>
   <style>
-    :root {
-      --bg: #0b1020;
-      --card: #121a2f;
-      --muted: #93a0b8;
-      --text: #e6ecff;
-      --accent: #3b82f6;
-      --accent-2: #22c55e;
-      --danger: #ef4444;
-      --warning: #f59e0b;
-      --outline: rgba(255,255,255,0.08);
+    :root{
+      --bg:#f6f9ff;
+      --bg-alt:#eef4ff;
+      --card:#ffffff;
+      --ink:#0b2545;
+      --muted:#5b7aa6;
+      --primary:#1f6feb;
+      --primary-600:#1a61cf;
+      --primary-700:#184ea7;
+      --ring:#b3d1ff;
+      --ok:#12a150;
+      --warn:#eb8a1f;
+      --err:#d13b3b;
     }
-    * { box-sizing: border-box; }
-    body {
-      margin: 0; background: var(--bg); color: var(--text); font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", sans-serif;
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
+      background:linear-gradient(180deg,var(--bg),var(--bg-alt)); color:var(--ink);
     }
-    header {
-      position: sticky; top: 0; z-index: 5;
-      background: linear-gradient(180deg, rgba(7,10,22,0.95), rgba(7,10,22,0.75));
-      backdrop-filter: blur(8px);
-      border-bottom: 1px solid var(--outline);
+    .container{max-width:1200px;margin:0 auto;padding:24px}
+    header{
+      display:flex; gap:12px; align-items:center; justify-content:space-between; flex-wrap:wrap; margin-bottom:16px;
     }
-    .container { max-width: 1200px; margin: 0 auto; padding: 16px 20px; }
-    h1 { margin: 0; font-size: 20px; font-weight: 700; letter-spacing: 0.2px; }
-    #count { font-weight: 600; color: var(--muted); margin-left: 8px; }
+    .brand{display:flex; gap:12px; align-items:center}
+    .logo{width:40px;height:40px;border-radius:12px;background:radial-gradient(circle at 30% 30%, #7fb3ff, #2d6cdf); box-shadow:0 6px 16px rgba(31,111,235,.35)}
+    h1{font-size:clamp(18px,2.6vw,26px); margin:0}
+    .sub{color:var(--muted); font-size:12px}
 
-    /* toolbar */
-    .toolbar { display: flex; align-items: center; gap: 12px; margin-top: 10px; flex-wrap: wrap; }
-    .btn {
-      display: inline-flex; align-items: center; gap: 8px;
-      padding: 10px 14px; border-radius: 10px; font-weight: 600; letter-spacing: 0.2px;
-      color: #0a0f1f; background: var(--text); border: 1px solid var(--outline); cursor: pointer;
-      transition: transform .06s ease, opacity .2s ease, box-shadow .2s ease;
-    }
-    .btn:hover { transform: translateY(-1px); }
-    .btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
-    .btn-outline { background: transparent; color: var(--text); border-color: var(--outline); }
-    .btn-accent { background: var(--accent); color: white; border-color: transparent; }
-    .btn-success { background: var(--accent-2); color: white; border-color: transparent; }
-    .btn-warning { background: var(--warning); color: #1a1300; border-color: transparent; }
+    .toolbar{display:flex; gap:12px; align-items:center; flex-wrap:wrap}
+    .btn{border:0; background:var(--primary); color:#fff; padding:10px 14px; border-radius:10px; cursor:pointer; font-weight:600; font-size:13px; letter-spacing:.2px; box-shadow:0 6px 14px rgba(31,111,235,.35); transition:.18s transform,.18s box-shadow,.18s background}
+    .btn:hover{transform:translateY(-1px); background:var(--primary-600); box-shadow:0 8px 18px rgba(31,111,235,.4)}
+    .btn:active{transform:translateY(0)}
+    .btn.secondary{background:#e6efff; color:var(--primary-700); box-shadow:none}
+    .btn.secondary:hover{background:#d8e6ff}
+    .btn.ghost{background:transparent; color:var(--primary-700); box-shadow:none}
 
-    main { padding: 20px; }
-    .grid {
-      display: grid; gap: 16px;
-      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    }
-    .card {
-      background: radial-gradient(150% 120% at 0% 0%, rgba(59,130,246,0.08), transparent 60%),
-                  radial-gradient(120% 120% at 100% 100%, rgba(34,197,94,0.06), transparent 60%),
-                  var(--card);
-      border: 1px solid var(--outline);
-      border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 12px;
-      box-shadow: 0 4px 14px rgba(0,0,0,0.25);
-    }
-    .row { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
-    .dealer { font-size: 18px; font-weight: 700; }
-    .meta { font-size: 13px; color: var(--muted); display: flex; gap: 10px; flex-wrap: wrap; }
-    .k { opacity: 0.75; }
-    .v { color: var(--text); font-weight: 600; }
-    .actions { display: flex; gap: 8px; flex-wrap: wrap; }
-    .file {
-      display: grid; gap: 8px;
-      grid-template-columns: 1fr auto;
-      align-items: center;
-      background: rgba(255,255,255,0.02);
-      border: 1px dashed var(--outline);
-      border-radius: 12px; padding: 10px;
-    }
-    input[type="file"] {
-      width: 100%; color: var(--muted);
-      background: transparent; border: none; outline: none;
-    }
-    .hidden { display: none !important; }
-    .pill {
-      font-size: 12px; padding: 4px 8px; border-radius: 999px; border: 1px solid var(--outline); color: var(--muted);
-    }
+    .meta{font-size:12px; color:var(--muted)}
 
-    /* loader */
-    .loader-wrap { display: grid; place-items: center; padding: 40px 0; }
-    .spinner {
-      width: 28px; height: 28px; border: 3px solid rgba(255,255,255,0.15); border-top-color: var(--accent);
-      border-radius: 50%; animation: spin 1s linear infinite;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
+    .grid{display:grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap:18px}
 
-    /* toast */
-    .toast {
-      position: fixed; right: 16px; bottom: 16px; z-index: 20; padding: 12px 14px;
-      background: #0f172a; color: #e6ecff; border: 1px solid var(--outline); border-radius: 12px;
-      box-shadow: 0 10px 30px rgba(0,0,0,.25); opacity: 0; transform: translateY(10px);
-      transition: opacity .2s ease, transform .2s ease;
-      max-width: 80vw;
-    }
-    .toast.show { opacity: 1; transform: translateY(0); }
-    .toast.success { border-color: rgba(34,197,94,0.35); }
-    .toast.error   { border-color: rgba(239,68,68,0.35); }
-    .tiny { font-size: 12px; color: var(--muted); }
+    .card{background:var(--card); border-radius:16px; box-shadow:0 10px 30px rgba(10,37,69,.07); border:1px solid #e7efff; display:flex; flex-direction:column; min-height:280px; overflow:hidden}
+    .card .head{display:flex; align-items:center; justify-content:space-between; padding:16px 16px 0 16px}
+    .badge{font-size:11px; font-weight:700; color:#184ea7; background:#e9f1ff; border:1px solid #d3e3ff; padding:6px 10px; border-radius:999px}
+    .title{font-size:15px; font-weight:800; color:#123; margin:0}
+    .body{padding:12px 16px 16px 16px; display:grid; grid-template-columns:1fr; gap:10px}
+
+    .kv{display:flex; gap:10px; align-items:flex-start}
+    .kv .k{min-width:120px; font-size:12px; color:var(--muted)}
+    .kv .v{font-weight:600; font-size:13px; word-break:break-word}
+
+    .split{margin:6px 16px; height:1px; background:#eaf1ff}
+
+    .actions{display:flex; flex-direction:column; gap:8px; padding:0 16px 16px 16px}
+    .link-btn{display:inline-flex; align-items:center; gap:8px; font-size:12px; font-weight:700; color:var(--primary-700); background:#eaf2ff; border:1px solid #d8e6ff; padding:8px 10px; border-radius:10px; text-decoration:none; justify-content:center}
+    .link-btn:hover{background:#dfeaff}
+
+    .filebox{display:flex; flex-direction:column; gap:6px}
+    .filebox label{font-size:12px; color:var(--muted)}
+    input[type="file"]{border:1px dashed #cfe0ff; padding:10px; border-radius:12px; background:#f6faff}
+
+    .submit-row{display:flex; gap:8px; align-items:center; justify-content:space-between}
+    .submit-row .btn{width:100%; font-size:12px; padding:10px}
+
+    .empty, .error, .loader{background:#fff; border:1px dashed #d8e6ff; color:var(--muted); padding:18px; border-radius:14px; text-align:center}
+    .loader{display:flex; gap:10px; align-items:center; justify-content:center}
+    .dot{width:8px;height:8px;border-radius:50%;background:var(--primary); box-shadow:0 0 0 0 rgba(31,111,235,.4); animation:pulse 1.4s infinite}
+    .dot:nth-child(2){animation-delay:.15s}
+    .dot:nth-child(3){animation-delay:.3s}
+    @keyframes pulse{0%{transform:scale(.9); box-shadow:0 0 0 0 rgba(31,111,235,.5)}70%{transform:scale(1); box-shadow:0 0 0 10px rgba(31,111,235,0)}100%{transform:scale(.9); box-shadow:0 0 0 0 rgba(31,111,235,0)}}
+
+    .footer-note{margin-top:24px; text-align:center; font-size:12px; color:var(--muted)}
   </style>
 </head>
 <body>
-  <header>
-    <div class="container">
-      <h1>Final / Additional Sales Orders <span id="count"></span></h1>
-      <div class="toolbar">
-        <button id="refreshBtn" class="btn btn-outline" title="Refresh data">↻ Refresh</button>
+  <div class="container">
+    <header>
+      <div class="brand">
+        <div class="logo" aria-hidden="true"></div>
+        <div>
+          <h1>Orders Dashboard</h1>
+          <div class="sub">White & Blue card UI · Auto refresh every 5 minutes</div>
+        </div>
       </div>
-    </div>
-  </header>
+      <div class="toolbar">
+        <button class="btn" id="refreshBtn" title="Refresh now">Refresh</button>
+        <button class="btn secondary" id="toggleAutoBtn" title="Toggle auto refresh">Auto: On</button>
+        <span class="meta" id="lastUpdated">Last updated: —</span>
+      </div>
+    </header>
 
-  <main class="container">
-    <div id="loader" class="loader-wrap"><div class="spinner"></div></div>
-    <div id="grid" class="grid hidden"></div>
-  </main>
+    <main id="content">
+      <div class="loader" id="loader" role="status" aria-live="polite">
+        <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+        <span>Loading orders…</span>
+      </div>
+      <div class="grid" id="grid" hidden></div>
+      <div class="empty" id="empty" hidden>No orders found.</div>
+      <div class="error" id="error" hidden>Could not load orders. Please try again.</div>
+    </main>
 
-  <div id="toast" class="toast"></div>
+    <div class="footer-note">Sheet: <strong>OrderCycle</strong> · ID: <code>1WSQMXxEAWVqeSBcEiYPWZ8HAL5d9y0Rdcel6xupbTPI</code></div>
+  </div>
 
   <script>
-    // ======== CONFIG ========
     const API_URL = "https://script.google.com/macros/s/AKfycbyQjiYd4frJjrj25UpuWJt7_gAnqI-xj0H5LPl-VS2N6h2zOqUEKhooWEqYsiNM7QVUqg/exec";
-    const POST_URL = API_URL; // same project (doPost)
 
-    // ======== UTIL ========
-    const $ = sel => document.querySelector(sel);
-    const el = (tag, props = {}, children = []) => {
-      const n = document.createElement(tag);
-      Object.entries(props).forEach(([k,v]) => {
-        if (k === "class") n.className = v;
-        else if (k === "html") n.innerHTML = v;
-        else if (k.startsWith("on") && typeof v === "function") n.addEventListener(k.slice(2), v);
-        else n.setAttribute(k, v);
+    // --- UI helpers ---
+    const el = sel => document.querySelector(sel);
+    const grid = el('#grid');
+    const loader = el('#loader');
+    const emptyState = el('#empty');
+    const errState = el('#error');
+    const lastUpdated = el('#lastUpdated');
+    const refreshBtn = el('#refreshBtn');
+    const toggleAutoBtn = el('#toggleAutoBtn');
+
+    let auto = true;
+    let timer = null;
+    let fetching = false;
+
+    function setLoading(on){
+      loader.hidden = !on; grid.hidden = on; emptyState.hidden = true; errState.hidden = true;
+    }
+    function setError(msg){
+      errState.textContent = msg || 'Could not load orders. Please try again.';
+      errState.hidden = false; loader.hidden = true; grid.hidden = true; emptyState.hidden = true;
+    }
+    function setEmpty(){
+      emptyState.hidden = false; loader.hidden = true; grid.hidden = true; errState.hidden = true;
+    }
+    function stamp(){
+      const now = new Date();
+      const s = now.toLocaleString(undefined, { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit', second:'2-digit' });
+      lastUpdated.textContent = `Last updated: ${s}`;
+    }
+
+    // Convert key names to pretty labels, with explicit overrides when known
+    const LABEL_MAP = {
+      DealerName: 'Dealer Name',
+      MarketingPerson: 'Marketing Person',
+      Location: 'Location',
+      CRMName: 'CRM Name',
+      FinalOrder: 'Final Order URL',
+      URLs: 'Additional Order URL'
+    };
+    function prettyLabel(key){
+      if(LABEL_MAP[key]) return LABEL_MAP[key];
+      // split camelCase / PascalCase / snake_case to readable
+      return key
+        .replace(/_/g,' ')
+        .replace(/([a-z])([A-Z])/g,'$1 $2')
+        .replace(/^./, c => c.toUpperCase());
+    }
+
+    function isTruthyUrl(v){
+      return typeof v === 'string' && v.trim() !== '';
+    }
+
+    function createKV(k, v){
+      const row = document.createElement('div'); row.className = 'kv';
+      const kEl = document.createElement('div'); kEl.className = 'k'; kEl.textContent = prettyLabel(k);
+      const vEl = document.createElement('div'); vEl.className = 'v'; vEl.textContent = (v ?? '')+'';
+      row.append(kEl, vEl); return row;
+    }
+
+    function createCard(order, index){
+      const card = document.createElement('article'); card.className = 'card';
+
+      // Head
+      const head = document.createElement('div'); head.className = 'head';
+      const title = document.createElement('h3'); title.className = 'title';
+      const titleText = order.DealerName || order.dealerName || `Order #${index+1}`;
+      title.textContent = titleText;
+      const badge = document.createElement('div'); badge.className = 'badge';
+      badge.textContent = order.CRMName ? `CRM: ${order.CRMName}` : 'Order';
+      head.append(title, badge);
+
+      // Body – show all fields
+      const body = document.createElement('div'); body.className = 'body';
+      Object.keys(order).forEach(key => {
+        // We'll still show URLs fields in the details (for transparency)
+        body.appendChild(createKV(key, order[key]));
       });
-      children.forEach(c => n.appendChild(typeof c === "string" ? document.createTextNode(c) : c));
-      return n;
-    };
-    const showToast = (msg, type="success") => {
-      const t = $("#toast");
-      t.textContent = msg;
-      t.className = "toast " + type + " show";
-      setTimeout(() => t.classList.remove("show"), 2200);
-    };
-    const toBase64 = file => new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result.split(",")[1]); // remove data:mime;base64,
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
+
+      // Split
+      const split = document.createElement('div'); split.className='split';
+
+      // Actions
+      const actions = document.createElement('div'); actions.className='actions';
+
+      // Dynamic view button (above file input)
+      const finalUrl = order.FinalOrder || order.finalOrder || '';
+      const addlUrl = order.URLs || order.urls || '';
+      const hasFinal = isTruthyUrl(finalUrl);
+      const hasAddl = !hasFinal && isTruthyUrl(addlUrl); // only if Final is blank and URLs has value
+
+      if(hasFinal){
+        const a = document.createElement('a');
+        a.href = finalUrl; a.target = '_blank'; a.rel = 'noopener noreferrer';
+        a.className = 'link-btn';
+        a.textContent = 'View Final Order';
+        actions.appendChild(a);
+      } else if(hasAddl){
+        const a = document.createElement('a');
+        a.href = addlUrl; a.target = '_blank'; a.rel = 'noopener noreferrer';
+        a.className = 'link-btn';
+        a.textContent = 'View Additional Order';
+        actions.appendChild(a);
+      }
+
+      // File input (single file)
+      const fileBox = document.createElement('div'); fileBox.className='filebox';
+      const fileLabel = document.createElement('label'); fileLabel.textContent = 'Attach file (single)'; fileLabel.setAttribute('for', `file-${index}`);
+      const fileInput = document.createElement('input'); fileInput.type='file'; fileInput.id=`file-${index}`; fileInput.multiple=false;
+      fileBox.append(fileLabel, fileInput);
+      actions.appendChild(fileBox);
+
+      // Submit button row
+      const submitRow = document.createElement('div'); submitRow.className='submit-row';
+      const submitBtn = document.createElement('button'); submitBtn.className='btn';
+      if(hasFinal){
+        submitBtn.textContent = 'Submit Final Sales Order';
+        submitBtn.dataset.kind = 'final';
+      } else if(hasAddl){
+        submitBtn.textContent = 'Submit Additional Sales Order';
+        submitBtn.dataset.kind = 'additional';
+      } else {
+        submitBtn.textContent = 'Submit Sales Order';
+        submitBtn.dataset.kind = 'generic';
+      }
+
+      submitBtn.addEventListener('click', async () => {
+        try{
+          const file = fileInput.files?.[0] || null;
+          if(!file){
+            if(confirm('No file selected. Submit without attachment?') === false) return;
+          }
+          submitBtn.disabled = true; submitBtn.textContent = 'Submitting…';
+
+          // 🔧 IMPLEMENT: Replace POST_URL + payload shape to match your Apps Script doPost
+          const POST_URL = API_URL; // or another endpoint for doPost
+
+          const fd = new FormData();
+          fd.append('action', submitBtn.dataset.kind === 'final' ? 'submitFinalOrder' : (submitBtn.dataset.kind === 'additional' ? 'submitAdditionalOrder' : 'submitOrder'));
+          fd.append('payload', JSON.stringify(order)); // include full row so backend can match the record
+          if(file){ fd.append('file', file, file.name); }
+
+          const res = await fetch(POST_URL, { method:'POST', body: fd });
+          if(!res.ok){ throw new Error('Server returned '+res.status); }
+          const text = await res.text();
+          alert('Submitted successfully!\n\nResponse: '+ text.slice(0,400));
+        }catch(err){
+          console.error(err);
+          alert('Submission failed. Check console for details.');
+        }finally{
+          submitBtn.disabled = false;
+          submitBtn.textContent = submitBtn.dataset.kind === 'final' ? 'Submit Final Sales Order' : (submitBtn.dataset.kind === 'additional' ? 'Submit Additional Sales Order' : 'Submit Sales Order');
+        }
+      });
+      submitRow.appendChild(submitBtn);
+      actions.appendChild(submitRow);
+
+      // Assemble
+      card.append(head, body, split, actions);
+      return card;
+    }
+
+    async function fetchOrders(){
+      if(fetching) return; // prevent overlapping fetches
+      fetching = true; setLoading(true);
+      try{
+        const res = await fetch(API_URL, { cache: 'no-store' });
+        if(!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        render(data);
+        stamp();
+      }catch(err){
+        console.error(err);
+        setError(err.message || 'Failed to fetch');
+      }finally{
+        fetching = false; setLoading(false);
+      }
+    }
+
+    function render(rows){
+      grid.innerHTML = '';
+      if(!Array.isArray(rows) || rows.length === 0){ setEmpty(); return; }
+      rows.forEach((row,i)=> grid.appendChild(createCard(row,i)) );
+      grid.hidden = false; emptyState.hidden = true; errState.hidden = true;
+    }
+
+    function startAuto(){
+      clearInterval(timer);
+      timer = setInterval(fetchOrders, 5 * 60 * 1000); // 5 minutes
+      toggleAutoBtn.textContent = 'Auto: On';
+    }
+    function stopAuto(){
+      clearInterval(timer); toggleAutoBtn.textContent = 'Auto: Off';
+    }
+
+    // Event wiring
+    refreshBtn.addEventListener('click', fetchOrders);
+    toggleAutoBtn.addEventListener('click', ()=>{
+      auto = !auto; auto ? startAuto() : stopAuto();
     });
 
-    // ======== RENDER ========
-    const grid = $("#grid");
-    const loader = $("#loader");
-    const count = $("#count");
-
-    async function fetchData() {
-      loader.classList.remove("hidden");
-      grid.classList.add("hidden");
-      grid.innerHTML = "";
-      try {
-        const res = await fetch(API_URL, { cache: "no-store" });
-        const data = await res.json(); // response is JSON per your API
-        render(data || []);
-        count.textContent = `(${data?.length || 0})`;
-      } catch (e) {
-        console.error(e);
-        showToast("Failed to fetch data", "error");
-        count.textContent = "";
-      } finally {
-        loader.classList.add("hidden");
-        grid.classList.remove("hidden");
-      }
-    }
-
-    function render(data) {
-      grid.innerHTML = "";
-      data.forEach((row, idx) => {
-        const {
-          DealerName = "",
-          MarketingPerson = "",
-          Location = "",
-          CRMName = "",
-          FinalOrder = "",
-          URLs = ""
-        } = row;
-
-        const hasFinal = !!(FinalOrder && String(FinalOrder).trim());
-        const urlsList = (URLs || "").split(",").map(s => s.trim()).filter(Boolean);
-        const hasAdditional = urlsList.length > 0;
-
-        // Open targets
-        const finalOrderUrl = (FinalOrder || "").toString().trim();
-        
-        const finalOrderBtn = hasFinal 
-          ? el("button", { 
-              class: "btn btn-accent", 
-              title: "Open Final Order", 
-              onClick: () => {
-                if (finalOrderUrl.startsWith("http")) {
-                  window.open(finalOrderUrl, "_blank");
-                } else {
-                  alert("Invalid Final Order URL");
-                }
-              }
-            }, ["FINAL ORDER"]) 
-          : null;
-
-        const additionalOrderBtn = (!hasFinal && hasAdditional) ? el("button", { class: "btn btn-outline", title: "Open Additional Order (latest)", onClick: () => window.open(urlsList[urlsList.length - 1], "_blank") }, ["ADDITIONAL ORDER"]) : null;
-
-        // File input & action button
-        const fileInput = el("input", { type: "file", accept: "*/*", id: `file-${idx}` });
-        const actionBtnLabel = hasFinal ? "FINAL Sales Order" : (hasAdditional ? "ADDITIONAL Sales Order" : null);
-
-        const actionBtn = actionBtnLabel ? el("button", { class: hasFinal ? "btn btn-success" : "btn btn-warning", id: `act-${idx}` }, [actionBtnLabel]) : null;
-
-        const onAction = async () => {
-          if (!fileInput.files || fileInput.files.length === 0) {
-            showToast("Please attach a file before submitting.", "error");
-            return;
-          }
-          const file = fileInput.files[0];
-          const fileBase64 = await toBase64(file);
-
-          const payload = {
-            action: hasFinal ? "finalSalesOrder" : "additionalSalesOrder",
-            finalOrderUrl: hasFinal ? String(FinalOrder) : "", // might be empty for additional path
-            additionalRefUrl: hasAdditional ? String(urlsList[urlsList.length - 1]) : "", // last URL as reference
-            fileName: file.name,
-            mimeType: file.type || "application/octet-stream",
-            fileBase64
-          };
-
-          // Button state
-          actionBtn.disabled = true;
-          const prevText = actionBtn.textContent;
-          actionBtn.textContent = "Processing…";
-
-          try {
-            // no-cors: we won't read response; server must handle silently
-            await fetch(POST_URL, {
-              method: "POST",
-              mode: "no-cors",
-              headers: {
-                // In no-cors the browser may downgrade headers; the server will read raw body anyway.
-                "Content-Type": "application/json"
-              },
-              body: JSON.stringify(payload)
-            });
-            showToast("Submitted successfully.");
-            // Optional: clear the file input
-            fileInput.value = "";
-          } catch (e) {
-            console.error(e);
-            showToast("Submit failed (network).", "error");
-          } finally {
-            actionBtn.disabled = false;
-            actionBtn.textContent = prevText;
-          }
-        };
-
-        if (actionBtn) actionBtn.addEventListener("click", onAction);
-
-        const card = el("div", { class: "card" }, [
-          el("div", { class: "row" }, [
-            el("div", { class: "dealer" }, [DealerName || "N/A"]),
-            el("span", { class: "pill" }, [hasFinal ? "Final" : (hasAdditional ? "Additional" : "No Files")])
-          ]),
-          el("div", { class: "meta" }, [
-            el("span", {}, [el("span", { class: "k" }, ["Marketing: "]), el("span", { class: "v" }, [MarketingPerson || "—"])]),
-            el("span", {}, [el("span", { class: "k" }, ["Location: "]), el("span", { class: "v" }, [Location || "—"])]),
-            el("span", {}, [el("span", { class: "k" }, ["CRM: "]), el("span", { class: "v" }, [CRMName || "—"])])
-          ]),
-          el("div", { class: "actions" }, [
-            ...(finalOrderBtn ? [finalOrderBtn] : []),
-            ...(additionalOrderBtn ? [additionalOrderBtn] : [])
-          ]),
-          actionBtn ? el("div", { class: "file" }, [
-            fileInput,
-            actionBtn
-          ]) : el("div", { class: "tiny" }, ["No eligible action for this card."])
-        ]);
-
-        grid.appendChild(card);
-      });
-
-      if (data.length === 0) {
-        grid.appendChild(el("div", { class: "tiny" }, ["No orders eligible right now."]));
-      }
-    }
-
-    // ======== BOOT ========
-    $("#refreshBtn").addEventListener("click", fetchData);
-    fetchData();
+    // Kickoff
+    fetchOrders();
+    startAuto();
   </script>
 </body>
 </html>
