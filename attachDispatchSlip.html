@@ -214,7 +214,7 @@
         submitBtn.disabled = true; submitBtn.textContent = 'Submitting…';
 
         // Payload with keyTimestamp
-        const payload = { ...order, keyTimestamp: order.keyTimestamp };
+        const payload = { ...order, KeyTimestamp: order.KeyTimestamp };
         const bodyData = {
           action: submitBtn.dataset.kind === 'final' ? 'submitFinalOrder' :
                   (submitBtn.dataset.kind === 'additional' ? 'submitAdditionalOrder' : 'submitOrder'),
