@@ -38,7 +38,6 @@
     .btn{border:0; background:var(--primary); color:#fff; padding:10px 14px; border-radius:10px; cursor:pointer; font-weight:600; font-size:13px; letter-spacing:.2px; box-shadow:0 6px 14px rgba(31,111,235,.35); transition:.18s transform,.18s box-shadow,.18s background}
     .btn:hover{transform:translateY(-1px); background:var(--primary-600); box-shadow:0 8px 18px rgba(31,111,235,.4)}
     .btn:active{transform:translateY(0)}
-    .btn:disabled{background:var(--muted); box-shadow:none; cursor:wait; transform:none;}
     .btn.secondary{background:#e6efff; color:var(--primary-700); box-shadow:none}
     .btn.secondary:hover{background:#d8e6ff}
     .btn.ghost{background:transparent; color:var(--primary-700); box-shadow:none}
@@ -67,7 +66,7 @@
     .filebox label{font-size:12px; color:var(--muted)}
     input[type="file"]{border:1px dashed #cfe0ff; padding:10px; border-radius:12px; background:#f6faff}
 
-    .submit-row{display:flex; flex-direction:column; gap:8px; align-items:center; justify-content:space-between}
+    .submit-row{display:flex; gap:8px; align-items:center; justify-content:space-between}
     .submit-row .btn{width:100%; font-size:12px; padding:10px}
 
     .empty, .error, .loader{background:#fff; border:1px dashed #d8e6ff; color:var(--muted); padding:18px; border-radius:14px; text-align:center}
@@ -76,14 +75,6 @@
     .dot:nth-child(2){animation-delay:.15s}
     .dot:nth-child(3){animation-delay:.3s}
     @keyframes pulse{0%{transform:scale(.9); box-shadow:0 0 0 0 rgba(31,111,235,.5)}70%{transform:scale(1); box-shadow:0 0 0 10px rgba(31,111,235,0)}100%{transform:scale(.9); box-shadow:0 0 0 0 rgba(31,111,235,0)}}
-
-    .status-message {
-      font-size: 12px; font-weight: 600; padding: 10px; border-radius: 10px; margin-top: 4px;
-      text-align: center; border: 1px solid transparent; transition: all 0.3s ease;
-      min-height: 20px; /* Ensure space for message */
-    }
-    .status-message.success { color: var(--ok); background: #e0f8e9; border-color: #c0f0d1; }
-    .status-message.failure { color: var(--err); background: #ffebeb; border-color: #ffc6c6; }
 
     .footer-note{margin-top:24px; text-align:center; font-size:12px; color:var(--muted)}
   </style>
@@ -117,29 +108,21 @@
   </div>
 
 <script>
-  // Ensure the API URL is correct and deployed for the script below.
-  const API_URL = "https://script.google.com/macros/s/AKfycbyMeNpAlA_IFpQ5F7Uif9k7dOuYheDkO9Qrcs4nKJkxB8VdrvK4HJCUH54Vc6u5Kl-uLQ/exec";
+  const API_URL = "https://script.google.com/macros/s/AKfycby0Dfyv9Aov5ZEPF8Nt8brDCDQs1V8JuFQGA0Ey6IhPZoDdF_CSTwO_PcouqobqDOgTkQ/exec";
 
   const el = sel => document.querySelector(sel);
   const grid = el('#grid');
   const loader = el('#loader');
   const emptyState = el('#empty');
   const errState = el('#error');
-  const lastUpdatedEl = el('#lastUpdated');
-  const refreshBtn = el('#refreshBtn');
-  const toggleAutoBtn = el('#toggleAutoBtn');
 
   let auto = true;
   let timer = null;
   let fetching = false;
 
   function setLoading(on){
-    loader.hidden = !on; 
-    if(on) { 
-      grid.hidden = true; 
-      emptyState.hidden = true; 
-      errState.hidden = true; 
-    }
+    loader.hidden = !on; grid.hidden = on;
+    emptyState.hidden = true; errState.hidden = true;
   }
   function setError(msg){
     errState.textContent = msg || 'Could not load orders. Please try again.';
@@ -156,8 +139,7 @@
     CRMName: 'CRM Name',
     FinalOrder: 'Final Order URL',
     URLs: 'Additional Order URL',
-    Timestamp: 'Order Timestamp',
-    Key: 'Key Timestamp (Match Field)' // Key is the field with the ISO timestamp
+    keyTimestamp: 'Key Timestamp'
   };
 
   function prettyLabel(key){
@@ -188,10 +170,9 @@
 
     // Body
     const body = document.createElement('div'); body.className = 'body';
-    // Only display fields relevant to the user's view, except the key which is for the backend
-    const DISPLAY_KEYS = ['DealerName', 'MarketingPerson', 'Location', 'CRMName', 'Timestamp']; 
-    DISPLAY_KEYS.forEach(key => {
-      if (order[key]) body.appendChild(createKV(key, order[key]));
+    const HIDDEN_KEYS = new Set(['FinalOrder','URLs']); // don't render raw URLs
+    Object.keys(order).forEach(key => {
+      if (!HIDDEN_KEYS.has(key)) body.appendChild(createKV(key, order[key]));
     });
 
     // Actions
@@ -200,63 +181,38 @@
     const finalUrl = order.FinalOrder || '';
     const addlUrl = order.URLs || '';
     const hasFinal = isTruthyUrl(finalUrl);
-    const hasAddl = isTruthyUrl(addlUrl); // Only check if there's any URL in the Additional field
+    const hasAddl = !hasFinal && isTruthyUrl(addlUrl);
 
     if(hasFinal){
       const a = document.createElement('a'); a.href = finalUrl; a.target='_blank'; a.className='link-btn'; a.textContent = 'View Final Order'; 
       actions.appendChild(a);
-    } 
-    if(hasAddl){
-      // This is slightly complex since addlUrl could be comma-separated, but we'll link to the first one for simplicity.
-      const firstUrl = addlUrl.split(',')[0].trim();
-      const a = document.createElement('a'); a.href = firstUrl; a.target='_blank'; a.className='link-btn'; a.textContent = 'View Additional Order(s)'; 
+    } else if(hasAddl){
+      const a = document.createElement('a'); a.href = addlUrl; a.target='_blank'; a.className='link-btn'; a.textContent = 'View Additional Order'; 
       actions.appendChild(a);
     }
-    
-    // Hidden key for reference
-    const keyRef = document.createElement('div'); 
-    keyRef.className = 'meta'; 
-    keyRef.textContent = `Matching Key: ${order.Key}`;
-    keyRef.style.display = 'none'; // Keep this hidden from the user
-    actions.appendChild(keyRef);
 
     const fileBox = document.createElement('div'); fileBox.className='filebox';
-    const fileLabel = document.createElement('label'); fileLabel.textContent = 'Attach Dispatch/Sales Order File'; fileLabel.setAttribute('for', `file-${index}`);
+    const fileLabel = document.createElement('label'); fileLabel.textContent = 'Attach file'; fileLabel.setAttribute('for', `file-${index}`);
     const fileInput = document.createElement('input'); fileInput.type='file'; fileInput.id=`file-${index}`;
     fileBox.append(fileLabel, fileInput);
     actions.appendChild(fileBox);
 
     const submitRow = document.createElement('div'); submitRow.className='submit-row';
     const submitBtn = document.createElement('button'); submitBtn.className='btn';
-    
-    let actionKind;
-    if(order.FinalOrder) { 
-      submitBtn.textContent = 'Submit Final Sales Order'; actionKind = 'final'; 
-    } else if(order.URLs) { 
-      submitBtn.textContent = 'Submit Additional Sales Order'; actionKind = 'additional'; 
-    } else { 
-      submitBtn.textContent = 'Submit Sales Order'; actionKind = 'generic'; 
-    }
-    submitBtn.dataset.kind = actionKind;
+    if(hasFinal){ submitBtn.textContent = 'Submit Final Sales Order'; submitBtn.dataset.kind = 'final'; }
+    else if(hasAddl){ submitBtn.textContent = 'Submit Additional Sales Order'; submitBtn.dataset.kind = 'additional'; }
+    else { submitBtn.textContent = 'Submit Sales Order'; submitBtn.dataset.kind = 'generic'; }
 
-    const statusMsg = document.createElement('div'); statusMsg.className = 'status-message';
-    
     submitBtn.addEventListener('click', async () => {
       try{
-        statusMsg.textContent = '';
         const file = fileInput.files?.[0] || null;
-        
-        // Use custom modal or simple logic instead of confirm()
-        if(!file) {
-          if (!window.confirm('No file selected. Submit without attachment?')) return;
-        }
+        if(!file && !confirm('No file selected. Submit without attachment?')) return;
 
         submitBtn.disabled = true; submitBtn.textContent = 'Submitting…';
         
-        // *** FIX: Use the 'Key' field which contains the ISO timestamp from doGet ***
-        const keyVal = order.Key; 
-        
-        const payload = { ...order, Key: keyVal };
+        console.log("Preparing payload for row:", order);
+        const payload = { ...order, Key: order.Key };
+        console.log("Payload being sent:", payload);
 
         const bodyData = {
           action: submitBtn.dataset.kind === 'final' ? 'submitFinalOrder' :
@@ -267,29 +223,18 @@
         const fd = new FormData();
         fd.append('data', JSON.stringify(bodyData));
         if(file) fd.append('file', file, file.name);
-
-        // Fetch is done with method: 'POST'
-        const res = await fetch(API_URL, { method:'POST', mode:'no-cors', body: fd });
-        statusMsg.textContent = '✅ Submission successful!';
-        statusMsg.classList.remove('failure');
-        statusMsg.classList.add('success');        
+        await fetch(API_URL, { method:'POST', mode:'no-cors', body: fd });
+        alert('Submitted successfully!');
       }catch(err){
-        console.error('Submission failed:', err);
-        statusMsg.textContent = `❌ Submission failed: ${err.message || 'Check console.'}`;
-        statusMsg.classList.remove('success');
-        statusMsg.classList.add('failure');
+        console.error(err);
+        alert('Submission failed: '+err.message);
       }finally{
         submitBtn.disabled = false;
         submitBtn.textContent = submitBtn.dataset.kind === 'final' ? 'Submit Final Sales Order' :
                                 (submitBtn.dataset.kind === 'additional' ? 'Submit Additional Sales Order' : 'Submit Sales Order');
-        setTimeout(() => {
-          statusMsg.textContent = '';
-          fetchOrders(); // Force a refresh after submission attempt
-        }, 3000);
       }
     });
 
-    submitRow.prepend(statusMsg);
     submitRow.appendChild(submitBtn);
     actions.appendChild(submitRow);
 
@@ -301,18 +246,15 @@
   async function fetchOrders(){
     if(fetching) return;
     fetching = true; setLoading(true);
-    refreshBtn.disabled = true;
     try{
-      const res = await fetch(API_URL + '?action=getOrders', { cache:'no-store' }); // Added a param for clarity
+      const res = await fetch(API_URL, { cache:'no-store' });
       if(!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       render(data);
-      lastUpdatedEl.textContent = `Last updated: ${new Date().toLocaleTimeString()}`;
     }catch(err){
-      console.error(err); setError('Failed to fetch orders: '+ (err.message || 'Unknown error'));
+      console.error(err); setError(err.message || 'Failed to fetch');
     }finally{
       fetching = false; setLoading(false);
-      refreshBtn.disabled = false;
     }
   }
 
@@ -325,14 +267,6 @@
 
   function startAuto(){ clearInterval(timer); timer = setInterval(fetchOrders, 5*60*1000); }
   function stopAuto(){ clearInterval(timer); }
-
-  // Event Listeners
-  refreshBtn.addEventListener('click', fetchOrders);
-  toggleAutoBtn.addEventListener('click', () => {
-    auto = !auto;
-    if(auto){ startAuto(); toggleAutoBtn.textContent = 'Auto: On'; }
-    else { stopAuto(); toggleAutoBtn.textContent = 'Auto: Off'; }
-  });
 
   // Initial load
   fetchOrders();
