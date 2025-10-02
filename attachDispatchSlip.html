@@ -269,37 +269,10 @@
         if(file) fd.append('file', file, file.name);
 
         // Fetch is done with method: 'POST'
-        const res = await fetch(API_URL, { method:'POST', body: fd });
-        
-        // Google Apps Script usually returns an HTML response when mode is 'no-cors'
-        // but since we are sending JSON response now, we can try to parse it.
-        // If the script is deployed as 'Web App' and set to execute as 'Me', 
-        // the response might not be readable due to CORS headers unless deployed 
-        // with specific configuration or used inside a Google environment.
-        // Assuming a successful 200/302 response for now due to the form data.
-        
-        // Since the script now returns JSON, let's try to read it.
-        // NOTE: If running in an iframe, fetch might fail with no-cors. 
-        // If it fails, we fall back to assuming success after a delay.
-        
-        let result = { success: true, message: 'Submitted successfully!' };
-        try {
-            const jsonResult = await res.json();
-            if (jsonResult.ok === false) {
-                throw new Error(jsonResult.error || 'Server reported failure.');
-            }
-            // Optional: You could refresh the view here if you want immediate feedback, but the script runs an automatic timer.
-        } catch (e) {
-            // Fallback for non-JSON or unreadable response (common in no-cors)
-            console.warn("Could not read server response (CORS/No-CORS issue). Assuming success if no HTTP error.");
-            if (!res.ok) throw new Error('HTTP request failed.');
-        }
-
-
+        const res = await fetch(API_URL, { method:'POST', mode:'no-cors', body: fd });
         statusMsg.textContent = '✅ Submission successful!';
         statusMsg.classList.remove('failure');
-        statusMsg.classList.add('success');
-        
+        statusMsg.classList.add('success');        
       }catch(err){
         console.error('Submission failed:', err);
         statusMsg.textContent = `❌ Submission failed: ${err.message || 'Check console.'}`;
