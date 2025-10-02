@@ -209,12 +209,16 @@
         if(!file && !confirm('No file selected. Submit without attachment?')) return;
 
         submitBtn.disabled = true; submitBtn.textContent = 'Submitting…';
+        
+        // normalize key field (prefer epoch ms for robust matching)
+        const keyPref =
+          (typeof order.keyTsMs === 'number' && !Number.isNaN(order.keyTsMs)) ? order.keyTsMs :
+          (order.keyTsMs && /^\d+$/.test(String(order.keyTsMs))) ? Number(order.keyTsMs) :
+          (order.keyTimestamp ?? order.Key ?? null);
+        
+        // do NOT stringify the key; send as number when possible
+        const payload = { ...order, keyTimestamp: keyPref, keyTsMs: keyPref };
 
-        // normalize key field
-        const keyFromServer = order.keyTimestamp ?? order.Key ?? order.keyTsMs ?? null;
-        const normalizedKey = keyFromServer != null ? String(keyFromServer) : null;
-
-        const payload = { ...order, keyTimestamp: normalizedKey };
         const bodyData = {
           action: submitBtn.dataset.kind === 'final' ? 'submitFinalOrder' :
                   (submitBtn.dataset.kind === 'additional' ? 'submitAdditionalOrder' : 'submitOrder'),
