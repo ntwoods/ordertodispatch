@@ -109,212 +109,173 @@
     <div class="footer-note">Sheet: <strong>OrderCycle</strong> · ID: <code>1WSQMXxEAWVqeSBcEiYPWZ8HAL5d9y0Rdcel6xupbTPI</code></div>
   </div>
 
-  <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbyQjiYd4frJjrj25UpuWJt7_gAnqI-xj0H5LPl-VS2N6h2zOqUEKhooWEqYsiNM7QVUqg/exec";
+<script>
+  const API_URL = "https://script.google.com/macros/s/AKfycbyQjiYd4frJjrj25UpuWJt7_gAnqI-xj0H5LPl-VS2N6h2zOqUEKhooWEqYsiNM7QVUqg/exec";
 
-    // --- UI helpers ---
-    const el = sel => document.querySelector(sel);
-    const grid = el('#grid');
-    const loader = el('#loader');
-    const emptyState = el('#empty');
-    const errState = el('#error');
-    const lastUpdated = el('#lastUpdated');
-    const refreshBtn = el('#refreshBtn');
-    const toggleAutoBtn = el('#toggleAutoBtn');
+  const el = sel => document.querySelector(sel);
+  const grid = el('#grid');
+  const loader = el('#loader');
+  const emptyState = el('#empty');
+  const errState = el('#error');
 
-    let auto = true;
-    let timer = null;
-    let fetching = false;
+  let auto = true;
+  let timer = null;
+  let fetching = false;
 
-    function setLoading(on){
-      loader.hidden = !on; grid.hidden = on; emptyState.hidden = true; errState.hidden = true;
-    }
-    function setError(msg){
-      errState.textContent = msg || 'Could not load orders. Please try again.';
-      errState.hidden = false; loader.hidden = true; grid.hidden = true; emptyState.hidden = true;
-    }
-    function setEmpty(){
-      emptyState.hidden = false; loader.hidden = true; grid.hidden = true; errState.hidden = true;
-    }
-    function stamp(){
-      const now = new Date();
-      const s = now.toLocaleString(undefined, { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit', second:'2-digit' });
-      lastUpdated.textContent = `Last updated: ${s}`;
-    }
+  function setLoading(on){
+    loader.hidden = !on; grid.hidden = on;
+    emptyState.hidden = true; errState.hidden = true;
+  }
+  function setError(msg){
+    errState.textContent = msg || 'Could not load orders. Please try again.';
+    errState.hidden = false; loader.hidden = true; grid.hidden = true; emptyState.hidden = true;
+  }
+  function setEmpty(){
+    emptyState.hidden = false; loader.hidden = true; grid.hidden = true; errState.hidden = true;
+  }
 
-    // Convert key names to pretty labels, with explicit overrides when known
-    const LABEL_MAP = {
-      DealerName: 'Dealer Name',
-      MarketingPerson: 'Marketing Person',
-      Location: 'Location',
-      CRMName: 'CRM Name',
-      FinalOrder: 'Final Order URL',
-      URLs: 'Additional Order URL'
-    };
-    function prettyLabel(key){
-      if(LABEL_MAP[key]) return LABEL_MAP[key];
-      // split camelCase / PascalCase / snake_case to readable
-      return key
-        .replace(/_/g,' ')
-        .replace(/([a-z])([A-Z])/g,'$1 $2')
-        .replace(/^./, c => c.toUpperCase());
-    }
+  const LABEL_MAP = {
+    DealerName: 'Dealer Name',
+    MarketingPerson: 'Marketing Person',
+    Location: 'Location',
+    CRMName: 'CRM Name',
+    FinalOrder: 'Final Order URL',
+    URLs: 'Additional Order URL',
+    keyTimestamp: 'Key Timestamp'
+  };
 
-    function isTruthyUrl(v){
-      return typeof v === 'string' && v.trim() !== '';
-    }
+  function prettyLabel(key){
+    if(LABEL_MAP[key]) return LABEL_MAP[key];
+    return key.replace(/_/g,' ')
+              .replace(/([a-z])([A-Z])/g,'$1 $2')
+              .replace(/^./, c => c.toUpperCase());
+  }
 
-    function createKV(k, v){
-      const row = document.createElement('div'); row.className = 'kv';
-      const kEl = document.createElement('div'); kEl.className = 'k'; kEl.textContent = prettyLabel(k);
-      const vEl = document.createElement('div'); vEl.className = 'v'; vEl.textContent = (v ?? '')+'';
-      row.append(kEl, vEl); return row;
-    }
+  function isTruthyUrl(v){ return typeof v === 'string' && v.trim() !== ''; }
 
-    function createCard(order, index){
-      const card = document.createElement('article'); card.className = 'card';
+  function createKV(k, v){
+    const row = document.createElement('div'); row.className = 'kv';
+    const kEl = document.createElement('div'); kEl.className = 'k'; kEl.textContent = prettyLabel(k);
+    const vEl = document.createElement('div'); vEl.className = 'v'; vEl.textContent = (v ?? '')+'';
+    row.append(kEl, vEl); return row;
+  }
 
-      // Head
-      const head = document.createElement('div'); head.className = 'head';
-      const title = document.createElement('h3'); title.className = 'title';
-      const titleText = order.DealerName || order.dealerName || `Order #${index+1}`;
-      title.textContent = titleText;
-      const badge = document.createElement('div'); badge.className = 'badge';
-      badge.textContent = order.CRMName ? `CRM: ${order.CRMName}` : 'Order';
-      head.append(title, badge);
+  function createCard(order, index){
+    const card = document.createElement('article'); card.className = 'card';
 
-      // Body – show all fields
-      const body = document.createElement('div'); body.className = 'body';
-      Object.keys(order).forEach(key => {
-        // We'll still show URLs fields in the details (for transparency)
-        body.appendChild(createKV(key, order[key]));
-      });
+    // Header
+    const head = document.createElement('div'); head.className = 'head';
+    const title = document.createElement('h3'); title.className = 'title';
+    const titleText = order.DealerName || `Order #${index+1}`;
+    title.textContent = titleText;
+    const badge = document.createElement('div'); badge.className = 'badge';
+    badge.textContent = order.CRMName ? `CRM: ${order.CRMName}` : 'Order';
+    head.append(title, badge);
 
-      // Split
-      const split = document.createElement('div'); split.className='split';
-
-      // Actions
-      const actions = document.createElement('div'); actions.className='actions';
-
-      // Dynamic view button (above file input)
-      const finalUrl = order.FinalOrder || order.finalOrder || '';
-      const addlUrl = order.URLs || order.urls || '';
-      const hasFinal = isTruthyUrl(finalUrl);
-      const hasAddl = !hasFinal && isTruthyUrl(addlUrl); // only if Final is blank and URLs has value
-
-      if(hasFinal){
-        const a = document.createElement('a');
-        a.href = finalUrl; a.target = '_blank'; a.rel = 'noopener noreferrer';
-        a.className = 'link-btn';
-        a.textContent = 'View Final Order';
-        actions.appendChild(a);
-      } else if(hasAddl){
-        const a = document.createElement('a');
-        a.href = addlUrl; a.target = '_blank'; a.rel = 'noopener noreferrer';
-        a.className = 'link-btn';
-        a.textContent = 'View Additional Order';
-        actions.appendChild(a);
-      }
-
-      // File input (single file)
-      const fileBox = document.createElement('div'); fileBox.className='filebox';
-      const fileLabel = document.createElement('label'); fileLabel.textContent = 'Attach file (single)'; fileLabel.setAttribute('for', `file-${index}`);
-      const fileInput = document.createElement('input'); fileInput.type='file'; fileInput.id=`file-${index}`; fileInput.multiple=false;
-      fileBox.append(fileLabel, fileInput);
-      actions.appendChild(fileBox);
-
-      // Submit button row
-      const submitRow = document.createElement('div'); submitRow.className='submit-row';
-      const submitBtn = document.createElement('button'); submitBtn.className='btn';
-      if(hasFinal){
-        submitBtn.textContent = 'Submit Final Sales Order';
-        submitBtn.dataset.kind = 'final';
-      } else if(hasAddl){
-        submitBtn.textContent = 'Submit Additional Sales Order';
-        submitBtn.dataset.kind = 'additional';
-      } else {
-        submitBtn.textContent = 'Submit Sales Order';
-        submitBtn.dataset.kind = 'generic';
-      }
-
-      submitBtn.addEventListener('click', async () => {
-        try{
-          const file = fileInput.files?.[0] || null;
-          if(!file){
-            if(confirm('No file selected. Submit without attachment?') === false) return;
-          }
-          submitBtn.disabled = true; submitBtn.textContent = 'Submitting…';
-
-          // 🔧 IMPLEMENT: Replace POST_URL + payload shape to match your Apps Script doPost
-          const POST_URL = API_URL; // or another endpoint for doPost
-
-          const fd = new FormData();
-          fd.append('action', submitBtn.dataset.kind === 'final' ? 'submitFinalOrder' : (submitBtn.dataset.kind === 'additional' ? 'submitAdditionalOrder' : 'submitOrder'));
-          fd.append('payload', JSON.stringify(order)); // include full row so backend can match the record
-          if(file){ fd.append('file', file, file.name); }
-
-          const res = await fetch(POST_URL, { method:'POST', body: fd });
-          if(!res.ok){ throw new Error('Server returned '+res.status); }
-          const text = await res.text();
-          alert('Submitted successfully!\n\nResponse: '+ text.slice(0,400));
-        }catch(err){
-          console.error(err);
-          alert('Submission failed. Check console for details.');
-        }finally{
-          submitBtn.disabled = false;
-          submitBtn.textContent = submitBtn.dataset.kind === 'final' ? 'Submit Final Sales Order' : (submitBtn.dataset.kind === 'additional' ? 'Submit Additional Sales Order' : 'Submit Sales Order');
-        }
-      });
-      submitRow.appendChild(submitBtn);
-      actions.appendChild(submitRow);
-
-      // Assemble
-      card.append(head, body, split, actions);
-      return card;
-    }
-
-    async function fetchOrders(){
-      if(fetching) return; // prevent overlapping fetches
-      fetching = true; setLoading(true);
-      try{
-        const res = await fetch(API_URL, { cache: 'no-store' });
-        if(!res.ok) throw new Error(`HTTP ${res.status}`);
-        const data = await res.json();
-        render(data);
-        stamp();
-      }catch(err){
-        console.error(err);
-        setError(err.message || 'Failed to fetch');
-      }finally{
-        fetching = false; setLoading(false);
-      }
-    }
-
-    function render(rows){
-      grid.innerHTML = '';
-      if(!Array.isArray(rows) || rows.length === 0){ setEmpty(); return; }
-      rows.forEach((row,i)=> grid.appendChild(createCard(row,i)) );
-      grid.hidden = false; emptyState.hidden = true; errState.hidden = true;
-    }
-
-    function startAuto(){
-      clearInterval(timer);
-      timer = setInterval(fetchOrders, 5 * 60 * 1000); // 5 minutes
-      toggleAutoBtn.textContent = 'Auto: On';
-    }
-    function stopAuto(){
-      clearInterval(timer); toggleAutoBtn.textContent = 'Auto: Off';
-    }
-
-    // Event wiring
-    refreshBtn.addEventListener('click', fetchOrders);
-    toggleAutoBtn.addEventListener('click', ()=>{
-      auto = !auto; auto ? startAuto() : stopAuto();
+    // Body with all fields
+    const body = document.createElement('div'); body.className = 'body';
+    Object.keys(order).forEach(key => {
+      body.appendChild(createKV(key, order[key]));
     });
 
-    // Kickoff
-    fetchOrders();
-    startAuto();
-  </script>
+    // Actions
+    const actions = document.createElement('div'); actions.className='actions';
+
+    const finalUrl = order.FinalOrder || '';
+    const addlUrl = order.URLs || '';
+    const hasFinal = isTruthyUrl(finalUrl);
+    const hasAddl = !hasFinal && isTruthyUrl(addlUrl);
+
+    if(hasFinal){
+      const a = document.createElement('a'); a.href = finalUrl; a.target='_blank'; a.className='link-btn'; a.textContent = 'View Final Order'; 
+      actions.appendChild(a);
+    } else if(hasAddl){
+      const a = document.createElement('a'); a.href = addlUrl; a.target='_blank'; a.className='link-btn'; a.textContent = 'View Additional Order'; 
+      actions.appendChild(a);
+    }
+
+    // File input
+    const fileBox = document.createElement('div'); fileBox.className='filebox';
+    const fileLabel = document.createElement('label'); fileLabel.textContent = 'Attach file'; fileLabel.setAttribute('for', `file-${index}`);
+    const fileInput = document.createElement('input'); fileInput.type='file'; fileInput.id=`file-${index}`;
+    fileBox.append(fileLabel, fileInput);
+    actions.appendChild(fileBox);
+
+    // Submit button
+    const submitRow = document.createElement('div'); submitRow.className='submit-row';
+    const submitBtn = document.createElement('button'); submitBtn.className='btn';
+    if(hasFinal){ submitBtn.textContent = 'Submit Final Sales Order'; submitBtn.dataset.kind = 'final'; }
+    else if(hasAddl){ submitBtn.textContent = 'Submit Additional Sales Order'; submitBtn.dataset.kind = 'additional'; }
+    else { submitBtn.textContent = 'Submit Sales Order'; submitBtn.dataset.kind = 'generic'; }
+
+    submitBtn.addEventListener('click', async () => {
+      try{
+        const file = fileInput.files?.[0] || null;
+        if(!file && !confirm('No file selected. Submit without attachment?')) return;
+
+        submitBtn.disabled = true; submitBtn.textContent = 'Submitting…';
+
+        // Payload with keyTimestamp
+        const payload = { ...order, keyTimestamp: order.keyTimestamp };
+        const bodyData = {
+          action: submitBtn.dataset.kind === 'final' ? 'submitFinalOrder' :
+                  (submitBtn.dataset.kind === 'additional' ? 'submitAdditionalOrder' : 'submitOrder'),
+          payload: payload
+        };
+
+        const fd = new FormData();
+        fd.append('data', JSON.stringify(bodyData));
+        if(file) fd.append('file', file, file.name);
+
+        const res = await fetch(API_URL, { method:'POST', body: fd });
+        if(!res.ok) throw new Error('Server returned '+res.status);
+        const text = await res.text();
+        alert('Submitted successfully! Response: '+ text.slice(0,300));
+      }catch(err){
+        console.error(err);
+        alert('Submission failed: '+err.message);
+      }finally{
+        submitBtn.disabled = false;
+        submitBtn.textContent = submitBtn.dataset.kind === 'final' ? 'Submit Final Sales Order' :
+                                (submitBtn.dataset.kind === 'additional' ? 'Submit Additional Sales Order' : 'Submit Sales Order');
+      }
+    });
+
+    submitRow.appendChild(submitBtn);
+    actions.appendChild(submitRow);
+
+    card.append(head, body, document.createElement('div'), actions);
+    return card;
+  }
+
+  async function fetchOrders(){
+    if(fetching) return;
+    fetching = true; setLoading(true);
+    try{
+      const res = await fetch(API_URL, { cache:'no-store' });
+      if(!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      render(data);
+    }catch(err){
+      console.error(err); setError(err.message || 'Failed to fetch');
+    }finally{
+      fetching = false; setLoading(false);
+    }
+  }
+
+  function render(rows){
+    grid.innerHTML = '';
+    if(!Array.isArray(rows) || rows.length===0){ setEmpty(); return; }
+    rows.forEach((row,i)=> grid.appendChild(createCard(row,i)));
+    grid.hidden = false; emptyState.hidden = true; errState.hidden = true;
+  }
+
+  function startAuto(){ clearInterval(timer); timer = setInterval(fetchOrders, 5*60*1000); }
+  function stopAuto(){ clearInterval(timer); }
+
+  // Initial load
+  fetchOrders();
+  startAuto();
+</script>
 </body>
 </html>
