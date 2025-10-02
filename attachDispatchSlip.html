@@ -210,11 +210,9 @@
 
         submitBtn.disabled = true; submitBtn.textContent = 'Submitting…';
         
-        // normalize key field (prefer epoch ms for robust matching)
-        const keyPref = (order.keyTimestamp);
-        
-        // do NOT stringify the key; send as number when possible
-        const payload = { ...order, Key: keyPref };
+        console.log("Preparing payload for row:", order);
+        const payload = { ...order, Key: order.keyTimestamp };
+        console.log("Payload being sent:", payload);
 
         const bodyData = {
           action: submitBtn.dataset.kind === 'final' ? 'submitFinalOrder' :
