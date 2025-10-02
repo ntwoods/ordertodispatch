@@ -258,7 +258,7 @@
     if(fetching) return;
     fetching = true; setLoading(true);
     try{
-      const res = await fetch(API_URL, { cache:'no-store' });
+      const res = await fetch(API_URL);
       if(!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       render(data);
