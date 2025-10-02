@@ -108,7 +108,7 @@
   </div>
 
 <script>
-  const API_URL = "https://script.google.com/macros/s/AKfycby0Dfyv9Aov5ZEPF8Nt8brDCDQs1V8JuFQGA0Ey6IhPZoDdF_CSTwO_PcouqobqDOgTkQ/exec";
+  const API_URL = "https://script.google.com/macros/s/AKfycbzIg93-NvjqrLEgr6zmk-weztixnBf1JiMko0wNkly9IQvdkU2LiUtgkbDcy99kCYZwQw/exec";
 
   const el = sel => document.querySelector(sel);
   const grid = el('#grid');
@@ -168,14 +168,12 @@
     badge.textContent = order.CRMName ? `CRM: ${order.CRMName}` : 'Order';
     head.append(title, badge);
 
-    // Body
     const body = document.createElement('div'); body.className = 'body';
-    const HIDDEN_KEYS = new Set(['FinalOrder','URLs']); // don't render raw URLs
+    const HIDDEN_KEYS = new Set(['FinalOrder','URLs']);
     Object.keys(order).forEach(key => {
       if (!HIDDEN_KEYS.has(key)) body.appendChild(createKV(key, order[key]));
     });
 
-    // Actions
     const actions = document.createElement('div'); actions.className='actions';
 
     const finalUrl = order.FinalOrder || '';
@@ -209,21 +207,36 @@
         if(!file && !confirm('No file selected. Submit without attachment?')) return;
 
         submitBtn.disabled = true; submitBtn.textContent = 'Submitting…';
-        
-        console.log("Preparing payload for row:", order);
+
+        // Build payload
         const payload = { ...order, Key: order.Key };
-        console.log("Payload being sent:", payload);
+        let actionVal = 'submitOrder';
+        if(submitBtn.dataset.kind === 'final') actionVal = 'finalSalesOrder';
+        else if(submitBtn.dataset.kind === 'additional') actionVal = 'additionalSalesOrder';
 
-        const bodyData = {
-          action: submitBtn.dataset.kind === 'final' ? 'submitFinalOrder' :
-                  (submitBtn.dataset.kind === 'additional' ? 'submitAdditionalOrder' : 'submitOrder'),
-          payload
-        };
+        const bodyData = { action: actionVal, payload };
 
-        const fd = new FormData();
-        fd.append('data', JSON.stringify(bodyData));
-        if(file) fd.append('file', file, file.name);
-        await fetch(API_URL, { method:'POST', mode:'no-cors', body: fd });
+        if(file){
+          // Convert file to base64
+          const base64Data = await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result.split(',')[1]);
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+          });
+          bodyData.file = {
+            fileName: file.name,
+            fileType: file.type,
+            fileData: base64Data
+          };
+        }
+
+        await fetch(API_URL, {
+          method:'POST',
+          mode:'no-cors',
+          headers:{ 'Content-Type':'application/json' },
+          body: JSON.stringify(bodyData)
+        });
         alert('Submitted successfully!');
       }catch(err){
         console.error(err);
@@ -240,9 +253,7 @@
 
     card.append(head, body, document.createElement('div'), actions);
     return card;
-  }
-
-  
+  }  
   async function fetchOrders(){
     if(fetching) return;
     fetching = true; setLoading(true);
