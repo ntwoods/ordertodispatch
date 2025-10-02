@@ -172,9 +172,11 @@
 
     // Body with all fields
     const body = document.createElement('div'); body.className = 'body';
+    const HIDDEN_KEYS = new Set(['FinalOrder','URLs']); // hide raw URLs in the card
     Object.keys(order).forEach(key => {
-      body.appendChild(createKV(key, order[key]));
+      if (!HIDDEN_KEYS.has(key)) body.appendChild(createKV(key, order[key]));
     });
+
 
     // Actions
     const actions = document.createElement('div'); actions.className='actions';
