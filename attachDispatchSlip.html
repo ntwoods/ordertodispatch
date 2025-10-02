@@ -224,9 +224,8 @@
         const fd = new FormData();
         fd.append('data', JSON.stringify(bodyData));
         if(file) fd.append('file', file, file.name);
-
         const res = await fetch(API_URL, { method:'POST', mode:'no-cors', body: fd });
-        alert('Submitted successfully!);
+        alert('Submitted successfully!');
       }catch(err){
         console.error(err);
         alert('Submission failed: '+err.message);
