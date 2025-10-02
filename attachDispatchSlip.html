@@ -105,8 +105,6 @@
       <div class="empty" id="empty" hidden>No orders found.</div>
       <div class="error" id="error" hidden>Could not load orders. Please try again.</div>
     </main>
-
-    <div class="footer-note">Sheet: <strong>OrderCycle</strong> · ID: <code>1WSQMXxEAWVqeSBcEiYPWZ8HAL5d9y0Rdcel6xupbTPI</code></div>
   </div>
 
 <script>
@@ -227,10 +225,8 @@
         fd.append('data', JSON.stringify(bodyData));
         if(file) fd.append('file', file, file.name);
 
-        const res = await fetch(API_URL, { method:'POST', body: fd });
-        if(!res.ok) throw new Error('Server returned '+res.status);
-        const text = await res.text();
-        alert('Submitted successfully! Response: '+ text.slice(0,300));
+        const res = await fetch(API_URL, { method:'POST', mode:'no-cors', body: fd });
+        alert('Submitted successfully!);
       }catch(err){
         console.error(err);
         alert('Submission failed: '+err.message);
