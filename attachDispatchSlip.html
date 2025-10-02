@@ -192,7 +192,22 @@
         const hasAdditional = urlsList.length > 0;
 
         // Open targets
-        const finalOrderBtn = hasFinal ? el("button", { class: "btn btn-accent", title: "Open Final Order", onClick: () => window.open(FinalOrder, "_blank") }, ["FINAL ORDER"]) : null;
+        const finalOrderUrl = (FinalOrder || "").toString().trim();
+        
+        const finalOrderBtn = hasFinal 
+          ? el("button", { 
+              class: "btn btn-accent", 
+              title: "Open Final Order", 
+              onClick: () => {
+                if (finalOrderUrl.startsWith("http")) {
+                  window.open(finalOrderUrl, "_blank");
+                } else {
+                  alert("Invalid Final Order URL");
+                }
+              }
+            }, ["FINAL ORDER"]) 
+          : null;
+
         const additionalOrderBtn = (!hasFinal && hasAdditional) ? el("button", { class: "btn btn-outline", title: "Open Additional Order (latest)", onClick: () => window.open(urlsList[urlsList.length - 1], "_blank") }, ["ADDITIONAL ORDER"]) : null;
 
         // File input & action button
