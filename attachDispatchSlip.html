@@ -211,13 +211,10 @@
         submitBtn.disabled = true; submitBtn.textContent = 'Submitting…';
         
         // normalize key field (prefer epoch ms for robust matching)
-        const keyPref =
-          (typeof order.keyTsMs === 'number' && !Number.isNaN(order.keyTsMs)) ? order.keyTsMs :
-          (order.keyTsMs && /^\d+$/.test(String(order.keyTsMs))) ? Number(order.keyTsMs) :
-          (order.keyTimestamp ?? order.Key ?? null);
+        const keyPref = (order.keyTimestamp);
         
         // do NOT stringify the key; send as number when possible
-        const payload = { ...order, keyTimestamp: keyPref, keyTsMs: keyPref };
+        const payload = { ...order, Key: keyPref };
 
         const bodyData = {
           action: submitBtn.dataset.kind === 'final' ? 'submitFinalOrder' :
