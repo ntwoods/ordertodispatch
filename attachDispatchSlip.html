@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Orders — Final/Additional Sales Orders</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      --bg: #0b1020;
+      --card: #121a2f;
+      --muted: #93a0b8;
+      --text: #e6ecff;
+      --accent: #3b82f6;
+      --accent-2: #22c55e;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --outline: rgba(255,255,255,0.08);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; background: var(--bg); color: var(--text); font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", sans-serif;
+    }
+    header {
+      position: sticky; top: 0; z-index: 5;
+      background: linear-gradient(180deg, rgba(7,10,22,0.95), rgba(7,10,22,0.75));
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--outline);
+    }
+    .container { max-width: 1200px; margin: 0 auto; padding: 16px 20px; }
+    h1 { margin: 0; font-size: 20px; font-weight: 700; letter-spacing: 0.2px; }
+    #count { font-weight: 600; color: var(--muted); margin-left: 8px; }
+
+    /* toolbar */
+    .toolbar { display: flex; align-items: center; gap: 12px; margin-top: 10px; flex-wrap: wrap; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 10px 14px; border-radius: 10px; font-weight: 600; letter-spacing: 0.2px;
+      color: #0a0f1f; background: var(--text); border: 1px solid var(--outline); cursor: pointer;
+      transition: transform .06s ease, opacity .2s ease, box-shadow .2s ease;
+    }
+    .btn:hover { transform: translateY(-1px); }
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+    .btn-outline { background: transparent; color: var(--text); border-color: var(--outline); }
+    .btn-accent { background: var(--accent); color: white; border-color: transparent; }
+    .btn-success { background: var(--accent-2); color: white; border-color: transparent; }
+    .btn-warning { background: var(--warning); color: #1a1300; border-color: transparent; }
+
+    main { padding: 20px; }
+    .grid {
+      display: grid; gap: 16px;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    }
+    .card {
+      background: radial-gradient(150% 120% at 0% 0%, rgba(59,130,246,0.08), transparent 60%),
+                  radial-gradient(120% 120% at 100% 100%, rgba(34,197,94,0.06), transparent 60%),
+                  var(--card);
+      border: 1px solid var(--outline);
+      border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 12px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.25);
+    }
+    .row { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+    .dealer { font-size: 18px; font-weight: 700; }
+    .meta { font-size: 13px; color: var(--muted); display: flex; gap: 10px; flex-wrap: wrap; }
+    .k { opacity: 0.75; }
+    .v { color: var(--text); font-weight: 600; }
+    .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .file {
+      display: grid; gap: 8px;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      background: rgba(255,255,255,0.02);
+      border: 1px dashed var(--outline);
+      border-radius: 12px; padding: 10px;
+    }
+    input[type="file"] {
+      width: 100%; color: var(--muted);
+      background: transparent; border: none; outline: none;
+    }
+    .hidden { display: none !important; }
+    .pill {
+      font-size: 12px; padding: 4px 8px; border-radius: 999px; border: 1px solid var(--outline); color: var(--muted);
+    }
+
+    /* loader */
+    .loader-wrap { display: grid; place-items: center; padding: 40px 0; }
+    .spinner {
+      width: 28px; height: 28px; border: 3px solid rgba(255,255,255,0.15); border-top-color: var(--accent);
+      border-radius: 50%; animation: spin 1s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* toast */
+    .toast {
+      position: fixed; right: 16px; bottom: 16px; z-index: 20; padding: 12px 14px;
+      background: #0f172a; color: #e6ecff; border: 1px solid var(--outline); border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.25); opacity: 0; transform: translateY(10px);
+      transition: opacity .2s ease, transform .2s ease;
+      max-width: 80vw;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .toast.success { border-color: rgba(34,197,94,0.35); }
+    .toast.error   { border-color: rgba(239,68,68,0.35); }
+    .tiny { font-size: 12px; color: var(--muted); }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container">
+      <h1>Final / Additional Sales Orders <span id="count"></span></h1>
+      <div class="toolbar">
+        <button id="refreshBtn" class="btn btn-outline" title="Refresh data">↻ Refresh</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <div id="loader" class="loader-wrap"><div class="spinner"></div></div>
+    <div id="grid" class="grid hidden"></div>
+  </main>
+
+  <div id="toast" class="toast"></div>
+
+  <script>
+    // ======== CONFIG ========
+    const API_URL = "https://script.google.com/macros/s/AKfycbyQjiYd4frJjrj25UpuWJt7_gAnqI-xj0H5LPl-VS2N6h2zOqUEKhooWEqYsiNM7QVUqg/exec";
+    const POST_URL = API_URL; // same project (doPost)
+
+    // ======== UTIL ========
+    const $ = sel => document.querySelector(sel);
+    const el = (tag, props = {}, children = []) => {
+      const n = document.createElement(tag);
+      Object.entries(props).forEach(([k,v]) => {
+        if (k === "class") n.className = v;
+        else if (k === "html") n.innerHTML = v;
+        else if (k.startsWith("on") && typeof v === "function") n.addEventListener(k.slice(2), v);
+        else n.setAttribute(k, v);
+      });
+      children.forEach(c => n.appendChild(typeof c === "string" ? document.createTextNode(c) : c));
+      return n;
+    };
+    const showToast = (msg, type="success") => {
+      const t = $("#toast");
+      t.textContent = msg;
+      t.className = "toast " + type + " show";
+      setTimeout(() => t.classList.remove("show"), 2200);
+    };
+    const toBase64 = file => new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result.split(",")[1]); // remove data:mime;base64,
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+
+    // ======== RENDER ========
+    const grid = $("#grid");
+    const loader = $("#loader");
+    const count = $("#count");
+
+    async function fetchData() {
+      loader.classList.remove("hidden");
+      grid.classList.add("hidden");
+      grid.innerHTML = "";
+      try {
+        const res = await fetch(API_URL, { cache: "no-store" });
+        const data = await res.json(); // response is JSON per your API
+        render(data || []);
+        count.textContent = `(${data?.length || 0})`;
+      } catch (e) {
+        console.error(e);
+        showToast("Failed to fetch data", "error");
+        count.textContent = "";
+      } finally {
+        loader.classList.add("hidden");
+        grid.classList.remove("hidden");
+      }
+    }
+
+    function render(data) {
+      grid.innerHTML = "";
+      data.forEach((row, idx) => {
+        const {
+          DealerName = "",
+          MarketingPerson = "",
+          Location = "",
+          CRMName = "",
+          FinalOrder = "",
+          URLs = ""
+        } = row;
+
+        const hasFinal = !!(FinalOrder && String(FinalOrder).trim());
+        const urlsList = (URLs || "").split(",").map(s => s.trim()).filter(Boolean);
+        const hasAdditional = urlsList.length > 0;
+
+        // Open targets
+        const finalOrderBtn = hasFinal ? el("button", { class: "btn btn-accent", title: "Open Final Order", onClick: () => window.open(FinalOrder, "_blank") }, ["FINAL ORDER"]) : null;
+        const additionalOrderBtn = (!hasFinal && hasAdditional) ? el("button", { class: "btn btn-outline", title: "Open Additional Order (latest)", onClick: () => window.open(urlsList[urlsList.length - 1], "_blank") }, ["ADDITIONAL ORDER"]) : null;
+
+        // File input & action button
+        const fileInput = el("input", { type: "file", accept: "*/*", id: `file-${idx}` });
+        const actionBtnLabel = hasFinal ? "FINAL Sales Order" : (hasAdditional ? "ADDITIONAL Sales Order" : null);
+
+        const actionBtn = actionBtnLabel ? el("button", { class: hasFinal ? "btn btn-success" : "btn btn-warning", id: `act-${idx}` }, [actionBtnLabel]) : null;
+
+        const onAction = async () => {
+          if (!fileInput.files || fileInput.files.length === 0) {
+            showToast("Please attach a file before submitting.", "error");
+            return;
+          }
+          const file = fileInput.files[0];
+          const fileBase64 = await toBase64(file);
+
+          const payload = {
+            action: hasFinal ? "finalSalesOrder" : "additionalSalesOrder",
+            finalOrderUrl: hasFinal ? String(FinalOrder) : "", // might be empty for additional path
+            additionalRefUrl: hasAdditional ? String(urlsList[urlsList.length - 1]) : "", // last URL as reference
+            fileName: file.name,
+            mimeType: file.type || "application/octet-stream",
+            fileBase64
+          };
+
+          // Button state
+          actionBtn.disabled = true;
+          const prevText = actionBtn.textContent;
+          actionBtn.textContent = "Processing…";
+
+          try {
+            // no-cors: we won't read response; server must handle silently
+            await fetch(POST_URL, {
+              method: "POST",
+              mode: "no-cors",
+              headers: {
+                // In no-cors the browser may downgrade headers; the server will read raw body anyway.
+                "Content-Type": "application/json"
+              },
+              body: JSON.stringify(payload)
+            });
+            showToast("Submitted successfully.");
+            // Optional: clear the file input
+            fileInput.value = "";
+          } catch (e) {
+            console.error(e);
+            showToast("Submit failed (network).", "error");
+          } finally {
+            actionBtn.disabled = false;
+            actionBtn.textContent = prevText;
+          }
+        };
+
+        if (actionBtn) actionBtn.addEventListener("click", onAction);
+
+        const card = el("div", { class: "card" }, [
+          el("div", { class: "row" }, [
+            el("div", { class: "dealer" }, [DealerName || "N/A"]),
+            el("span", { class: "pill" }, [hasFinal ? "Final" : (hasAdditional ? "Additional" : "No Files")])
+          ]),
+          el("div", { class: "meta" }, [
+            el("span", {}, [el("span", { class: "k" }, ["Marketing: "]), el("span", { class: "v" }, [MarketingPerson || "—"])]),
+            el("span", {}, [el("span", { class: "k" }, ["Location: "]), el("span", { class: "v" }, [Location || "—"])]),
+            el("span", {}, [el("span", { class: "k" }, ["CRM: "]), el("span", { class: "v" }, [CRMName || "—"])])
+          ]),
+          el("div", { class: "actions" }, [
+            ...(finalOrderBtn ? [finalOrderBtn] : []),
+            ...(additionalOrderBtn ? [additionalOrderBtn] : [])
+          ]),
+          actionBtn ? el("div", { class: "file" }, [
+            fileInput,
+            actionBtn
+          ]) : el("div", { class: "tiny" }, ["No eligible action for this card."])
+        ]);
+
+        grid.appendChild(card);
+      });
+
+      if (data.length === 0) {
+        grid.appendChild(el("div", { class: "tiny" }, ["No orders eligible right now."]));
+      }
+    }
+
+    // ======== BOOT ========
+    $("#refreshBtn").addEventListener("click", fetchData);
+    fetchData();
+  </script>
+</body>
+</html>
