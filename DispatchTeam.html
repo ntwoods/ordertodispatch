@@ -378,30 +378,67 @@
         }
 
 
-function startCountdown(index, rawDate) {
-  const el = document.getElementById(`countdown-${index}`);
-  if (!el) return;
-  try {
-    const d = new Date(rawDate);
-    const deadline = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 21, 0, 0);
+function startCountdown(index, dispatchDateStr) {
+  const countdownEl = document.getElementById(`countdown-${index}`);
+  if (!countdownEl || !dispatchDateStr) return;
 
-    function update() {
+  try {
+    // Force dd/mm/yyyy parsing
+    let day, month, year;
+    if (dispatchDateStr.includes("/")) {
+      const parts = dispatchDateStr.split("/");
+      if (parts[0].length === 4) {
+        // yyyy/mm/dd
+        year = parseInt(parts[0], 10);
+        month = parseInt(parts[1], 10) - 1;
+        day = parseInt(parts[2], 10);
+      } else {
+        // dd/mm/yyyy
+        day = parseInt(parts[0], 10);
+        month = parseInt(parts[1], 10) - 1;
+        year = parseInt(parts[2], 10);
+      }
+    } else {
+      // fallback: try ISO
+      const d = new Date(dispatchDateStr);
+      day = d.getDate();
+      month = d.getMonth();
+      year = d.getFullYear();
+    }
+
+    const deadline = new Date(year, month, day, 21, 0, 0);
+
+
+    function updateTimer() {
       const now = new Date();
       const diff = deadline - now;
+
       if (diff <= 0) {
-        el.textContent = "Overdue";
-        el.classList.add("text-red-700","bg-red-100");
-        clearInterval(timer);
+        countdownEl.textContent = "Overdue";
+        countdownEl.classList.remove("text-gray-700", "bg-gray-100");
+        countdownEl.classList.add("text-red-700", "bg-red-100");
+
+        // highlight card
+        const card = document.querySelector(`[data-order-index="${index}"]`);
+        if (card) {
+          card.classList.add("bg-red-200");
+        }
+        clearInterval(interval);
         return;
       }
-      const h = Math.floor(diff/(1000*60*60));
-      const m = Math.floor((diff%(1000*60*60))/(1000*60));
-      const s = Math.floor((diff%(1000*60))/1000);
-      el.textContent = `${h}h ${m}m ${s}s`;
+
+      const hours = Math.floor(diff / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+      countdownEl.textContent = `${hours}h ${minutes}m ${seconds}s`;
     }
-    update();
-    const timer = setInterval(update,1000);
-  } catch(e){ console.error("Countdown error:",e); }
+
+    updateTimer(); // initial call
+    const interval = setInterval(updateTimer, 1000);
+  } catch (e) {
+    console.error("Countdown error:", e);
+  }
 }
 
 		
@@ -711,11 +748,3 @@ orders.forEach((order, index) => {
     <script src="js/viewOnly.js"></script>
 </body>
 </html>
-
-
-
-
-
-
-
-
