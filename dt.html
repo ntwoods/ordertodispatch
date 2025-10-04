@@ -1,667 +1,541 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dispatch Team - Sales Orders</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'Inter', sans-serif;
-        }
-        .file-upload-label {
-            display: block;
-            font-size: 0.875rem;
-            font-weight: 500;
-            margin-bottom: 0.25rem;
-            color: #374151;
-        }
-        .file-input {
-            width: 100%;
-            border: 1px solid #d1d5db;
-            border-radius: 0.375rem;
-            padding: 0.5rem 0.75rem;
-            font-size: 0.875rem;
-        }
-        .file-selected {
-            display: none;
-            margin-top: 0.25rem;
-            font-size: 0.75rem;
-            color: #10b981;
-            font-weight: 500;
-        }
-        .modal-overlay {
-            background-color: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(4px);
-            transition: opacity 0.3s ease-in-out;
-        }
-        .modal-content {
-            transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
-        }
-        .modal-open {
-            transform: translateY(0) !important;
-            opacity: 1 !important;
-        }
-        .animate-spin-fast {
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-        .order-card {
-            transition: all 0.3s ease;
-        }
-        .order-card:hover {
-            transform: translateY(-2px);
-        }
-	.overdue-card {
-            border: 2px solid #ef4444; /* Red border */
-            box-shadow: 0 4px 10px rgba(239, 68, 68, 0.2); /* Red shadow */
-        }	    
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dispatch Team - Sales Orders</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .file-upload-label { display:block; font-size:.875rem; font-weight:500; margin-bottom:.25rem; color:#374151; }
+    .file-input { width:100%; border:1px solid #d1d5db; border-radius:.375rem; padding:.5rem .75rem; font-size:.875rem; }
+    .file-selected { display:none; margin-top:.25rem; font-size:.75rem; color:#10b981; font-weight:500; }
+    .modal-overlay { background-color:rgba(0,0,0,.5); backdrop-filter:blur(4px); transition:opacity .3s ease-in-out; }
+    .modal-content { transition:transform .3s ease-in-out, opacity .3s ease-in-out; }
+    .modal-open { transform:translateY(0)!important; opacity:1!important; }
+    .animate-spin-fast { animation: spin 1s linear infinite; }
+    @keyframes spin { from{transform:rotate(0)} to{transform:rotate(360deg)} }
+    .order-card { transition: all .3s ease; }
+    .order-card:hover { transform: translateY(-2px); }
+    .overdue-card { border:2px solid #ef4444; box-shadow:0 4px 10px rgba(239,68,68,.2); }
+    .chev { transition: transform .2s ease; }
+    .chev.rot { transform: rotate(90deg); }
+    .btn-link { @apply inline-flex items-center justify-center px-3 py-1 rounded text-sm font-medium border border-gray-300 hover:bg-gray-50 focus:outline-none; }
+    .btn-primary { @apply bg-blue-600 text-white hover:bg-blue-700; }
+    .btn-ghost { @apply bg-white text-gray-700 hover:bg-gray-50 border border-gray-300; }
+    .tiny-table th, .tiny-table td { @apply align-top p-2; }
+    .tiny-table th { @apply text-left text-xs font-semibold text-gray-600 uppercase tracking-wide; }
+    .tiny-table td { @apply text-sm text-gray-700; }
+  </style>
 </head>
 <body class="min-h-screen flex flex-col bg-gray-50">
-
-    <header class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white p-4 shadow-lg">
-        <div class="container mx-auto flex justify-between items-center">
-            <h1 class="text-3xl font-bold">🚀 Dispatch Dashboard</h1>
-            <div class="flex items-center space-x-4">
-                <span id="last-updated" class="text-sm opacity-80"></span>
-                <div id="refresh-indicator" class="flex items-center space-x-2 text-sm">
-                    <svg class="animate-spin-fast h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="display: none;">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    <span id="refresh-text" class="hidden">Refreshing...</span>
-                </div>
-            </div>
+  <header class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white p-4 shadow-lg">
+    <div class="container mx-auto flex justify-between items-center">
+      <h1 class="text-3xl font-bold">🚀 Dispatch Dashboard</h1>
+      <div class="flex items-center space-x-4">
+        <span id="last-updated" class="text-sm opacity-80"></span>
+        <div id="refresh-indicator" class="flex items-center space-x-2 text-sm">
+          <svg class="animate-spin-fast h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="display:none;">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          <span id="refresh-text" class="hidden">Refreshing...</span>
         </div>
-    </header>
+      </div>
+    </div>
+  </header>
 
-	    <main class="container mx-auto p-6 flex-grow">
-	        <h2 class="text-3xl font-semibold text-gray-800 mb-6">Approved Sales Orders</h2>
-	<div class="editable">		    
-	<a href="https://ntwoods.github.io/audit/warehouseManager" target="_blank" 
-	   class="inline-block px-4 py-2 bg-blue-600 text-white font-medium rounded hover:bg-blue-700 transition duration-200 shadow">
-	  🧑🏻‍🏫 Audit Portal
-	</a>
-	</div>
+  <main class="container mx-auto p-6 flex-grow">
+    <h2 class="text-3xl font-semibold text-gray-800 mb-6">Approved Sales Orders</h2>
 
-
-        <div id="loading-spinner" class="flex justify-center items-center py-10" style="display: none;">
-            <div class="animate-spin-fast rounded-full h-16 w-16 border-t-4 border-b-4 border-blue-500"></div>
-            <p class="ml-4 text-xl text-gray-600">Fetching latest orders...</p>
-        </div>
-
-        <div id="error-message" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-6" role="alert" style="display: none;">
-            <strong class="font-bold">Oops!</strong>
-            <span class="block sm:inline" id="error-text">Something went wrong while fetching data. Please try again later.</span>
-            <span class="absolute top-0 bottom-0 right-0 px-4 py-3 cursor-pointer" onclick="document.getElementById('error-message').style.display='none'">
-                <svg class="fill-current h-6 w-6 text-red-500" role="button" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><title>Close</title><path d="M14.348 14.849a1.2 1.2 0 0 1-1.697 0L10 11.414l-2.651 2.651a1.2 1.2 0 1 1-1.697-1.697L8.586 10 5.935 7.348a1.2 1.2 0 0 1 1.697-1.697L10 8.586l2.651-2.651a1.2 1.2 0 0 1 1.697 1.697L11.414 10l2.651 2.651a1.2 1.2 0 0 1 0 1.698z"/></svg>
-            </span>
-        </div>
-
-        <div id="no-orders-message" class="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded relative mb-6" role="alert" style="display: none;">
-            <strong class="font-bold">Heads Up!</strong>
-            <span class="block sm:inline">No approved sales orders found at the moment.</span>
-        </div>
-
-        <div id="orders-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        </div>
-    </main>
-
-    <div id="order-detail-modal" class="modal-overlay fixed inset-0 flex items-center justify-center p-4 z-50 opacity-0 invisible" style="display: none;">
-        <div class="modal-content bg-white rounded-lg shadow-xl p-8 w-full max-w-lg relative transform -translate-y-full opacity-0" role="dialog" aria-modal="true">
-            <button id="close-modal" class="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-3xl font-semibold">&times;</button>
-            <h3 class="text-2xl font-bold text-gray-800 mb-6 border-b pb-3">Order Details</h3>
-            <div id="modal-body" class="text-gray-700 text-lg space-y-4">
-            </div>
-        </div>
+    <div class="editable">
+      <a href="https://ntwoods.github.io/audit/warehouseManager" target="_blank"
+         class="inline-block px-4 py-2 bg-blue-600 text-white font-medium rounded hover:bg-blue-700 transition duration-200 shadow">
+        🧑🏻‍🏫 Audit Portal
+      </a>
     </div>
 
-    <footer class="bg-gray-800 text-white p-4 text-center text-sm mt-auto">
-        <div class="container mx-auto">
-            &copy; <span id="current-year"></span> Dispatch Team Dashboard. All rights reserved.
+    <div id="loading-spinner" class="flex justify-center items-center py-10" style="display:none;">
+      <div class="animate-spin-fast rounded-full h-16 w-16 border-t-4 border-b-4 border-blue-500"></div>
+      <p class="ml-4 text-xl text-gray-600">Fetching latest orders...</p>
+    </div>
+
+    <div id="error-message" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-6" role="alert" style="display:none;">
+      <strong class="font-bold">Oops!</strong>
+      <span class="block sm:inline" id="error-text">Something went wrong while fetching data. Please try again later.</span>
+      <span class="absolute top-0 bottom-0 right-0 px-4 py-3 cursor-pointer" onclick="document.getElementById('error-message').style.display='none'">
+        <svg class="fill-current h-6 w-6 text-red-500" role="button" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><title>Close</title>
+          <path d="M14.348 14.849a1.2 1.2 0 0 1-1.697 0L10 11.414l-2.651 2.651a1.2 1.2 0 1 1-1.697-1.697L8.586 10 5.935 7.348a1.2 1.2 0 0 1 1.697-1.697L10 8.586l2.651-2.651a1.2 1.2 0 0 1 1.697 1.697L11.414 10l2.651 2.651a1.2 1.2 0 0 1 0 1.698z"/>
+        </svg>
+      </span>
+    </div>
+
+    <div id="no-orders-message" class="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded relative mb-6" role="alert" style="display:none;">
+      <strong class="font-bold">Heads Up!</strong>
+      <span class="block sm:inline">No approved sales orders found at the moment.</span>
+    </div>
+
+    <div id="orders-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+  </main>
+
+  <!-- Modal -->
+  <div id="order-detail-modal" class="modal-overlay fixed inset-0 flex items-center justify-center p-4 z-50 opacity-0 invisible" style="display:none;">
+    <div class="modal-content bg-white rounded-lg shadow-xl p-8 w-full max-w-lg relative transform -translate-y-full opacity-0" role="dialog" aria-modal="true">
+      <button id="close-modal" class="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-3xl font-semibold">&times;</button>
+      <h3 class="text-2xl font-bold text-gray-800 mb-6 border-b pb-3">Order Details</h3>
+      <div id="modal-body" class="text-gray-700 text-lg space-y-4"></div>
+    </div>
+  </div>
+
+  <footer class="bg-gray-800 text-white p-4 text-center text-sm mt-auto">
+    <div class="container mx-auto">&copy; <span id="current-year"></span> Dispatch Team Dashboard. All rights reserved.</div>
+  </footer>
+
+  <script>
+    const API_URL = "https://script.google.com/macros/s/AKfycbygRGmvL8xyEl0hCSkQdUBGLWG1xHIcY-sNVaPsj97WV0Y7fsOWNjtAJ-bo40xZweh7/exec";
+
+    const ordersGrid = document.getElementById('orders-grid');
+    const loadingSpinner = document.getElementById('loading-spinner');
+    const errorMessage = document.getElementById('error-message');
+    const errorText = document.getElementById('error-text');
+    const noOrdersMessage = document.getElementById('no-orders-message');
+    const orderDetailModal = document.getElementById('order-detail-modal');
+    const modalBody = document.getElementById('modal-body');
+    const closeModalButton = document.getElementById('close-modal');
+    const lastUpdatedSpan = document.getElementById('last-updated');
+    const refreshIndicator = document.getElementById('refresh-indicator');
+    const refreshSpinner = refreshIndicator.querySelector('svg');
+    const refreshText = document.getElementById('refresh-text');
+
+    let allOrdersData = [];
+
+    /* -------------------- Helpers -------------------- */
+    function formatTimestamp(isoString) {
+      if (!isoString) return 'N/A';
+      try {
+        const date = new Date(isoString);
+        return date.toLocaleString('en-IN', {
+          year:'numeric', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit', second:'2-digit'
+        });
+      } catch { return isoString; }
+    }
+
+    function formatDispatchDate(dateStr) {
+      if (!dateStr) return "N/A";
+      const d = new Date(dateStr);
+      if (isNaN(d)) return dateStr;
+      const dd = String(d.getDate()).padStart(2,"0");
+      const mm = String(d.getMonth()+1).padStart(2,"0");
+      const yy = d.getFullYear();
+      return `${dd}-${mm}-${yy}`;
+    }
+
+    function fileToBase64(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload  = () => resolve(reader.result.split(',')[1]);
+        reader.onerror = reject;
+      });
+    }
+
+    function handleFileSelect(orderIndex){
+      const fileInput = document.getElementById(`file-${orderIndex}`);
+      const fileSelectedDiv = document.getElementById(`file-selected-${orderIndex}`);
+      if (fileInput.files.length > 0) {
+        const f = fileInput.files[0];
+        fileSelectedDiv.style.display = 'block';
+        fileSelectedDiv.textContent = `✓ ${f.name} selected (${(f.size/1024).toFixed(1)} KB)`;
+      } else fileSelectedDiv.style.display = 'none';
+    }
+
+    function handleFileSelect1(orderIndex){
+      const fileInput = document.getElementById(`file1-${orderIndex}`);
+      const fileSelectedDiv = document.getElementById(`file-selected1-${orderIndex}`);
+      if (fileInput.files.length > 0) {
+        const f = fileInput.files[0];
+        fileSelectedDiv.style.display = 'block';
+        fileSelectedDiv.textContent = `✓ ${f.name} selected (${(f.size/1024).toFixed(1)} KB)`;
+      } else fileSelectedDiv.style.display = 'none';
+    }
+
+    function showMessageBox(message, type='info') {
+      const el = document.createElement('div');
+      el.className = `fixed top-4 right-4 p-4 rounded-md shadow-lg text-white z-50`;
+      el.classList.add(type==='success'?'bg-green-500':type==='error'?'bg-red-500':type==='warning'?'bg-yellow-500':'bg-blue-500');
+      el.innerHTML = `<div class="flex items-center justify-between">
+          <span>${message}</span>
+          <button class="ml-4 text-white font-bold" onclick="this.parentElement.parentElement.remove()">&times;</button>
+      </div>`;
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 3000);
+    }
+
+    function isPastDate(dateStr) {
+      if (!dateStr) return false;
+      const d = new Date(dateStr);
+      if (isNaN(d)) return false;
+      const today = new Date(); today.setHours(0,0,0,0);
+      const target = new Date(d); target.setHours(0,0,0,0);
+      return target < today;
+    }
+
+    function splitCSV(str){
+      if (!str) return [];
+      return String(str)
+        .split(',')
+        .map(s => s.trim())
+        .filter(s => s.length > 0);
+    }
+
+    function uniqueNonEmpty(arr){
+      const seen = new Set();
+      const out = [];
+      for (const u of arr) {
+        const v = (u||'').trim();
+        if (v && !seen.has(v)) { seen.add(v); out.push(v); }
+      }
+      return out;
+    }
+
+    function makeLinkButton(url, label){
+      const safe = url.replace(/"/g,'&quot;');
+      return `<a href="${safe}" target="_blank" rel="noopener"
+                class="btn-ghost inline-flex items-center space-x-1 px-2 py-1 rounded">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                </svg>
+                <span>${label}</span>
+              </a>`;
+    }
+
+    function buildFilesTable(order, index){
+      // Orders column: first fileUploadLink then all items from additionalOrder (comma-separated)
+      const ordersList = uniqueNonEmpty([order.fileUploadLink, ...splitCSV(order.additionalOrder)]);
+      // Dispatch Slip column: first colAQ then all from colAR (comma-separated)
+      const slipList   = uniqueNonEmpty([order.colAQ, ...splitCSV(order.colAR)]);
+
+      const ordersBtns = ordersList.map((u, i) => makeLinkButton(u, i===0 ? 'Order File' : `Additional #${i}`)).join('<br/>');
+      const slipBtns   = slipList.map((u, i) => makeLinkButton(u, i===0 ? 'Dispatch Slip' : `Slip #${i}`)).join('<br/>');
+
+      return `
+        <div class="mt-2 border border-gray-200 rounded-md overflow-hidden">
+          <table class="w-full tiny-table">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="w-1/2">Orders</th>
+                <th class="w-1/2">Dispatch Slip</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="space-y-2">${ordersBtns || '<span class="text-gray-400">—</span>'}</td>
+                <td class="space-y-2">${slipBtns   || '<span class="text-gray-400">—</span>'}</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
-    </footer>
+      `;
+    }
 
-    <script>
-        const API_URL = "https://script.google.com/macros/s/AKfycbygRGmvL8xyEl0hCSkQdUBGLWG1xHIcY-sNVaPsj97WV0Y7fsOWNjtAJ-bo40xZweh7/exec";
-        const ordersGrid = document.getElementById('orders-grid');
-        const loadingSpinner = document.getElementById('loading-spinner');
-        const errorMessage = document.getElementById('error-message');
-        const errorText = document.getElementById('error-text');
-        const noOrdersMessage = document.getElementById('no-orders-message');
-        const orderDetailModal = document.getElementById('order-detail-modal');
-        const modalBody = document.getElementById('modal-body');
-        const closeModalButton = document.getElementById('close-modal');
-        const lastUpdatedSpan = document.getElementById('last-updated');
-        const refreshIndicator = document.getElementById('refresh-indicator');
-        const refreshSpinner = refreshIndicator.querySelector('svg');
-        const refreshText = document.getElementById('refresh-text');
+    function toggleSection(id, btnId){
+      const el = document.getElementById(id);
+      const btn = document.getElementById(btnId);
+      const chev = btn?.querySelector('.chev');
+      const nowHidden = el.classList.toggle('hidden');
+      btn.setAttribute('aria-expanded', String(!nowHidden));
+      if (chev) chev.classList.toggle('rot', !nowHidden);
+    }
 
-        let allOrdersData = []; // Store all fetched data for modal display
+    /* -------------------- Mark Done -------------------- */
+    async function markDone(orderIndex) {
+      const order = allOrdersData[orderIndex];
+      if (!order) { showMessageBox('Order data not found', 'error'); return; }
 
-        // Function to format timestamp
-        function formatTimestamp(isoString) {
-            if (!isoString) return 'N/A';
-            try {
-                const date = new Date(isoString);
-                return date.toLocaleString('en-IN', {
-                    year: 'numeric',
-                    month: 'short',
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    second: '2-digit'
-                });
-            } catch (e) {
-                console.error("Error formatting timestamp:", e);
-                return isoString;
-            }
+      const deliveryDate = document.getElementById(`delivery-${orderIndex}`).value;
+      const generalRemark = document.getElementById(`generalRemark-${orderIndex}`).value;
+      const vehicleNo = document.getElementById(`vehicleNo-${orderIndex}`).value;
+      const freight = document.getElementById(`freight-${orderIndex}`).value;
+      const driverName = document.getElementById(`driverName-${orderIndex}`).value;
+      const driverMob = document.getElementById(`driverMob-${orderIndex}`).value;
+      const fileInput = document.getElementById(`file-${orderIndex}`);
+      const fileInput1 = document.getElementById(`file1-${orderIndex}`);
+
+      if (!deliveryDate) { showMessageBox('Please select an expected delivery date', 'warning'); return; }
+      if (driverMob && !/^\d{10}$/.test(driverMob)) { showMessageBox('Driver Mobile number must be 10 digits', 'warning'); return; }
+      if (freight && isNaN(freight)) { showMessageBox('Freight must be a numeric value', 'warning'); return; }
+
+      const markDoneButton = document.querySelector(`button[onclick="markDone(${orderIndex})"]`);
+      markDoneButton.disabled = true;
+      markDoneButton.textContent = 'Processing...';
+      markDoneButton.classList.add('opacity-50', 'cursor-not-allowed');
+
+      try {
+        let fileArray = [], file1Array = [];
+        if (fileInput.files.length > 0) {
+          for (let i = 0; i < fileInput.files.length; i++) {
+            const f = fileInput.files[i];
+            fileArray.push({ name:f.name, type:f.type, size:f.size, base64: await fileToBase64(f) });
+          }
+        }
+        if (fileInput1.files.length > 0) {
+          for (let i = 0; i < fileInput1.files.length; i++) {
+            const f1 = fileInput1.files[i];
+            file1Array.push({ name:f1.name, type:f1.type, size:f1.size, base64: await fileToBase64(f1) });
+          }
         }
 
-function formatDispatchDate(dateStr) {
-  if (!dateStr) return "N/A";
+        const payload = {
+          action: 'markDone',
+          timestamp: order.timestamp,
+          dealerName: order.dealerName,
+          marketingPersonName: order.marketingPersonName,
+          crmName: order.crmName,
+          location: order.location,
+          dispatchDate: order.dispatchDate,
+          fileUploadLink: order.fileUploadLink,
+          expectedDeliveryDate: deliveryDate,
+          generalRemark, vehicleNo, freight, driverName, driverMob,
+          fileArray, file1Array
+        };
 
-  try {
-    // Try to parse as ISO or plain date
-    const d = new Date(dateStr);
-    if (isNaN(d)) return dateStr; // fallback: return as-is if invalid
+        await fetch(API_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
 
-    // Format as dd-mm-yyyy
-    const day = String(d.getDate()).padStart(2, "0");
-    const month = String(d.getMonth() + 1).padStart(2, "0");
-    const year = d.getFullYear();
-    return `${day}-${month}-${year}`;
-  } catch (err) {
-    return dateStr; // fallback
-  }
-}
+        showMessageBox('Order marked as done successfully!', 'success');
 
+        const card = document.querySelector(`[data-order-index="${orderIndex}"]`);
+        if (card) card.remove();
+        allOrdersData.splice(orderIndex, 1);
+        renderOrders(allOrdersData);
 
-        // Function to convert file to base64
-        function fileToBase64(file) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.readAsDataURL(file);
-                reader.onload = () => {
-                    const base64 = reader.result.split(',')[1];
-                    resolve(base64);
-                };
-                reader.onerror = error => reject(error);
-            });
+      } catch (err) {
+        console.error('Error marking order as done:', err);
+        showMessageBox(`Error: ${err.message}`, 'error');
+      } finally {
+        markDoneButton.disabled = false;
+        markDoneButton.textContent = 'Mark Done';
+        markDoneButton.classList.remove('opacity-50', 'cursor-not-allowed');
+      }
+    }
+
+    /* -------------------- Fetch & Render -------------------- */
+    async function fetchOrders() {
+      loadingSpinner.style.display = 'flex';
+      errorMessage.style.display = 'none';
+      noOrdersMessage.style.display = 'none';
+      ordersGrid.innerHTML = '';
+
+      try {
+        const response = await fetch(API_URL);
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        const result = await response.json();
+
+        if (result.status === "success" && result.data && result.data.length > 0) {
+          allOrdersData = result.data;
+          renderOrders(result.data);
+          if (typeof setReadOnlyMode === "function") setReadOnlyMode();
+          noOrdersMessage.style.display = 'none';
+        } else if (result.status === "success" && result.data && result.data.length === 0) {
+          noOrdersMessage.style.display = 'block';
+          allOrdersData = [];
+        } else {
+          throw new Error(result.message || "Failed to fetch data.");
         }
+        lastUpdatedSpan.textContent = `Last updated: ${new Date().toLocaleTimeString()}`;
+      } catch (error) {
+        console.error("Fetch error:", error);
+        errorText.textContent = `Error: ${error.message}. Please check the API URL or network connection.`;
+        errorMessage.style.display = 'block';
+        noOrdersMessage.style.display = 'none';
+        allOrdersData = [];
+      } finally {
+        loadingSpinner.style.display = 'none';
+        refreshSpinner.style.display = 'none';
+        refreshText.classList.add('hidden');
+      }
+    }
 
-        // Function to handle file selection
-        function handleFileSelect(orderIndex) {
-            const fileInput = document.getElementById(`file-${orderIndex}`);
-            const fileSelectedDiv = document.getElementById(`file-selected-${orderIndex}`);
-            
-            if (fileInput.files.length > 0) {
-                const file = fileInput.files[0];
-                fileSelectedDiv.style.display = 'block';
-                fileSelectedDiv.textContent = `✓ ${file.name} selected (${(file.size / 1024).toFixed(1)} KB)`;
-            } else {
-                fileSelectedDiv.style.display = 'none';
-            }
-        }
+    function renderOrders(orders) {
+      ordersGrid.innerHTML = '';
+      if (orders.length === 0) { noOrdersMessage.style.display = 'block'; return; }
+      noOrdersMessage.style.display = 'none';
 
-        // Function to handle file selection for invoice
-        function handleFileSelect1(orderIndex) {
-            const fileInput = document.getElementById(`file1-${orderIndex}`);
-            const fileSelectedDiv = document.getElementById(`file-selected1-${orderIndex}`);
-            
-            if (fileInput.files.length > 0) {
-                const file = fileInput.files[0];
-                fileSelectedDiv.style.display = 'block';
-                fileSelectedDiv.textContent = `✓ ${file.name} selected (${(file.size / 1024).toFixed(1)} KB)`;
-            } else {
-                fileSelectedDiv.style.display = 'none';
-            }
-        }
+      orders.forEach((order, index) => {
+        const orderCard = document.createElement('div');
 
-        // Function to mark order as done
-        async function markDone(orderIndex) {
-            const order = allOrdersData[orderIndex];
-            if (!order) {
-                // Using a custom message box instead of alert()
-                showMessageBox('Order data not found', 'error');
-                return;
-            }
+        const isLate = isPastDate(order.dispatchDate);
+        orderCard.className = `order-card rounded-lg shadow-md p-6 flex flex-col justify-between hover:shadow-xl ${isLate ? 'bg-red-100' : 'bg-white'}`;
+        orderCard.setAttribute('data-order-index', index);
 
-            const deliveryDate = document.getElementById(`delivery-${orderIndex}`).value;
-            const generalRemark = document.getElementById(`generalRemark-${orderIndex}`).value;
-            const vehicleNo = document.getElementById(`vehicleNo-${orderIndex}`).value;
-            const freight = document.getElementById(`freight-${orderIndex}`).value;
-            const driverName = document.getElementById(`driverName-${orderIndex}`).value;
-            const driverMob = document.getElementById(`driverMob-${orderIndex}`).value;
-            const fileInput = document.getElementById(`file-${orderIndex}`);
-            const fileInput1 = document.getElementById(`file1-${orderIndex}`);
+        const filesSectionId = `files-sec-${index}`;
+        const filesBtnId     = `files-btn-${index}`;
+        const moreSectionId  = `more-sec-${index}`;
+        const moreBtnId      = `more-btn-${index}`;
 
+        orderCard.innerHTML = `
+          <div class="mb-4">
+            <h3 class="text-xl font-semibold text-blue-700 mb-2">${order.dealerName || 'N/A'}</h3>
+            <p class="text-gray-600"><strong class="font-medium">Marketing Person:</strong> ${order.marketingPersonName || 'N/A'}</p>
+            <p class="text-gray-600"><strong class="font-medium">CRM Name:</strong> ${order.crmName || 'N/A'}</p>
+            <p class="text-gray-600"><strong class="font-medium">Location:</strong> ${order.location || 'N/A'}</p>
+          </div>
 
-            if (!deliveryDate) {
-                showMessageBox('Please select an expected delivery date', 'warning');
-                return;
-            }
+          <div class="border-t pt-4 mb-4">
+            <p class="text-sm text-gray-500 mb-1"><strong class="font-medium">Expected Dispatch:</strong> <span class="text-blue-500">${formatDispatchDate(order.dispatchDate)}</span></p>
+            <p class="text-sm text-gray-500 mb-2"><strong class="font-medium">Order Timestamp:</strong> ${formatTimestamp(order.timestamp)}</p>
 
-            // Basic validation for driver mobile number
-            if (driverMob && !/^\d{10}$/.test(driverMob)) {
-                showMessageBox('Driver Mobile number must be 10 digits', 'warning');
-                return;
-            }
-            
-            // Basic validation for freight to be numeric
-            if (freight && isNaN(freight)) {
-                showMessageBox('Freight must be a numeric value', 'warning');
-                return;
-            }
+            <!-- Collapsible: Orders & Dispatch Slips -->
+            <button id="${filesBtnId}" type="button" aria-expanded="false"
+                    class="w-full flex items-center justify-between px-3 py-2 rounded bg-gray-100 hover:bg-gray-200 text-gray-800 text-sm font-medium"
+                    onclick="event.stopPropagation(); toggleSection('${filesSectionId}', '${filesBtnId}')">
+              <span>📄 Orders & Dispatch Slips</span>
+              <svg class="chev h-4 w-4 text-gray-600" viewBox="0 0 20 20" fill="currentColor"><path d="M6 6l6 4-6 4V6z"/></svg>
+            </button>
+            <div id="${filesSectionId}" class="hidden">
+              ${buildFilesTable(order, index)}
+            </div>
+          </div>
 
+          <!-- Collapsible: Everything from Expected Delivery & below -->
+          <button id="${moreBtnId}" type="button" aria-expanded="false"
+                  class="w-full flex items-center justify-between px-3 py-2 rounded bg-gray-100 hover:bg-gray-200 text-gray-800 text-sm font-medium"
+                  onclick="event.stopPropagation(); toggleSection('${moreSectionId}', '${moreBtnId}')">
+            <span>🧾 Delivery, Dispatch Details & Attachments</span>
+            <svg class="chev h-4 w-4 text-gray-600" viewBox="0 0 20 20" fill="currentColor"><path d="M6 6l6 4-6 4V6z"/></svg>
+          </button>
 
-            const markDoneButton = document.querySelector(`button[onclick="markDone(${orderIndex})"]`);
-            markDoneButton.disabled = true;
-            markDoneButton.textContent = 'Processing...';
-            markDoneButton.classList.add('opacity-50', 'cursor-not-allowed');
+          <div id="${moreSectionId}" class="hidden editable">
+            <div onclick="event.stopPropagation();">
+              <div class="mt-3">
+                <label class="block text-sm font-medium mb-1 text-gray-700">Expected Delivery Date:</label>
+                <input type="date" id="delivery-${index}" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required/>
+              </div>
 
-            try {
-                let fileArray = [];
-                let file1Array = [];
-
-                if (fileInput.files.length > 0) {
-                    for (let i = 0; i < fileInput.files.length; i++) {
-                        const file = fileInput.files[i];
-                        const base64 = await fileToBase64(file);
-                        fileArray.push({
-                            name: file.name,
-                            type: file.type,
-                            size: file.size,
-                            base64: base64
-                        });
-                    }
-                }
-
-                if (fileInput1.files.length > 0) {
-                    for (let i = 0; i < fileInput1.files.length; i++) {
-                        const file1 = fileInput1.files[i];
-                        const base64 = await fileToBase64(file1);
-                        file1Array.push({
-                            name: file1.name,
-                            type: file1.type,
-                            size: file1.size,
-                            base64: base64
-                        });
-                    }
-                }
-                
-                // Construct the payload with new fields
-                const payload = {
-                    action: 'markDone',
-                    timestamp: order.timestamp,
-                    dealerName: order.dealerName,
-                    marketingPersonName: order.marketingPersonName,
-                    crmName: order.crmName,
-                    location: order.location,
-                    dispatchDate: order.dispatchDate,
-                    fileUploadLink: order.fileUploadLink,
-                    expectedDeliveryDate: deliveryDate,
-                    // New fields for dispatch details
-                    generalRemark: generalRemark,
-                    vehicleNo: vehicleNo,
-                    freight: freight,
-                    driverName: driverName,
-                    driverMob: driverMob,
-                    fileArray: fileArray,
-                    file1Array: file1Array
-                };
-
-                await fetch(API_URL, {
-                    method: 'POST',
-                    mode: 'no-cors', // Keep no-cors mode as requested
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(payload)
-                });
-
-                // Assume success due to no-cors limitation
-                showMessageBox('Order marked as done successfully!', 'success');
-                
-                const orderCard = document.querySelector(`[data-order-index="${orderIndex}"]`);
-                if (orderCard) {
-                    orderCard.remove();
-                }
-
-                allOrdersData.splice(orderIndex, 1);
-                renderOrders(allOrdersData);
-
-            } catch (error) {
-                console.error('Error marking order as done:', error);
-                showMessageBox(`Error: ${error.message}`, 'error');
-            } finally {
-                markDoneButton.disabled = false;
-                markDoneButton.textContent = 'Mark Done';
-                markDoneButton.classList.remove('opacity-50', 'cursor-not-allowed');
-            }
-        }
-
-        async function fetchOrders() {
-            loadingSpinner.style.display = 'flex';
-            errorMessage.style.display = 'none';
-            noOrdersMessage.style.display = 'none';
-            ordersGrid.innerHTML = '';
-
-            try {
-                const response = await fetch(API_URL);
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                const result = await response.json();
-
-                if (result.status === "success" && result.data && result.data.length > 0) {
-                    allOrdersData = result.data;
-                    renderOrders(result.data);
-            	if (typeof setReadOnlyMode === "function") {
-                  setReadOnlyMode();
-                }			
-                    noOrdersMessage.style.display = 'none';
-                } else if (result.status === "success" && result.data && result.data.length === 0) {
-                    noOrdersMessage.style.display = 'block';
-                    allOrdersData = [];
-                } else {
-                    throw new Error(result.message || "Failed to fetch data.");
-                }
-                lastUpdatedSpan.textContent = `Last updated: ${new Date().toLocaleTimeString()}`;
-
-            } catch (error) {
-                console.error("Fetch error:", error);
-                errorText.textContent = `Error: ${error.message}. Please check the API URL or network connection.`;
-                errorMessage.style.display = 'block';
-                noOrdersMessage.style.display = 'none';
-                allOrdersData = [];
-            } finally {
-                loadingSpinner.style.display = 'none';
-                refreshSpinner.style.display = 'none';
-                refreshText.classList.add('hidden');
-            }
-        }
-
-
-function isPastDate(dateStr) {
-  if (!dateStr) return false;
-
-  const d = new Date(dateStr);
-  if (isNaN(d)) return false;
-
-  // Compare only date part (ignore hours/minutes)
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  const targetDate = new Date(d);
-  targetDate.setHours(0, 0, 0, 0);
-
-  return targetDate < today;
-}
-	    
-	    
-	    // Function to render order cards
-        function renderOrders(orders) {
-            ordersGrid.innerHTML = '';
-            if (orders.length === 0) {
-                noOrdersMessage.style.display = 'block';
-                return;
-            }
-            noOrdersMessage.style.display = 'none';
-
-orders.forEach((order, index) => {
-                const orderCard = document.createElement('div');
-                
-                // --- START ADDITION FOR OVERDUE HIGHLIGHT ---
-                const today = new Date();
-                today.setHours(0, 0, 0, 0); // Normalize today's date to start of day
-
-                let isOverdue = false;
-                if (order.dispatchDate) {
-                    try {
-                        // Parse the dispatchDate string (e.g., "2024/07/10")
-                        const parts = order.dispatchDate.split('/');
-                        // Note: Month is 0-indexed in JavaScript Date (0 for January, 11 for December)
-                        const dispatchDateObj = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]) + 1); // +1 for day to account for timezone issues
-                        dispatchDateObj.setHours(0, 0, 0, 0); // Normalize dispatch date to start of day
-
-                        if (dispatchDateObj < today) {
-                            isOverdue = true;
-                        }
-                    } catch (e) {
-                        console.error("Error parsing dispatch date for overdue check:", order.dispatchDate, e);
-                    }
-                }
-
-		const isLate = isPastDate(order.dispatchDate);
-		orderCard.className = `order-card rounded-lg shadow-md p-6 flex flex-col justify-between hover:shadow-xl ${isLate ? 'bg-red-100' : 'bg-white'}`;
-
-                // --- END ADDITION FOR OVERDUE HIGHLIGHT ---
-
-                orderCard.setAttribute('data-order-index', index);
-                orderCard.innerHTML = `
-                    <div class="mb-4">
-                        <h3 class="text-xl font-semibold text-blue-700 mb-2">${order.dealerName || 'N/A'}</h3>
-                        <p class="text-gray-600"><strong class="font-medium">Marketing Person:</strong> ${order.marketingPersonName || 'N/A'}</p>
-			<p class="text-gray-600"><strong class="font-medium">CRM Name:</strong> ${order.crmName || 'N/A'}</p>
-                        <p class="text-gray-600"><strong class="font-medium">Location:</strong> ${order.location || 'N/A'}</p>
-                    </div>
-                    <div class="border-t pt-4 mb-4">
-                        <p class="text-sm text-gray-500 mb-1"><strong class="font-medium">Expected Dispatch:</strong> <span class="text-blue-500">${formatDispatchDate(order.dispatchDate)}</span></p>
-                        <p class="text-sm text-gray-500 mb-2"><strong class="font-medium">Order Timestamp:</strong> ${formatTimestamp(order.timestamp)}</p>
-                        ${order.fileUploadLink ? `
-                            <p class="text-sm text-gray-500">
-                                <a href="${order.fileUploadLink}" target="_blank" class="text-blue-500 hover:underline flex items-center" onclick="event.stopPropagation();">
-                                    <strong class="font-medium">Download Order File</strong>
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                                    </svg>
-                                </a>
-                            </p>
-                        ` : ''}
-			${order.additionalOrder ? `
-			    <p class="text-sm text-gray-500">
-				<button onclick="event.stopPropagation(); openMultipleDocuments('${order.additionalOrder.replace(/'/g, "\\'")}', ${index})"
-					class="text-red-500 hover:underline flex items-center bg-transparent border-none cursor-pointer p-0 m-0">
-				    <strong class="font-medium">Additional Order</strong>
-				    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-				    </svg>
-				</button>
-			    </p>
-			` : ''}
-			
-                    </div>
-                    <div class="editable">
-                    <div onclick="event.stopPropagation();">
-                        <div class="mb-3">
-                            <label class="block text-sm font-medium mb-1 text-gray-700">Expected Delivery Date:</label>
-                            <input type="date" id="delivery-${index}" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required/>
-                        </div>
-                        
-                        <!-- New sub-section for Dispatch Team Remark -->
-                        <div class="mb-3 p-4 border border-gray-200 rounded-md bg-gray-50">
-                            <h4 class="text-md font-semibold text-gray-700 mb-3">Dispatch Details</h4>
-                            <div class="mb-2">
-                                <label class="block text-sm font-medium mb-1 text-gray-700">General Remark:</label>
-                                <input type="text" id="generalRemark-${index}" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter general remarks..."/>
-                            </div>
-                            <div class="mb-2">
-                                <label class="block text-sm font-medium mb-1 text-gray-700">Vehicle No.:</label>
-                                <input type="text" id="vehicleNo-${index}" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g., UP16AB1234"/>
-                            </div>
-                            <div class="mb-2">
-                                <label class="block text-sm font-medium mb-1 text-gray-700">Freight:</label>
-                                <input type="number" id="freight-${index}" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter freight amount"/>
-                            </div>
-                            <div class="mb-2">
-                                <label class="block text-sm font-medium mb-1 text-gray-700">Driver Name:</label>
-                                <input type="text" id="driverName-${index}" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter driver's name"/>
-                            </div>
-                            <div class="mb-2">
-                                <label class="block text-sm font-medium mb-1 text-gray-700">Driver Mob:</label>
-                                <input type="tel" id="driverMob-${index}" pattern="[0-9]{10}" maxlength="10" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter 10-digit mobile number"/>
-                            </div>
-                        </div>
-                        
-                        <div class="mb-4">
-                            <label class="file-upload-label">Attach LR Receipt:</label> <!-- Changed label -->
-                            <input type="file" class="file-input" id="file-${index}" multiple onchange="handleFileSelect(${index})" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.xlsx,.xls">
-                            <div class="file-selected" id="file-selected-${index}">✓ File selected</div>
-                        </div>
-
-                        <div class="mb-4">
-                            <label class="file-upload-label">Attach Invoice:</label>
-                            <input type="file" class="file-input" id="file1-${index}" multiple onchange="handleFileSelect1(${index})" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.xlsx,.xls">
-                            <div class="file-selected" id="file-selected1-${index}">✓ File selected</div>
-                        </div>
-                        
-                        <button onclick="markDone(${index})" class="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition duration-200 font-medium">
-                            Mark Done
-                        </button>
-                    </div>
-		    </div>
-                `;
-
-                orderCard.addEventListener('click', (event) => {
-                    if (!event.target.closest('a') && !event.target.closest('input') && !event.target.closest('button')) {
-                        openModal(index);
-                    }
-                });
-                
-                ordersGrid.appendChild(orderCard);
-            });
-        }
-	function openMultipleDocuments(urlString, index) {
-	    // Split the URLs by comma and trim whitespace
-	    const urls = urlString.split(',').map(url => url.trim()).filter(url => url.length > 0);
-	    
-	    if (urls.length === 0) {
-		showMessageBox('No valid URLs found', 'warning');
-		return;
-	    }
-	    
-	    // Show a confirmation if there are multiple URLs
-	    if (urls.length > 1) {
-		const confirmed = confirm(`This will open ${urls.length} documents in separate tabs. Continue?`);
-		if (!confirmed) {
-		    return;
-		}
-	    }
-	    
-	    // Open each URL in a new tab with a small delay to prevent popup blocker
-	    urls.forEach((url, urlIndex) => {
-		setTimeout(() => {
-		    window.open(url, '_blank');
-		}, urlIndex * 100); // 100ms delay between each tab opening
-	    });
-	}
-
-	    
-        // Function to open the detail modal
-        function openModal(index) {
-            const order = allOrdersData[index];
-            if (!order) return;
-
-            modalBody.innerHTML = `
-                <p><strong class="font-semibold">Dealer Name:</strong> ${order.dealerName || 'N/A'}</p>
-                <p><strong class="font-semibold">Marketing Person:</strong> ${order.marketingPersonName || 'N/A'}</p>
-                <p><strong class="font-semibold">CRM Name:</strong> ${order.crmName || 'N/A'}</p>
-                <p><strong class="font-semibold">Location:</strong> ${order.location || 'N/A'}</p>
-                <p><strong class="font-semibold">Order Timestamp:</strong> ${formatTimestamp(order.timestamp)}</p>
-                <p><strong class="font-semibold">Expected Dispatch Date:</strong> <span class="text-blue-600 font-bold">${formatDispatchDate(order.dispatchDate)}</span></p>
-                <p class="flex items-center">
-                    <strong class="font-semibold">File Upload:</strong>
-                    ${order.fileUploadLink ? `<a href="${order.fileUploadLink}" target="_blank" class="ml-2 text-blue-500 hover:underline flex items-center">
-                        View File
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                        </svg>
-                    </a>` : '<span class="ml-2 text-gray-500">N/A</span>'}
-                </p>
-            `;
-
-            orderDetailModal.style.display = 'flex';
-            setTimeout(() => {
-                orderDetailModal.classList.remove('invisible');
-                orderDetailModal.classList.add('opacity-100');
-                orderDetailModal.querySelector('.modal-content').classList.remove('-translate-y-full', 'opacity-0');
-                orderDetailModal.querySelector('.modal-content').classList.add('modal-open');
-            }, 10);
-        }
-
-        // Function to close the detail modal
-        function closeModal() {
-            orderDetailModal.classList.remove('opacity-100');
-            orderDetailModal.querySelector('.modal-content').classList.add('-translate-y-full', 'opacity-0');
-            orderDetailModal.querySelector('.modal-content').classList.remove('modal-open');
-            setTimeout(() => {
-                orderDetailModal.style.display = 'none';
-                orderDetailModal.classList.add('invisible');
-            }, 300);
-        }
-
-        // Custom message box function instead of alert()
-        function showMessageBox(message, type = 'info') {
-            const messageBox = document.createElement('div');
-            messageBox.className = `fixed top-4 right-4 p-4 rounded-md shadow-lg text-white z-50`;
-            
-            let bgColor = 'bg-blue-500'; // info
-            if (type === 'success') bgColor = 'bg-green-500';
-            else if (type === 'error') bgColor = 'bg-red-500';
-            else if (type === 'warning') bgColor = 'bg-yellow-500';
-
-            messageBox.classList.add(bgColor);
-            messageBox.innerHTML = `
-                <div class="flex items-center justify-between">
-                    <span>${message}</span>
-                    <button class="ml-4 text-white font-bold" onclick="this.parentElement.parentElement.remove()">
-                        &times;
-                    </button>
+              <div class="mt-3 p-4 border border-gray-200 rounded-md bg-gray-50">
+                <h4 class="text-md font-semibold text-gray-700 mb-3">Dispatch Details</h4>
+                <div class="mb-2">
+                  <label class="block text-sm font-medium mb-1 text-gray-700">General Remark:</label>
+                  <input type="text" id="generalRemark-${index}" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter general remarks..."/>
                 </div>
-            `;
-            document.body.appendChild(messageBox);
+                <div class="mb-2">
+                  <label class="block text-sm font-medium mb-1 text-gray-700">Vehicle No.:</label>
+                  <input type="text" id="vehicleNo-${index}" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g., UP16AB1234"/>
+                </div>
+                <div class="mb-2">
+                  <label class="block text-sm font-medium mb-1 text-gray-700">Freight:</label>
+                  <input type="number" id="freight-${index}" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter freight amount"/>
+                </div>
+                <div class="mb-2">
+                  <label class="block text-sm font-medium mb-1 text-gray-700">Driver Name:</label>
+                  <input type="text" id="driverName-${index}" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter driver's name"/>
+                </div>
+                <div class="mb-2">
+                  <label class="block text-sm font-medium mb-1 text-gray-700">Driver Mob:</label>
+                  <input type="tel" id="driverMob-${index}" pattern="[0-9]{10}" maxlength="10" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter 10-digit mobile number"/>
+                </div>
+              </div>
 
-            setTimeout(() => {
-                messageBox.remove();
-            }, 3000); // Message disappears after 3 seconds
-        }
+              <div class="mt-3">
+                <label class="file-upload-label">Attach LR Receipt:</label>
+                <input type="file" class="file-input" id="file-${index}" multiple onchange="handleFileSelect(${index})" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.xlsx,.xls">
+                <div class="file-selected" id="file-selected-${index}">✓ File selected</div>
+              </div>
 
+              <div class="mt-3">
+                <label class="file-upload-label">Attach Invoice:</label>
+                <input type="file" class="file-input" id="file1-${index}" multiple onchange="handleFileSelect1(${index})" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.xlsx,.xls">
+                <div class="file-selected" id="file-selected1-${index}">✓ File selected</div>
+              </div>
 
-        // Close modal on escape key
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && orderDetailModal.classList.contains('opacity-100')) {
-                closeModal();
-            }
+              <button onclick="markDone(${index})"
+                      class="mt-4 w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition duration-200 font-medium">
+                Mark Done
+              </button>
+            </div>
+          </div>
+        `;
+
+        // Clicking blank space opens modal
+        orderCard.addEventListener('click', (e) => {
+          if (!e.target.closest('a') && !e.target.closest('input') && !e.target.closest('button')) {
+            openModal(index);
+          }
         });
 
-        // Close modal when clicking outside the content
-        orderDetailModal.addEventListener('click', (e) => {
-            if (e.target === orderDetailModal) {
-                closeModal();
-            }
-        });
+        ordersGrid.appendChild(orderCard);
+      });
+    }
 
-        closeModalButton.addEventListener('click', closeModal);
+    function openModal(index) {
+      const order = allOrdersData[index];
+      if (!order) return;
 
-        // Initial fetch
-        fetchOrders();
+      modalBody.innerHTML = `
+        <p><strong class="font-semibold">Dealer Name:</strong> ${order.dealerName || 'N/A'}</p>
+        <p><strong class="font-semibold">Marketing Person:</strong> ${order.marketingPersonName || 'N/A'}</p>
+        <p><strong class="font-semibold">CRM Name:</strong> ${order.crmName || 'N/A'}</p>
+        <p><strong class="font-semibold">Location:</strong> ${order.location || 'N/A'}</p>
+        <p><strong class="font-semibold">Order Timestamp:</strong> ${formatTimestamp(order.timestamp)}</p>
+        <p><strong class="font-semibold">Expected Dispatch Date:</strong> <span class="text-blue-600 font-bold">${formatDispatchDate(order.dispatchDate)}</span></p>
+        <p class="flex items-center">
+          <strong class="font-semibold">File Upload:</strong>
+          ${order.fileUploadLink ? `<a href="${order.fileUploadLink}" target="_blank" class="ml-2 text-blue-500 hover:underline flex items-center">
+              View File
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+              </svg>
+            </a>` : '<span class="ml-2 text-gray-500">N/A</span>'}
+        </p>
+      `;
 
-        // Auto-refresh every minute
-        setInterval(() => {
-            refreshSpinner.style.display = 'block';
-            refreshText.classList.remove('hidden');
-            fetchOrders();
-        }, 300 * 1000);
+      orderDetailModal.style.display = 'flex';
+      setTimeout(() => {
+        orderDetailModal.classList.remove('invisible');
+        orderDetailModal.classList.add('opacity-100');
+        const box = orderDetailModal.querySelector('.modal-content');
+        box.classList.remove('-translate-y-full', 'opacity-0');
+        box.classList.add('modal-open');
+      }, 10);
+    }
 
-        // Set current year in footer
-        document.getElementById('current-year').textContent = new Date().getFullYear();
-    </script>
-    <script src="js/viewOnly.js"></script>
+    function closeModal() {
+      orderDetailModal.classList.remove('opacity-100');
+      const box = orderDetailModal.querySelector('.modal-content');
+      box.classList.add('-translate-y-full', 'opacity-0');
+      box.classList.remove('modal-open');
+      setTimeout(() => {
+        orderDetailModal.style.display = 'none';
+        orderDetailModal.classList.add('invisible');
+      }, 300);
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && orderDetailModal.classList.contains('opacity-100')) closeModal();
+    });
+    orderDetailModal.addEventListener('click', (e) => { if (e.target === orderDetailModal) closeModal(); });
+    closeModalButton.addEventListener('click', closeModal);
+
+    // Initial fetch
+    fetchOrders();
+
+    // Auto-refresh (5 min)
+    setInterval(() => {
+      refreshSpinner.style.display = 'block';
+      refreshText.classList.remove('hidden');
+      fetchOrders();
+    }, 300 * 1000);
+
+    // Footer year
+    document.getElementById('current-year').textContent = new Date().getFullYear();
+  </script>
+
+  <script src="js/viewOnly.js"></script>
 </body>
 </html>
