@@ -218,7 +218,7 @@
       const slipList   = uniqueNonEmpty([order.colAQ, ...splitCSV(order.colAR)]);
 
       const ordersBtns = ordersList.map((u, i) => makeLinkButton(u, i===0 ? 'Order File' : `Additional #${i}`)).join('<br/>');
-      const slipBtns   = slipList.map((u, i) => makeLinkButton(u, i===0 ? 'Dispatch Slip / Sale Order' : `Slip #${i}`)).join('<br/>');
+      const slipBtns   = slipList.map((u, i) => makeLinkButton(u, i===0 ? 'Dispatch Slip' : `Slip #${i}`)).join('<br/>');
 
       return `
         <div class="mt-2 border border-gray-200 rounded-md overflow-hidden">
@@ -226,7 +226,7 @@
             <thead class="bg-gray-50">
               <tr>
                 <th class="w-1/2">Orders</th>
-                <th class="w-1/2">Dispatch Slip</th>
+                <th class="w-1/2">Dispatch Slip / Sale Order</th>
               </tr>
             </thead>
             <tbody>
