@@ -277,21 +277,43 @@
     return `${mm}:${ss}`;
   }
 
-  function startCountdown(el, deadline){
-    function tick(){
-      const now = Date.now();
-      const diff = deadline.getTime() - now;
-      if (diff <= 0){
-        el.textContent = '00:00';
-        el.closest('.badge')?.classList.add('overdue');
-        return;
+// REPLACE your existing startCountdown() with this:
+function startCountdown(el, deadline){
+  const badge = el.closest('.badge');  // the "Due in ..." badge
+  let intervalId;
+
+  function tick(){
+    const now = Date.now();
+    const diff = deadline.getTime() - now;
+
+    if (diff <= 0){
+      // Flip to "Overdue" tag, stop ticking
+      if (badge){
+        badge.classList.add('overdue');   // uses your red/white styling
+        badge.textContent = 'Overdue';    // show a clean Overdue tag
       }
-      el.textContent = fmtMMSS(diff);
+      clearInterval(intervalId);
+      return;
     }
-    tick();
-    const h = setInterval(tick, 1000);
-    countdownHandles.push(h);
+
+    // Still time left — keep MM:SS ticking
+    const mmss = fmtMMSS(diff);
+    el.textContent = mmss;
+    // ensure the parent badge keeps the "Due in ..." label with the countdown span
+    if (badge && !badge.matches('.overdue')) {
+      // reattach the span if something re-rendered the badge
+      if (!badge.contains(el)) {
+        badge.innerHTML = 'Due in\u00A0';
+        badge.appendChild(el);
+      }
+    }
   }
+
+  // kick off immediately, then every second
+  tick();
+  intervalId = setInterval(tick, 1000);
+  countdownHandles.push(intervalId);
+}
 
   /* ---------- Card builder (adds countdown badge) ---------- */
   function createCard(order, index){
