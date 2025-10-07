@@ -290,12 +290,7 @@
         const payload = {
           action: 'markDone',
           timestamp: order.timestamp,
-          dealerName: order.dealerName,
-          marketingPersonName: order.marketingPersonName,
           crmName: order.crmName,
-          location: order.location,
-          dispatchDate: order.dispatchDate,
-          fileUploadLink: order.fileUploadLink,
           expectedDeliveryDate: deliveryDate,
           generalRemark, vehicleNo, freight, driverName, driverMob,
           fileArray, file1Array
@@ -309,6 +304,42 @@
         });
 
         showMessageBox('Order marked as done successfully!', 'success');
+        renderOrders(allOrdersData);
+
+      } catch (err) {
+        console.error('Error marking order as done:', err);
+        showMessageBox(`Error: ${err.message}`, 'error');
+      } finally {
+        markDoneButton.disabled = false;
+        markDoneButton.textContent = 'Submit Details';
+        markDoneButton.classList.remove('opacity-50', 'cursor-not-allowed');
+      }
+    }
+
+    /* -------------------- Simple Mark Done -------------------- */
+    async function simpleMarkDone(orderIndex) {
+      const order = allOrdersData[orderIndex];
+      if (!order) { showMessageBox('Order data not found', 'error'); return; }
+      if ((!order.dispatchReceipt) || (!order.invoice)) { showMessageBox('Dispatch Receipt / Invoice pending', 'warning'); return; }
+
+      const simpleMarkDoneButton = document.querySelector(`button[onclick="simpleMarkDone(${orderIndex})"]`);
+      simpleMarkDoneButton.disabled = true;
+      simpleMarkDoneButton.textContent = 'Processing...';
+      simpleMarkDoneButton.classList.add('opacity-50', 'cursor-not-allowed');
+
+      try {
+        const payload = {
+          action: 'markDone',
+          timestamp: order.timestamp,
+        };
+        await fetch(API_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        showMessageBox('Order dispatched successfully!', 'success');
 
         const card = document.querySelector(`[data-order-index="${orderIndex}"]`);
         if (card) card.remove();
@@ -319,11 +350,12 @@
         console.error('Error marking order as done:', err);
         showMessageBox(`Error: ${err.message}`, 'error');
       } finally {
-        markDoneButton.disabled = false;
-        markDoneButton.textContent = 'Mark Done';
-        markDoneButton.classList.remove('opacity-50', 'cursor-not-allowed');
+        simpleMarkDoneButton.disabled = false;
+        simpleMarkDoneButton.textContent = 'Mark Done';
+        simpleMarkDoneButton.classList.remove('opacity-50', 'cursor-not-allowed');
       }
     }
+
 
     /* -------------------- Fetch & Render -------------------- */
     async function fetchOrders() {
@@ -456,8 +488,12 @@
 
               <button onclick="markDone(${index})"
                       class="mt-4 w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition duration-200 font-medium">
-                Mark Done
+                Submit Details
               </button>
+              <button onclick="simpleMarkDone(${index})"
+                      class="mt-4 w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition duration-200 font-medium">
+                Mark Done
+              </button>              
             </div>
           </div>
         `;
