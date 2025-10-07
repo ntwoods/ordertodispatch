@@ -108,7 +108,18 @@
   </div>
 
 <script>
-  const API_URL = "https://script.google.com/macros/s/AKfycbzIg93-NvjqrLEgr6zmk-weztixnBf1JiMko0wNkly9IQvdkU2LiUtgkbDcy99kCYZwQw/exec";
+  function getSearchParam(name) {
+    const url = new URL(window.location.href);
+    const v = url.searchParams.get(name);
+    return v ? v.trim() : "";
+    }
+  const MODE = getSearchParam('mode'); // optional: "view" or default
+  const CRM  = getSearchParam('crm');  // e.g. "Km Kalpana"
+
+  const API_BASE = "https://script.google.com/macros/s/AKfycbzIg93-NvjqrLEgr6zmk-weztixnBf1JiMko0wNkly9IQvdkU2LiUtgkbDcy99kCYZwQw/exec";
+  const qs = new URLSearchParams();
+  if (CRM) qs.set('crm', CRM);
+  const API_URL = qs.toString() ? `${API_BASE}?${qs.toString()}` : API_BASE;  
 
   const el = sel => document.querySelector(sel);
   const grid = el('#grid');
@@ -262,6 +273,9 @@
       if(!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       render(data);
+      if (MODE === 'view') {
+        document.querySelectorAll('[data-edit-only]').forEach(el => el.style.display = 'none');
+      }      
     }catch(err){
       console.error(err); setError(err.message || 'Failed to fetch');
     }finally{
