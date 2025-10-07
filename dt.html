@@ -535,7 +535,79 @@
     // Footer year
     document.getElementById('current-year').textContent = new Date().getFullYear();
   </script>
-
   <script src="js/viewOnly.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const observer = new MutationObserver(() => {
+        initCardEnhancements();
+      });
+      observer.observe(document.getElementById('orders-grid'), { childList: true });
+    });
+  
+    function initCardEnhancements() {
+      const cards = document.querySelectorAll('[data-order-index]');
+      cards.forEach(card => {
+        const idx = parseInt(card.getAttribute('data-order-index'));
+        const order = window.allOrdersData?.[idx];
+        if (!order) return;
+  
+        // Highlight yellow if invoice or dispatchReceipt exist
+        if (order.invoice || order.dispatchReceipt) {
+          card.classList.remove('bg-white', 'bg-red-100');
+          card.classList.add('bg-yellow-100');
+        }
+  
+        // Change existing button label to Submit Details
+        const submitBtn = card.querySelector('button[onclick^="markDone"]');
+        if (submitBtn && submitBtn.textContent.trim() === 'Mark Done') {
+          submitBtn.textContent = 'Submit Details';
+        }
+  
+        // Add new Mark Done button
+        if (!card.querySelector('.final-markdone-btn')) {
+          const newBtn = document.createElement('button');
+          newBtn.textContent = 'Mark Done';
+          newBtn.className = 'final-markdone-btn mt-2 w-full bg-green-600 text-white px-4 py-2 rounded-lg font-medium opacity-50 cursor-not-allowed';
+          newBtn.disabled = true;
+          card.appendChild(newBtn);
+  
+          // Enable only if both invoice & dispatchReceipt are present
+          if (order.invoice && order.dispatchReceipt) {
+            newBtn.disabled = false;
+            newBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            newBtn.classList.add('hover:bg-green-700', 'transition', 'duration-200');
+          }
+  
+          newBtn.addEventListener('click', async () => {
+            if (newBtn.disabled) return;
+            newBtn.disabled = true;
+            newBtn.textContent = 'Processing...';
+            newBtn.classList.add('opacity-50', 'cursor-not-allowed');
+  
+            try {
+              const payload = { action: 'markDone', timestamp: order.timestamp };
+              await fetch(API_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+              });
+              showMessageBox('Order marked done successfully!', 'success');
+              card.remove();
+              window.allOrdersData.splice(idx, 1);
+            } catch (err) {
+              console.error(err);
+              showMessageBox('Error marking done', 'error');
+            } finally {
+              newBtn.disabled = false;
+              newBtn.textContent = 'Mark Done';
+              newBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+          });
+        }
+      });
+    }
+  </script>
+
 </body>
 </html>
