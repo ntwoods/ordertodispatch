@@ -130,43 +130,49 @@
   </div>
 
 <script>
+  /* ---------- URL params ---------- */
   function getSearchParam(name) {
     const url = new URL(window.location.href);
     const v = url.searchParams.get(name);
     return v ? v.trim() : "";
-    }
-  const MODE = getSearchParam('mode'); // optional: "view" or default
+  }
+  const MODE = getSearchParam('mode'); // optional: "view"
   const CRM  = getSearchParam('crm');  // e.g. "Km Kalpana"
   const IS_VIEW_MODE = (MODE || '').toLowerCase() === 'view';
-  if (IS_VIEW_MODE) document.documentElement.classList.add('view-mode');  
+  if (IS_VIEW_MODE) document.documentElement.classList.add('view-mode');
 
+  /* ---------- API URL ---------- */
   const API_BASE = "https://script.google.com/macros/s/AKfycbzIg93-NvjqrLEgr6zmk-weztixnBf1JiMko0wNkly9IQvdkU2LiUtgkbDcy99kCYZwQw/exec";
   const qs = new URLSearchParams();
   if (CRM) qs.set('crm', CRM);
-  const API_URL = qs.toString() ? `${API_BASE}?${qs.toString()}` : API_BASE;  
+  const API_URL = qs.toString() ? `${API_BASE}?${qs.toString()}` : API_BASE;
 
+  /* ---------- Elements ---------- */
   const el = sel => document.querySelector(sel);
   const grid = el('#grid');
   const loader = el('#loader');
   const emptyState = el('#empty');
   const errState = el('#error');
+  const refreshBtn = el('#refreshBtn');
+  const toggleAutoBtn = el('#toggleAutoBtn');
+  const lastUpdated = el('#lastUpdated');
 
+  /* ---------- UI State Machine (fixes sticky "Loading orders…") ---------- */
+  function setUI(state) {
+    // state: 'loading' | 'ready' | 'empty' | 'error'
+    loader.hidden     = state !== 'loading';
+    grid.hidden       = state !== 'ready';
+    emptyState.hidden = state !== 'empty';
+    errState.hidden   = state !== 'error';
+  }
+
+  /* ---------- Auto refresh ---------- */
   let auto = true;
   let timer = null;
-  let fetching = false;
+  function startAuto(){ clearInterval(timer); timer = setInterval(fetchOrders, 5*60*1000); }
+  function stopAuto(){ clearInterval(timer); }
 
-  function setLoading(on){
-    loader.hidden = !on; grid.hidden = on;
-    emptyState.hidden = true; errState.hidden = true;
-  }
-  function setError(msg){
-    errState.textContent = msg || 'Could not load orders. Please try again.';
-    errState.hidden = false; loader.hidden = true; grid.hidden = true; emptyState.hidden = true;
-  }
-  function setEmpty(){
-    emptyState.hidden = false; loader.hidden = true; grid.hidden = true; errState.hidden = true;
-  }
-
+  /* ---------- Card label helpers ---------- */
   const LABEL_MAP = {
     DealerName: 'Dealer Name',
     MarketingPerson: 'Marketing Person',
@@ -183,7 +189,6 @@
               .replace(/([a-z])([A-Z])/g,'$1 $2')
               .replace(/^./, c => c.toUpperCase());
   }
-
   function isTruthyUrl(v){ return typeof v === 'string' && v.trim() !== ''; }
 
   function createKV(k, v){
@@ -193,138 +198,268 @@
     row.append(kEl, vEl); return row;
   }
 
-function createCard(order, index){
-  const card = document.createElement('article'); card.className = 'card';
+  /* ---------- Countdown helpers ---------- */
+  const countdownHandles = [];
+  function clearCountdowns(){ countdownHandles.forEach(clearInterval); countdownHandles.length = 0; }
 
-  const head = document.createElement('div'); head.className = 'head';
-  const title = document.createElement('h3'); title.className = 'title';
-  title.textContent = order.DealerName || `Order #${index+1}`;
-  const badge = document.createElement('div'); badge.className = 'badge';
-  badge.textContent = order.CRMName ? `CRM: ${order.CRMName}` : 'Order';
-  head.append(title, badge);
+  // Try to extract a Timeline timestamp from the row.
+  // Prefer common keys; fall back to any *time/ts* field (except dispatch) that parses as a date.
+  function extractTimelineMs(order){
+    const preferred = ['Timeline','timeline','timelineTs','timelineTS','timeLine','timeline_ts','KeyTimestamp','keyTimestamp','timeline_ms','TimelineMs'];
+    for(const k of preferred){
+      if (order[k] != null) {
+        const t = parseAnyTs(order[k]);
+        if (!isNaN(t)) return t;
+      }
+    }
+    // Fallback scan
+    for (const k of Object.keys(order)) {
+      if (/dispatch/i.test(k)) continue;           // avoid confusing with dispatchDate
+      if (/time|ts/i.test(k)) {
+        const t = parseAnyTs(order[k]);
+        if (!isNaN(t)) return t;
+      }
+    }
+    return NaN;
+  }
 
-  const body = document.createElement('div'); body.className = 'body';
-  const HIDDEN_KEYS = new Set(['FinalOrder','URLs','Key', 'Timestamp']);
-  Object.keys(order).forEach(key => {
-    if (!HIDDEN_KEYS.has(key)) body.appendChild(createKV(key, order[key]));
+  function parseAnyTs(v){
+    if (v == null) return NaN;
+    if (typeof v === 'number') {
+      // guess seconds vs ms
+      return v < 1e12 ? v * 1000 : v;
+    }
+    if (typeof v === 'string') {
+      const s = v.trim();
+      if (/^\d{10}$/.test(s)) return Number(s) * 1000;    // seconds
+      if (/^\d{13}$/.test(s)) return Number(s);           // ms
+      const d = new Date(s);
+      return d.getTime();
+    }
+    if (v instanceof Date) return v.getTime();
+    return NaN;
+  }
+
+  // Working hours: 09:30–18:30
+  // Rule:
+  // - If Timeline >= 18:05 → deadline = next working day 10:00
+  // - If 00:00:01–09:29:59 (early morning) → deadline = today 10:00
+  // - Else → deadline = Timeline + 30 minutes, clamped to ≤ 18:30
+  function computeDeadline(timelineDate){
+    const t = new Date(timelineDate); // local time
+    const y = t.getFullYear(), m = t.getMonth(), d = t.getDate();
+
+    const at = (hh, mm, ss=0) => new Date(y, m, d, hh, mm, ss, 0);
+    const start = at(9, 30);
+    const end    = at(18, 30);
+    const cutoff = at(18, 5);
+
+    // Early morning → 10:00 same day
+    if (t < start) {
+      const earlyStart = at(0,0,0);
+      // "after 12:00:00am" — treat 00:00:00 and onward as morning bucket
+      if (t >= earlyStart) return at(10, 0);
+    }
+    // After 18:05 → 10:00 next day
+    if (t >= cutoff) {
+      const next = new Date(y, m, d + 1, 10, 0, 0, 0);
+      return next;
+    }
+    // Normal window → +30 min, but not beyond 18:30
+    const plus30 = new Date(t.getTime() + 30 * 60 * 1000);
+    return plus30 > end ? end : plus30;
+  }
+
+  function fmtMMSS(ms){
+    const total = Math.max(0, Math.ceil(ms/1000));
+    const mm = String(Math.floor(total/60)).padStart(2,'0');
+    const ss = String(total%60).padStart(2,'0');
+    return `${mm}:${ss}`;
+  }
+
+  function startCountdown(el, deadline){
+    function tick(){
+      const now = Date.now();
+      const diff = deadline.getTime() - now;
+      if (diff <= 0){
+        el.textContent = '00:00';
+        el.closest('.badge')?.classList.add('overdue');
+        return;
+      }
+      el.textContent = fmtMMSS(diff);
+    }
+    tick();
+    const h = setInterval(tick, 1000);
+    countdownHandles.push(h);
+  }
+
+  /* ---------- Card builder (adds countdown badge) ---------- */
+  function createCard(order, index){
+    const card = document.createElement('article'); card.className = 'card';
+
+    const head = document.createElement('div'); head.className = 'head';
+
+    const title = document.createElement('h3'); title.className = 'title';
+    title.textContent = order.DealerName || `Order #${index+1}`;
+
+    const rightSide = document.createElement('div'); rightSide.style.display='flex'; rightSide.style.gap='8px'; rightSide.style.alignItems='center';
+
+    const crmBadge = document.createElement('div'); crmBadge.className = 'badge';
+    crmBadge.textContent = order.CRMName ? `CRM: ${order.CRMName}` : 'Order';
+
+    // Countdown badge (only if we can resolve a timeline)
+    const tlMs = extractTimelineMs(order);
+    let deadline = null;
+    let countdownBadge = null;
+
+    if (!isNaN(tlMs)) {
+      deadline = computeDeadline(new Date(tlMs));
+      countdownBadge = document.createElement('div'); countdownBadge.className = 'badge deadline';
+      const span = document.createElement('span'); span.className = 'countdown'; span.id = `cd-${index}`;
+      countdownBadge.innerHTML = 'Due in&nbsp;<span class="countdown" id="'+span.id+'">--:--</span>';
+      rightSide.append(countdownBadge);
+      // start ticking
+      startCountdown(span, deadline);
+    }
+
+    rightSide.append(crmBadge);
+    head.append(title, rightSide);
+
+    const body = document.createElement('div'); body.className = 'body';
+    const HIDDEN_KEYS = new Set(['FinalOrder','URLs','Key','Timestamp']); // keep your original hidden fields
+    Object.keys(order).forEach(key => {
+      if (!HIDDEN_KEYS.has(key)) body.appendChild(createKV(key, order[key]));
+    });
+
+    const actions = document.createElement('div'); actions.className='actions';
+
+    const finalUrl = order.FinalOrder || '';
+    const addlUrl = order.URLs || '';
+    const hasFinal = isTruthyUrl(finalUrl);
+    const hasAddl = !hasFinal && isTruthyUrl(addlUrl);
+
+    if(hasFinal){
+      const a = document.createElement('a'); a.href = finalUrl; a.target='_blank'; a.className='link-btn'; a.textContent = 'View Final Order';
+      actions.appendChild(a);
+    } else if(hasAddl){
+      const a = document.createElement('a'); a.href = addlUrl; a.target='_blank'; a.className='link-btn'; a.textContent = 'View Additional Order';
+      actions.appendChild(a);
+    }
+
+    // --- EDIT-ONLY: file input box ---
+    const fileBox = document.createElement('div'); fileBox.className='filebox';
+    fileBox.setAttribute('data-edit-only','');
+    const fileLabel = document.createElement('label'); fileLabel.textContent = 'Attach file'; fileLabel.setAttribute('for', `file-${index}`);
+    const fileInput = document.createElement('input'); fileInput.type='file'; fileInput.id=`file-${index}`;
+    fileBox.append(fileLabel, fileInput);
+    actions.appendChild(fileBox);
+
+    // --- EDIT-ONLY: submit row + button ---
+    const submitRow = document.createElement('div'); submitRow.className='submit-row';
+    submitRow.setAttribute('data-edit-only','');
+    const submitBtn = document.createElement('button'); submitBtn.className='btn';
+    if(hasFinal){ submitBtn.textContent = 'Submit Final Sales Order'; submitBtn.dataset.kind = 'final'; }
+    else if(hasAddl){ submitBtn.textContent = 'Submit Additional Sales Order'; submitBtn.dataset.kind = 'additional'; }
+    else { submitBtn.textContent = 'Submit Sales Order'; submitBtn.dataset.kind = 'generic'; }
+    submitRow.appendChild(submitBtn);
+    actions.appendChild(submitRow);
+
+    // Only wire up submit logic when NOT in view mode
+    if (!IS_VIEW_MODE) {
+      submitBtn.addEventListener('click', async () => {
+        try{
+          const file = fileInput.files?.[0] || null;
+          if(!file && !confirm('No file selected. Submit without attachment?')) return;
+
+          submitBtn.disabled = true; submitBtn.textContent = 'Submitting…';
+
+          // Build payload
+          const payload = { ...order, Key: order.Key };
+          let actionVal = 'submitOrder';
+          if(submitBtn.dataset.kind === 'final') actionVal = 'finalSalesOrder';
+          else if(submitBtn.dataset.kind === 'additional') actionVal = 'additionalSalesOrder';
+
+          const bodyData = { action: actionVal, payload };
+
+          if(file){
+            // Convert file to base64
+            const base64Data = await new Promise((resolve, reject) => {
+              const reader = new FileReader();
+              reader.onload = () => resolve(reader.result.split(',')[1]);
+              reader.onerror = reject;
+              reader.readAsDataURL(file);
+            });
+            bodyData.file = {
+              fileName: file.name,
+              fileType: file.type,
+              fileData: base64Data
+            };
+          }
+
+          await fetch(API_URL, {
+            method:'POST',
+            mode:'no-cors',
+            headers:{ 'Content-Type':'application/json' },
+            body: JSON.stringify(bodyData)
+          });
+          alert('Submitted successfully!');
+        }catch(err){
+          console.error(err);
+          alert('Submission failed: '+err.message);
+        }finally{
+          submitBtn.disabled = false;
+          submitBtn.textContent = submitBtn.dataset.kind === 'final' ? 'Submit Final Sales Order' :
+                                  (submitBtn.dataset.kind === 'additional' ? 'Submit Additional Sales Order' : 'Submit Sales Order');
+        }
+      });
+    }
+
+    card.append(head, body, document.createElement('div'), actions);
+    return card;
+  }
+
+  /* ---------- Render & fetch (uses UI state machine) ---------- */
+  async function fetchOrders(){
+    if (fetchOrders._busy) return;
+    fetchOrders._busy = true;
+    setUI('loading');
+    try{
+      const res = await fetch(API_URL);
+      if(!res.ok) throw new Error(`HTTP ${res.status}`);
+      const rows = await res.json();
+
+      clearCountdowns();
+      grid.innerHTML = '';
+
+      if (!Array.isArray(rows) || rows.length === 0){
+        setUI('empty');              // <- loader stays hidden, empty shown
+      } else {
+        rows.forEach((row,i)=> grid.appendChild(createCard(row,i)));
+        setUI('ready');              // <- loader hidden, grid visible
+      }
+      lastUpdated.textContent = 'Last updated: ' + new Date().toLocaleString();
+    }catch(err){
+      console.error(err);
+      setUI('error');                // <- loader hidden, error shown
+      errState.textContent = 'Could not load orders. Please try again. ' + (err?.message || '');
+    }finally{
+      fetchOrders._busy = false;
+    }
+  }
+
+  /* ---------- Buttons ---------- */
+  refreshBtn?.addEventListener('click', fetchOrders);
+  toggleAutoBtn?.addEventListener('click', () => {
+    auto = !auto;
+    toggleAutoBtn.textContent = 'Auto: ' + (auto ? 'On' : 'Off');
+    if (auto) startAuto(); else stopAuto();
   });
 
-  const actions = document.createElement('div'); actions.className='actions';
-
-  const finalUrl = order.FinalOrder || '';
-  const addlUrl = order.URLs || '';
-  const hasFinal = isTruthyUrl(finalUrl);
-  const hasAddl = !hasFinal && isTruthyUrl(addlUrl);
-
-  if(hasFinal){
-    const a = document.createElement('a'); a.href = finalUrl; a.target='_blank'; a.className='link-btn'; a.textContent = 'View Final Order';
-    actions.appendChild(a);
-  } else if(hasAddl){
-    const a = document.createElement('a'); a.href = addlUrl; a.target='_blank'; a.className='link-btn'; a.textContent = 'View Additional Order';
-    actions.appendChild(a);
-  }
-
-  // --- EDIT-ONLY: file input box ---
-  const fileBox = document.createElement('div'); fileBox.className='filebox';
-  fileBox.setAttribute('data-edit-only','');               // <-- hide in view mode
-  const fileLabel = document.createElement('label'); fileLabel.textContent = 'Attach file'; fileLabel.setAttribute('for', `file-${index}`);
-  const fileInput = document.createElement('input'); fileInput.type='file'; fileInput.id=`file-${index}`;
-  fileBox.append(fileLabel, fileInput);
-  actions.appendChild(fileBox);
-
-  // --- EDIT-ONLY: submit row + button ---
-  const submitRow = document.createElement('div'); submitRow.className='submit-row';
-  submitRow.setAttribute('data-edit-only','');             // <-- hide in view mode
-  const submitBtn = document.createElement('button'); submitBtn.className='btn';
-  if(hasFinal){ submitBtn.textContent = 'Submit Final Sales Order'; submitBtn.dataset.kind = 'final'; }
-  else if(hasAddl){ submitBtn.textContent = 'Submit Additional Sales Order'; submitBtn.dataset.kind = 'additional'; }
-  else { submitBtn.textContent = 'Submit Sales Order'; submitBtn.dataset.kind = 'generic'; }
-  submitRow.appendChild(submitBtn);
-  actions.appendChild(submitRow);
-
-  // Only wire up submit logic when NOT in view mode
-  if (!IS_VIEW_MODE) {
-    submitBtn.addEventListener('click', async () => {
-      try{
-        const file = fileInput.files?.[0] || null;
-        if(!file && !confirm('No file selected. Submit without attachment?')) return;
-
-        submitBtn.disabled = true; submitBtn.textContent = 'Submitting…';
-
-        // Build payload
-        const payload = { ...order, Key: order.Key };
-        let actionVal = 'submitOrder';
-        if(submitBtn.dataset.kind === 'final') actionVal = 'finalSalesOrder';
-        else if(submitBtn.dataset.kind === 'additional') actionVal = 'additionalSalesOrder';
-
-        const bodyData = { action: actionVal, payload };
-
-        if(file){
-          // Convert file to base64
-          const base64Data = await new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = () => resolve(reader.result.split(',')[1]);
-            reader.onerror = reject;
-            reader.readAsDataURL(file);
-          });
-          bodyData.file = {
-            fileName: file.name,
-            fileType: file.type,
-            fileData: base64Data
-          };
-        }
-
-        await fetch(API_URL, {
-          method:'POST',
-          mode:'no-cors',
-          headers:{ 'Content-Type':'application/json' },
-          body: JSON.stringify(bodyData)
-        });
-        alert('Submitted successfully!');
-      }catch(err){
-        console.error(err);
-        alert('Submission failed: '+err.message);
-      }finally{
-        submitBtn.disabled = false;
-        submitBtn.textContent = submitBtn.dataset.kind === 'final' ? 'Submit Final Sales Order' :
-                                (submitBtn.dataset.kind === 'additional' ? 'Submit Additional Sales Order' : 'Submit Sales Order');
-      }
-    });
-  }
-
-  card.append(head, body, document.createElement('div'), actions);
-  return card;
-}
-  
-async function fetchOrders(){
-  if(fetching) return;
-  fetching = true; setLoading(true);
-  try{
-    const res = await fetch(API_URL);
-    if(!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-    render(data);
-  }catch(err){
-    console.error(err); setError(err.message || 'Failed to fetch');
-  }finally{
-    fetching = false; setLoading(false);
-  }
-}
-
-  function render(rows){
-    grid.innerHTML = '';
-    if(!Array.isArray(rows) || rows.length===0){ setEmpty(); return; }
-    rows.forEach((row,i)=> grid.appendChild(createCard(row,i)));
-    grid.hidden = false; emptyState.hidden = true; errState.hidden = true;
-  }
-
-  function startAuto(){ clearInterval(timer); timer = setInterval(fetchOrders, 5*60*1000); }
-  function stopAuto(){ clearInterval(timer); }
-
-  // Initial load
+  /* ---------- Initial load ---------- */
   fetchOrders();
   startAuto();
 </script>
+
 <script src="js/viewOnly.js"></script>
 </body>
 </html>
