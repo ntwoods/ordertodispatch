@@ -187,7 +187,7 @@ function createCard(order, index){
   head.append(title, badge);
 
   const body = document.createElement('div'); body.className = 'body';
-  const HIDDEN_KEYS = new Set(['FinalOrder','URLs','keyTimestamp']);
+  const HIDDEN_KEYS = new Set(['FinalOrder','URLs','Key', 'Timestamp']);
   Object.keys(order).forEach(key => {
     if (!HIDDEN_KEYS.has(key)) body.appendChild(createKV(key, order[key]));
   });
