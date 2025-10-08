@@ -323,7 +323,7 @@ const createClaimCard = (request) => {
 
   const pQty = document.createElement('p');
   pQty.className = 'text-gray-700 text-xs';
-  pQty.innerHTML = `Quantity: <span class="font-medium">${String(request["Qty"]||'')}</span>`;
+  pQty.innerHTML = `Approved Quantity: <span class="font-medium">${String(request["Approved Qty"]||'')}</span>`;
 
   const pCrm = document.createElement('p');
   pCrm.className = 'text-gray-700 text-xs';
@@ -335,7 +335,7 @@ const createClaimCard = (request) => {
 
   const remarkBox = document.createElement('div');
   remarkBox.className = 'remark-box mt-3 p-2 bg-blue-50 border border-blue-200 rounded-md';
-  remarkBox.innerHTML = `<p class="text-xs font-semibold text-blue-800">Remark:</p>
+  remarkBox.innerHTML = `<p class="text-xs font-semibold text-blue-800">Owner's Remark:</p>
                          <p class="text-xs text-blue-700 italic">${String(request["Owner Remark"]||'')}</p>`;
 
   const btnRow = document.createElement('div');
@@ -526,7 +526,7 @@ const createClaimCard = (request) => {
                         const qty = card?.getAttribute("data-qty") || "";
                         const issue = card?.getAttribute("data-issue") || "";
                     
-                        const postUrl = 'https://script.google.com/macros/s/AKfycbwj3V9T0E7r9BWVbnlQSLrWuG-MZuKZ00iLfs9N0kB867_yUZhbCZeLn8G3S0ivnVI/exec'; 
+                        const postUrl = 'https://script.google.com/macros/s/AKfycbxKHLxhcxparrfNpCcC8jExol17fJjmL-uuMxia_uld7t8AcsMrDUxZkIrRT-GT9d1AJw/exec'; 
                         const payload = {
                             reqId: reqId,
                             supplierName: supplierName,
