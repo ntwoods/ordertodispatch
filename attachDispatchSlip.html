@@ -68,11 +68,6 @@
 
     .submit-row{display:flex; gap:8px; align-items:center; justify-content:space-between}
     .submit-row .btn{width:100%; font-size:12px; padding:10px}
-    /* Hide all elements marked as edit-only when in view mode */
-    .view-mode [data-edit-only] {
-      display: none !important;
-    }
-    
 
     .empty, .error, .loader{background:#fff; border:1px dashed #d8e6ff; color:var(--muted); padding:18px; border-radius:14px; text-align:center}
     .loader{display:flex; gap:10px; align-items:center; justify-content:center}
@@ -113,20 +108,7 @@
   </div>
 
 <script>
-  function getSearchParam(name) {
-    const url = new URL(window.location.href);
-    const v = url.searchParams.get(name);
-    return v ? v.trim() : "";
-    }
-  const MODE = getSearchParam('mode'); // optional: "view" or default
-  const CRM  = getSearchParam('crm');  // e.g. "Km Kalpana"
-  const IS_VIEW_MODE = (MODE || '').toLowerCase() === 'view';
-  if (IS_VIEW_MODE) document.documentElement.classList.add('view-mode');  
-
-  const API_BASE = "https://script.google.com/macros/s/AKfycbzIg93-NvjqrLEgr6zmk-weztixnBf1JiMko0wNkly9IQvdkU2LiUtgkbDcy99kCYZwQw/exec";
-  const qs = new URLSearchParams();
-  if (CRM) qs.set('crm', CRM);
-  const API_URL = qs.toString() ? `${API_BASE}?${qs.toString()}` : API_BASE;  
+  const API_URL = "https://script.google.com/macros/s/AKfycbzIg93-NvjqrLEgr6zmk-weztixnBf1JiMko0wNkly9IQvdkU2LiUtgkbDcy99kCYZwQw/exec";
 
   const el = sel => document.querySelector(sel);
   const grid = el('#grid');
@@ -176,57 +158,49 @@
     row.append(kEl, vEl); return row;
   }
 
-function createCard(order, index){
-  const card = document.createElement('article'); card.className = 'card';
+  function createCard(order, index){
+    const card = document.createElement('article'); card.className = 'card';
 
-  const head = document.createElement('div'); head.className = 'head';
-  const title = document.createElement('h3'); title.className = 'title';
-  title.textContent = order.DealerName || `Order #${index+1}`;
-  const badge = document.createElement('div'); badge.className = 'badge';
-  badge.textContent = order.CRMName ? `CRM: ${order.CRMName}` : 'Order';
-  head.append(title, badge);
+    const head = document.createElement('div'); head.className = 'head';
+    const title = document.createElement('h3'); title.className = 'title';
+    title.textContent = order.DealerName || `Order #${index+1}`;
+    const badge = document.createElement('div'); badge.className = 'badge';
+    badge.textContent = order.CRMName ? `CRM: ${order.CRMName}` : 'Order';
+    head.append(title, badge);
 
-  const body = document.createElement('div'); body.className = 'body';
-  const HIDDEN_KEYS = new Set(['FinalOrder','URLs','keyTimestamp']);
-  Object.keys(order).forEach(key => {
-    if (!HIDDEN_KEYS.has(key)) body.appendChild(createKV(key, order[key]));
-  });
+    const body = document.createElement('div'); body.className = 'body';
+    const HIDDEN_KEYS = new Set(['FinalOrder','URLs']);
+    Object.keys(order).forEach(key => {
+      if (!HIDDEN_KEYS.has(key)) body.appendChild(createKV(key, order[key]));
+    });
 
-  const actions = document.createElement('div'); actions.className='actions';
+    const actions = document.createElement('div'); actions.className='actions';
 
-  const finalUrl = order.FinalOrder || '';
-  const addlUrl = order.URLs || '';
-  const hasFinal = isTruthyUrl(finalUrl);
-  const hasAddl = !hasFinal && isTruthyUrl(addlUrl);
+    const finalUrl = order.FinalOrder || '';
+    const addlUrl = order.URLs || '';
+    const hasFinal = isTruthyUrl(finalUrl);
+    const hasAddl = !hasFinal && isTruthyUrl(addlUrl);
 
-  if(hasFinal){
-    const a = document.createElement('a'); a.href = finalUrl; a.target='_blank'; a.className='link-btn'; a.textContent = 'View Final Order';
-    actions.appendChild(a);
-  } else if(hasAddl){
-    const a = document.createElement('a'); a.href = addlUrl; a.target='_blank'; a.className='link-btn'; a.textContent = 'View Additional Order';
-    actions.appendChild(a);
-  }
+    if(hasFinal){
+      const a = document.createElement('a'); a.href = finalUrl; a.target='_blank'; a.className='link-btn'; a.textContent = 'View Final Order'; 
+      actions.appendChild(a);
+    } else if(hasAddl){
+      const a = document.createElement('a'); a.href = addlUrl; a.target='_blank'; a.className='link-btn'; a.textContent = 'View Additional Order'; 
+      actions.appendChild(a);
+    }
 
-  // --- EDIT-ONLY: file input box ---
-  const fileBox = document.createElement('div'); fileBox.className='filebox';
-  fileBox.setAttribute('data-edit-only','');               // <-- hide in view mode
-  const fileLabel = document.createElement('label'); fileLabel.textContent = 'Attach file'; fileLabel.setAttribute('for', `file-${index}`);
-  const fileInput = document.createElement('input'); fileInput.type='file'; fileInput.id=`file-${index}`;
-  fileBox.append(fileLabel, fileInput);
-  actions.appendChild(fileBox);
+    const fileBox = document.createElement('div'); fileBox.className='filebox';
+    const fileLabel = document.createElement('label'); fileLabel.textContent = 'Attach file'; fileLabel.setAttribute('for', `file-${index}`);
+    const fileInput = document.createElement('input'); fileInput.type='file'; fileInput.id=`file-${index}`;
+    fileBox.append(fileLabel, fileInput);
+    actions.appendChild(fileBox);
 
-  // --- EDIT-ONLY: submit row + button ---
-  const submitRow = document.createElement('div'); submitRow.className='submit-row';
-  submitRow.setAttribute('data-edit-only','');             // <-- hide in view mode
-  const submitBtn = document.createElement('button'); submitBtn.className='btn';
-  if(hasFinal){ submitBtn.textContent = 'Submit Final Sales Order'; submitBtn.dataset.kind = 'final'; }
-  else if(hasAddl){ submitBtn.textContent = 'Submit Additional Sales Order'; submitBtn.dataset.kind = 'additional'; }
-  else { submitBtn.textContent = 'Submit Sales Order'; submitBtn.dataset.kind = 'generic'; }
-  submitRow.appendChild(submitBtn);
-  actions.appendChild(submitRow);
+    const submitRow = document.createElement('div'); submitRow.className='submit-row';
+    const submitBtn = document.createElement('button'); submitBtn.className='btn';
+    if(hasFinal){ submitBtn.textContent = 'Submit Final Sales Order'; submitBtn.dataset.kind = 'final'; }
+    else if(hasAddl){ submitBtn.textContent = 'Submit Additional Sales Order'; submitBtn.dataset.kind = 'additional'; }
+    else { submitBtn.textContent = 'Submit Sales Order'; submitBtn.dataset.kind = 'generic'; }
 
-  // Only wire up submit logic when NOT in view mode
-  if (!IS_VIEW_MODE) {
     submitBtn.addEventListener('click', async () => {
       try{
         const file = fileInput.files?.[0] || null;
@@ -273,26 +247,27 @@ function createCard(order, index){
                                 (submitBtn.dataset.kind === 'additional' ? 'Submit Additional Sales Order' : 'Submit Sales Order');
       }
     });
-  }
 
-  card.append(head, body, document.createElement('div'), actions);
-  return card;
-}
-  
-async function fetchOrders(){
-  if(fetching) return;
-  fetching = true; setLoading(true);
-  try{
-    const res = await fetch(API_URL);
-    if(!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-    render(data);
-  }catch(err){
-    console.error(err); setError(err.message || 'Failed to fetch');
-  }finally{
-    fetching = false; setLoading(false);
+    submitRow.appendChild(submitBtn);
+    actions.appendChild(submitRow);
+
+    card.append(head, body, document.createElement('div'), actions);
+    return card;
+  }  
+  async function fetchOrders(){
+    if(fetching) return;
+    fetching = true; setLoading(true);
+    try{
+      const res = await fetch(API_URL);
+      if(!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      render(data);
+    }catch(err){
+      console.error(err); setError(err.message || 'Failed to fetch');
+    }finally{
+      fetching = false; setLoading(false);
+    }
   }
-}
 
   function render(rows){
     grid.innerHTML = '';
@@ -308,6 +283,5 @@ async function fetchOrders(){
   fetchOrders();
   startAuto();
 </script>
-<script src="js/viewOnly.js"></script>
 </body>
 </html>
