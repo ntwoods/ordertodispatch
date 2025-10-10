@@ -560,6 +560,10 @@ const buildItemsTable = (product, details, qty, issue) => {
             const ownerResponse = (item['Owner Response'] || '').toString().toLowerCase().trim();
             const ownerRemark = escapeHtml(item['Owner Remark'] || '');
             const ownersInformedAt = item['Owners Informed at'];
+            const encProducts = encodeURIComponent(item['Product'] || '');
+            const encDetails  = encodeURIComponent(item['Details'] || '');
+            const encQtys     = encodeURIComponent(item['Qty'] || '');
+              
         
             // Date parsing logic unchanged...
             let formattedDate = 'Unknown';
