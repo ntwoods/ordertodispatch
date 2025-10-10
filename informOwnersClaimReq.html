@@ -803,17 +803,30 @@ const buildItemsTable = (product, details, qty, issue) => {
 
     // Owner Response actions
     approveBtn.addEventListener('click', () => {
-        if (approvedQtyField.classList.contains('hidden')) {
-            approvedQtyInput.value = modal.dataset.claimQty || '';
-            approvedQtyField.classList.remove('hidden');
-            return;
-        }
-        if (!approvedQtyInput.value.trim()) {
-            alert('Approved Qty is required.');
-            return;
-        }
-        sendData({ action: 'approve', ownerRemark: ownerRemarkInput.value, reqId: modal.dataset.reqId, approvedQty: approvedQtyInput.value });
+      const tableWrap = document.getElementById('approved-qty-table');
+      const tbody = document.getElementById('approved-qty-rows');
+    
+      // First click -> build table and show
+      if (tableWrap.classList.contains('hidden')) {
+        const items = JSON.parse(modal.dataset.itemsJson || '[]');
+        buildPerItemApprovalRows(tbody, items);
+        tableWrap.classList.remove('hidden');
+        return;
+      }
+    
+      // Second click -> collect CSV and submit
+      try {
+        const approvedCsv = collectApprovedCsv(tbody);
+        sendData({
+          action: 'approve',
+          ownerRemark: ownerRemarkInput.value,
+          reqId: modal.dataset.reqId,
+          approvedQty: approvedCsv
+        });
         modal.classList.add('hidden');
+      } catch (e) {
+        alert(e.message || 'Please fill approved qty for all rows.');
+      }
     });
 
     verifyBtn.addEventListener('click', () => {
