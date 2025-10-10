@@ -769,18 +769,30 @@ const buildItemsTable = (product, details, qty, issue) => {
 
         const discussBtn = e.target.closest('.discuss-btn');
         if (discussBtn) {
-            discussModal.dataset.reqId = discussBtn.dataset.reqId;
-            discussModal.dataset.qty = discussBtn.dataset.qty;
-            discussRemark.value = '';
-            discussApprovedQtyField.classList.add('hidden');
+          discussModal.dataset.reqId = discussBtn.dataset.reqId;
+          discussRemark.value = '';
+          document.getElementById('discuss-approved-qty-table').classList.add('hidden');
+          document.getElementById('discuss-approved-qty-rows').innerHTML = '';
+          // show salesperson remark
+          const remarkText = discussBtn.dataset.salespersonRemark || 'No remark provided';
+          document.getElementById('discuss-salesperson-remark').textContent = remarkText;
         
-            // NEW: show salesperson remark in modal
-            const remarkText = discussBtn.dataset.salespersonRemark || 'No remark provided';
-            document.getElementById('discuss-salesperson-remark').textContent = remarkText;
+          // Prepare items for table
+          const P = decodeURIComponent(discussBtn.dataset.products || '').split(',').map(s => s.trim()).filter(Boolean);
+          const D = decodeURIComponent(discussBtn.dataset.details  || '').split(',').map(s => s.trim());
+          const Q = decodeURIComponent(discussBtn.dataset.qtycsv   || '').split(',').map(s => s.trim());
+          const max = Math.max(P.length, D.length, Q.length, 1);
+          const items = Array.from({length:max}, (_,i)=>({
+            p: escapeHtml(P[i] || ''),
+            d: escapeHtml(D[i] || ''),
+            q: escapeHtml(Q[i] || '')
+          }));
+          discussModal.dataset.itemsJson = JSON.stringify(items);
         
-            discussModal.classList.remove('hidden');
-            return;
+          discussModal.classList.remove('hidden');
+          return;
         }
+
     });
 
     // Close modals
