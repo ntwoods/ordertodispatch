@@ -572,47 +572,47 @@ tableWrap.appendChild(table);
 
 
             // Function to send the POST request
-                    const sendPostRequest = async (reqId, supplierName, supplierEmail) => {
-                        showLoader('Sending data to server...');
-                    
-                        // Find the card by reqId
-                        const card = document.querySelector(`.card[data-req-id="${reqId}"]`);
-                        const product = card?.getAttribute("data-product") || "";
-                        const qty = card?.getAttribute("data-qty") || "";
-                        const issue = card?.getAttribute("data-issue") || "";
-                        card.dataset.product = request["Product"] || '';
-                        card.dataset.qty = request["Approved Qty"] || '';
-                        card.dataset.issue = request["Issue"] || '';
-                        card.dataset.details = request["Details"] || '';   // NEW
-                        
-                    
-                        const postUrl = 'https://script.google.com/macros/s/AKfycbxKHLxhcxparrfNpCcC8jExol17fJjmL-uuMxia_uld7t8AcsMrDUxZkIrRT-GT9d1AJw/exec'; 
-                        const payload = {
-                            reqId: reqId,
-                            supplierName: supplierName,
-                            supplierEmail: supplierEmail,
-                            product: product,
-                            qty: qty,
-                            issue: issue
-                        };
-                    
-                        try {
-                            const response = await fetch(postUrl, {
-                                method: 'POST',
-                                mode: 'no-cors',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify(payload)
-                            });
-                    
-                            showMessageBox('Success!', `Submitted to server for REQ-ID ${reqId}.`);
-                            await loadRequests();
-                        } catch (error) {
-                            console.error('Error sending POST request:', error);
-                            showMessageBox('Error', 'Could not submit to server.');
-                        } finally {
-                            hideLoader();
-                        }
-                    };
+const sendPostRequest = async (reqId, supplierName, supplierEmail) => {
+  showLoader('Sending data to server...');
+
+  // Escape reqId for special characters to be safe in the selector
+  const card = document.querySelector(`.card[data-req-id="${CSS?.escape ? CSS.escape(reqId) : reqId}"]`);
+
+  const product = card?.dataset.product || "";
+  const qty     = card?.dataset.qty     || "";
+  const issue   = card?.dataset.issue   || "";
+  const details = card?.dataset.details || "";
+
+  const postUrl = 'https://script.google.com/macros/s/AKfycbxKHLxhcxparrfNpCcC8jExol17fJjmL-uuMxia_uld7t8AcsMrDUxZkIrRT-GT9d1AJw/exec';
+
+  const payload = {
+    reqId,
+    supplierName,
+    supplierEmail,
+    product,
+    qty,
+    issue,
+    details,            // include details if your backend expects it
+    action: 'supplierClaim'
+  };
+
+  try {
+    await fetch(postUrl, {
+      method: 'POST',
+      mode: 'no-cors',                   // opaque response; errors won’t throw here
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    showMessageBox('Success!', `Submitted to server for REQ-ID ${reqId}.`);
+    await loadRequests();
+  } catch (error) {
+    console.error('Error sending POST request:', error);
+    showMessageBox('Error', 'Could not submit to server.');
+  } finally {
+    hideLoader();
+  }
+};
 
 // ---------------------- NEW CODE FOR DEALER CLAIM START ----------------------
 
