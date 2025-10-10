@@ -851,18 +851,31 @@ const buildItemsTable = (product, details, qty, issue) => {
     });
 
     discussApproveBtn.addEventListener('click', () => {
-        if (!discussRemark.value.trim()) return alert('Remark is mandatory.');
-        if (discussApprovedQtyField.classList.contains('hidden')) {
-            discussApprovedQtyInput.value = discussModal.dataset.qty || '';
-            discussApprovedQtyField.classList.remove('hidden');
-            return;
-        }
-        if (!discussApprovedQtyInput.value.trim()) {
-            alert('Approved Qty is required.');
-            return;
-        }
-        sendData({ action: 'approveVerification', ownerRemark: discussRemark.value, reqId: discussModal.dataset.reqId, approvedQty: discussApprovedQtyInput.value });
+      if (!discussRemark.value.trim()) return alert('Remark is mandatory.');
+      const tableWrap = document.getElementById('discuss-approved-qty-table');
+      const tbody = document.getElementById('discuss-approved-qty-rows');
+    
+      // First click -> build table and show
+      if (tableWrap.classList.contains('hidden')) {
+        const items = JSON.parse(discussModal.dataset.itemsJson || '[]');
+        buildPerItemApprovalRows(tbody, items);
+        tableWrap.classList.remove('hidden');
+        return;
+      }
+    
+      // Second click -> collect CSV and submit
+      try {
+        const approvedCsv = collectApprovedCsv(tbody);
+        sendData({
+          action: 'approveVerification',
+          ownerRemark: discussRemark.value,
+          reqId: discussModal.dataset.reqId,
+          approvedQty: approvedCsv
+        });
         discussModal.classList.add('hidden');
+      } catch (e) {
+        alert(e.message || 'Please fill approved qty for all rows.');
+      }
     });
 
     // Verification report submit
