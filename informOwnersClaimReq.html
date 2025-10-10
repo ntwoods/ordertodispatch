@@ -413,6 +413,29 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
 // --- helpers for CSV -> table ---
+// Build a per-item approval table into a <tbody> element.
+// items = [{p, d, q}] and it creates <input> fields with .approved-input class
+const buildPerItemApprovalRows = (tbodyEl, items) => {
+  tbodyEl.innerHTML = items.map(({p,d,q}, i) => `
+    <tr class="odd:bg-white even:bg-slate-50">
+      <td class="px-3 py-2 align-top border-b border-slate-200">${p}</td>
+      <td class="px-3 py-2 align-top border-b border-slate-200 whitespace-pre-wrap">${d}</td>
+      <td class="px-3 py-2 align-top border-b border-slate-200">${q}</td>
+      <td class="px-3 py-2 align-top border-b border-slate-200">
+        <input type="number" min="0" step="any" value="${q}" data-index="${i}"
+               class="approved-input w-28 px-2 py-1 border border-gray-300 rounded bg-gray-50 focus:ring-blue-500 focus:border-blue-500"/>
+      </td>
+    </tr>
+  `).join('');
+};
+
+// Turn inputs in a container (with .approved-input) into a CSV string
+const collectApprovedCsv = (containerEl) => {
+  const vals = Array.from(containerEl.querySelectorAll('.approved-input')).map(i => (i.value ?? '').toString().trim());
+  if (vals.some(v => v === '' || isNaN(Number(v)))) throw new Error('Please enter approved qty for all rows.');
+  return vals.join(', ');
+};
+    
 const splitCsv = (val) =>
   String(val ?? "")
     .split(",")
