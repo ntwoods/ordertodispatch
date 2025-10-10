@@ -341,21 +341,9 @@ const createClaimCard = (request) => {
   h2.className = 'text-base font-bold text-blue-900 mt-1';
   h2.textContent = request["Dealer Name"] || '';
 
-  const pProduct = document.createElement('p');
-  pProduct.className = 'text-gray-700 text-xs mt-1';
-  pProduct.innerHTML = `Product: <span class="font-medium">${String(request["Product"]||'')}</span>`;
-
-  const pQty = document.createElement('p');
-  pQty.className = 'text-gray-700 text-xs';
-  pQty.innerHTML = `Approved Quantity: <span class="font-medium">${String(request["Approved Qty"]||'')}</span>`;
-
   const pCrm = document.createElement('p');
   pCrm.className = 'text-gray-700 text-xs';
   pCrm.innerHTML = `CRM: <span class="font-medium">${String(request["CRM Name"]||'')}</span>`;
-
-  const pIssue = document.createElement('p');
-  pIssue.className = 'text-gray-700 text-xs';
-  pIssue.innerHTML = `Issue: <span class="font-medium">${String(request["Issue"]||'')}</span>`;
 
   const remarkBox = document.createElement('div');
   remarkBox.className = 'remark-box mt-3 p-2 bg-blue-50 border border-blue-200 rounded-md';
