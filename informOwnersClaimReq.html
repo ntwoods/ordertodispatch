@@ -728,15 +728,33 @@ const buildItemsTable = (product, details, qty, issue) => {
     cardContainer.addEventListener('click', (e) => {
         const ownersBtn = e.target.closest('.owners-informed-btn');
         if (ownersBtn) {
-            modal.dataset.reqId = ownersBtn.dataset.reqId;
-            modal.dataset.claimQty = ownersBtn.dataset.qty || '';
-            marketingPersonField.classList.add('hidden');
-            approvedQtyField.classList.add('hidden');
-            ownerRemarkInput.value = '';
-            marketingPersonNameInput.value = '';
-            approvedQtyInput.value = ownersBtn.dataset.qty || '';
-            modal.classList.remove('hidden');
-            return;
+          modal.dataset.reqId = ownersBtn.dataset.reqId;
+        
+          // Decode CSVs
+          const P = decodeURIComponent(ownersBtn.dataset.products || '').split(',').map(s => s.trim()).filter(Boolean);
+          const D = decodeURIComponent(ownersBtn.dataset.details  || '').split(',').map(s => s.trim());
+          const Q = decodeURIComponent(ownersBtn.dataset.qtycsv   || '').split(',').map(s => s.trim());
+        
+          // Zip to items (keep lengths aligned)
+          const max = Math.max(P.length, D.length, Q.length, 1);
+          const items = Array.from({length:max}, (_,i)=>({
+            p: escapeHtml(P[i] || ''),
+            d: escapeHtml(D[i] || ''),
+            q: escapeHtml(Q[i] || '')
+          }));
+        
+          // Show per-item table; hide verify person field
+          marketingPersonField.classList.add('hidden');
+          document.getElementById('approved-qty-table').classList.add('hidden');   // hidden until Approve clicked first time
+          document.getElementById('approved-qty-rows').innerHTML = '';             // clear
+          ownerRemarkInput.value = '';
+          marketingPersonNameInput.value = '';
+        
+          // Stash JSON for later (approve click will build rows on first click)
+          modal.dataset.itemsJson = JSON.stringify(items);
+        
+          modal.classList.remove('hidden');
+          return;
         }
 
         const verificationBtn = e.target.closest('.submit-verification-btn');
