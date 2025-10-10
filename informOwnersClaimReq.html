@@ -387,6 +387,61 @@ document.addEventListener('DOMContentLoaded', () => {
         update();
     };
 
+// --- helpers for CSV -> table ---
+const splitCsv = (val) =>
+  String(val ?? "")
+    .split(",")
+    .map(s => s.trim())
+    .filter(s => s.length > 0);
+
+const zipLongest = (arrays) => {
+  const max = Math.max(...arrays.map(a => a.length || 1)) || 1;
+  const out = [];
+  for (let i = 0; i < max; i++) {
+    out.push(arrays.map(a => (a && a[i] !== undefined ? a[i] : "")));
+  }
+  return out;
+};
+
+const buildItemsTable = (product, details, qty, issue) => {
+  const P = splitCsv(product);
+  const D = splitCsv(details);
+  const Q = splitCsv(qty);
+  const I = splitCsv(issue);
+
+  const rows = zipLongest([P, D, Q, I]).map(row =>
+    row.map(cell => escapeHtml(cell))
+  );
+
+  return `
+    <div class="mt-3 overflow-x-auto">
+      <table class="min-w-full border border-slate-200 rounded-lg overflow-hidden">
+        <thead>
+          <tr class="bg-slate-50 text-slate-700 text-xs">
+            <th class="px-3 py-2 text-left font-semibold border-b border-slate-200">Product</th>
+            <th class="px-3 py-2 text-left font-semibold border-b border-slate-200">Details</th>
+            <th class="px-3 py-2 text-left font-semibold border-b border-slate-200">Qty</th>
+            <th class="px-3 py-2 text-left font-semibold border-b border-slate-200">Issue</th>
+          </tr>
+        </thead>
+        <tbody class="text-sm text-slate-700">
+          ${rows
+            .map(
+              r => `
+              <tr class="odd:bg-white even:bg-slate-50">
+                <td class="px-3 py-2 align-top border-b border-slate-200">${r[0] || ""}</td>
+                <td class="px-3 py-2 align-top border-b border-slate-200 whitespace-pre-wrap">${r[1] || ""}</td>
+                <td class="px-3 py-2 align-top border-b border-slate-200">${r[2] || ""}</td>
+                <td class="px-3 py-2 align-top border-b border-slate-200 whitespace-pre-wrap">${r[3] || ""}</td>
+              </tr>`
+            )
+            .join("")}
+        </tbody>
+      </table>
+    </div>
+  `;
+};
+
     const displayCards = (data) => {
         cardContainer.innerHTML = '';
         if (!Array.isArray(data) || data.length === 0) {
