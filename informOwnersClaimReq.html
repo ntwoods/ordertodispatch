@@ -593,9 +593,14 @@ const buildItemsTable = (product, details, qty, issue) => {
             let colorClass = 'bg-white';
             let footerHtml = `
               <button class="owners-informed-btn w-full px-4 py-2 text-sm font-semibold text-white bg-blue-500 rounded-lg hover:bg-blue-600 transition-colors shadow-md"
-                      data-req-id="${reqId}" data-qty="${onlyNumber(qty)}">
+                      data-req-id="${reqId}"
+                      data-qty="${onlyNumber(qty)}"
+                      data-products="${encProducts}"
+                      data-details="${encDetails}"
+                      data-qtycsv="${encQtys}">
                 <i class="fas fa-bullhorn mr-2"></i>Owners Informed
               </button>`;
+
         
             let statusTagHtml = '';
         
