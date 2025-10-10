@@ -328,10 +328,15 @@
 const createClaimCard = (request) => {
   const card = document.createElement('div');
   card.className = 'card p-4 rounded-lg shadow-md hover:shadow-lg';
-  card.dataset.reqId = request["REQ-ID"] || '';
-  card.dataset.product = request["Product"] || '';
-  card.dataset.qty = request["Qty"] || '';
-  card.dataset.issue = request["Issue"] || '';
+// in createClaimCard(...)
+card.dataset.reqId   = request["REQ-ID"] || '';
+card.dataset.product = request["Product"] || '';
+card.dataset.qty     = request["Approved Qty"] || ''; // use Approved Qty in email/table
+card.dataset.issue   = request["Issue"] || '';
+card.dataset.details = request["Details"] || '';      // NEW: send to server for Details column
+card.dataset.remark  = request["Remark"] || '';       // NEW: used for Remark paragraph
+card.dataset.invoice = request["Invoice No"] || '';   // NEW: used for subject + intro sentence
+
 
   const pReq = document.createElement('p');
   pReq.className = 'text-xs font-semibold text-gray-500 mb-1';
@@ -575,31 +580,35 @@ tableWrap.appendChild(table);
 const sendPostRequest = async (reqId, supplierName, supplierEmail) => {
   showLoader('Sending data to server...');
 
-  // Escape reqId for special characters to be safe in the selector
-  const card = document.querySelector(`.card[data-req-id="${CSS?.escape ? CSS.escape(reqId) : reqId}"]`);
+  const safeId = CSS?.escape ? CSS.escape(reqId) : reqId;
+  const card = document.querySelector(`.card[data-req-id="${safeId}"]`);
 
   const product = card?.dataset.product || "";
-  const qty     = card?.dataset.qty     || "";
+  const qty     = card?.dataset.qty     || "";   // approved qty CSV
   const issue   = card?.dataset.issue   || "";
-  const details = card?.dataset.details || "";
+  const details = card?.dataset.details || "";   // CSV for table
+  const remark  = card?.dataset.remark  || "";   // remark paragraph
+  const invoice = card?.dataset.invoice || "";   // subject + intro line
 
   const postUrl = 'https://script.google.com/macros/s/AKfycbxKHLxhcxparrfNpCcC8jExol17fJjmL-uuMxia_uld7t8AcsMrDUxZkIrRT-GT9d1AJw/exec';
 
   const payload = {
+    action: 'supplierClaim',
     reqId,
     supplierName,
     supplierEmail,
-    product,
-    qty,
-    issue,
-    details,            // include details if your backend expects it
-    action: 'supplierClaim'
+    product,          // CSV: "P1, P2"
+    details,          // CSV: "Detail-1, Detail-2"
+    qty,              // CSV: "1, 2"
+    issue,            // CSV
+    remark,           // shown after table when not blank
+    invoiceNo: invoice// included in subject + intro when not blank
   };
 
   try {
     await fetch(postUrl, {
       method: 'POST',
-      mode: 'no-cors',                   // opaque response; errors won’t throw here
+      mode: 'no-cors',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     });
@@ -613,7 +622,6 @@ const sendPostRequest = async (reqId, supplierName, supplierEmail) => {
     hideLoader();
   }
 };
-
 // ---------------------- NEW CODE FOR DEALER CLAIM START ----------------------
 
             // Handle "Dealer Claim" button click on the card
