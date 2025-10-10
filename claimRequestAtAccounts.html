@@ -549,6 +549,11 @@ const createClaimCard = (request) => {
                         const product = card?.getAttribute("data-product") || "";
                         const qty = card?.getAttribute("data-qty") || "";
                         const issue = card?.getAttribute("data-issue") || "";
+                        card.dataset.product = request["Product"] || '';
+                        card.dataset.qty = request["Approved Qty"] || '';
+                        card.dataset.issue = request["Issue"] || '';
+                        card.dataset.details = request["Details"] || '';   // NEW
+                        
                     
                         const postUrl = 'https://script.google.com/macros/s/AKfycbxKHLxhcxparrfNpCcC8jExol17fJjmL-uuMxia_uld7t8AcsMrDUxZkIrRT-GT9d1AJw/exec'; 
                         const payload = {
