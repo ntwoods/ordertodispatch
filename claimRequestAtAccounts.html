@@ -624,145 +624,44 @@ const sendPostRequest = async (reqId, supplierName, supplierEmail) => {
 };
 // ---------------------- NEW CODE FOR DEALER CLAIM START ----------------------
 
-            // Handle "Dealer Claim" button click on the card
-            requestsContainer.addEventListener('click', async (e) => {
-                const btn = e.target.closest('.btn-dealer');
-                if (!btn) return;
+// Handle "Dealer Claim" button: send immediately without CN prompt
+requestsContainer.addEventListener('click', async (e) => {
+  const btn = e.target.closest('.btn-dealer');
+  if (!btn) return;
 
-                const reqId = btn.getAttribute('data-id');
-                const card = btn.closest('.card');
-                
-                // Check if a form already exists to prevent duplicates
-                if (card.querySelector('.cn-input-form')) {
-                    return;
-                }
+  const reqId = btn.getAttribute('data-id');
+  if (!reqId) return;
 
-                // Hide the original buttons
-                const btnRow = card.querySelector('.flex.mt-4');
-                btnRow.style.display = 'none';
+  await sendDealerClaimRequest(reqId);
+});
 
-                // Create the input form
-                const formHtml = `
-                    <div class="cn-input-form mt-4">
-                        <label for="cn-input-${reqId}" class="block text-xs font-semibold text-gray-700 mb-1">Enter CN No.:</label>
-                        <div class="flex items-center space-x-2">
-                            <input type="text" id="cn-input-${reqId}" class="flex-grow px-2 py-1 border border-gray-300 rounded-md text-xs focus:outline-none focus:ring-1 focus:ring-blue-500" placeholder="e.g., CN12345" required>
-                            <button class="btn bg-blue-600 hover:bg-blue-700 text-white text-xs px-3 py-1.5 rounded-md" data-req-id="${reqId}" id="submit-cn-btn">
-                                <i class="fas fa-paper-plane mr-1"></i> Submit
-                            </button>
-                        </div>
-                    </div>
-                `;
+// POST: dealerClaim without CN No. prompt
+const sendDealerClaimRequest = async (reqId) => {
+  showLoader('Submitting dealer claim...');
+  const postUrl = 'https://script.google.com/macros/s/AKfycbxKHLxhcxparrfNpCcC8jExol17fJjmL-uuMxia_uld7t8AcsMrDUxZkIrRT-GT9d1AJw/exec';
 
-                // Append the form to the card
-                // FIX: Select the element with the class "remark-box"
-                const remarkBox = card.querySelector('.remark-box');
-                if (remarkBox) {
-                    remarkBox.insertAdjacentHTML('afterend', formHtml);
-                } else {
-                    console.error('Remark box element not found.');
-                    return;
-                }
+  const payload = {
+    reqId: reqId,
+    action: 'dealerClaim'
+  };
 
-                // Event listener for the new submit button
-                // Use a delegated event listener on the requestsContainer to handle dynamically created buttons
-                requestsContainer.querySelector(`#submit-cn-btn[data-req-id="${reqId}"]`).addEventListener('click', async (submitEvent) => {
-                    submitEvent.preventDefault();
-                    const cnInput = document.getElementById(`cn-input-${reqId}`);
-                    const cnNo = cnInput.value.trim();
+  try {
+    await fetch(postUrl, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
 
-                    if (cnNo === '') {
-                        showMessageBox('Validation Error', 'Please enter a Credit Note number.');
-                        return;
-                    }
-
-                    await sendDealerClaimRequest(reqId, cnNo);
-
-                    // Clean up the card UI after submission
-                    card.querySelector('.cn-input-form').remove();
-                    btnRow.style.display = 'flex';
-                });
-            });
-
-            // Function to send the POST request for dealer claims
-            const sendDealerClaimRequest = async (reqId, cnNo) => {
-                showLoader('Submitting CN No. for dealer claim...');
-                const postUrl = 'https://script.google.com/macros/s/AKfycbxKHLxhcxparrfNpCcC8jExol17fJjmL-uuMxia_uld7t8AcsMrDUxZkIrRT-GT9d1AJw/exec';
-                const payload = {
-                    reqId: reqId,
-                    cnNo: cnNo,
-                    action: 'dealerClaim'
-                };
-
-                try {
-                    const response = await fetch(postUrl, {
-                        method: 'POST',
-                        mode: 'no-cors',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                    });
-
-                    showMessageBox('Success!', `CN No. ${cnNo} submitted for REQ-ID ${reqId}.`);
-                    await loadRequests(); // Reload the list to reflect the change
-                } catch (error) {
-                    console.error('Error sending dealer claim POST request:', error);
-                    showMessageBox('Error', 'Could not submit dealer claim to server.');
-                } finally {
-                    hideLoader();
-                }
-            };
-// Add this event listener within the main 'DOMContentLoaded' block
-        requestsContainer.addEventListener('click', async (e) => {
-            const clearBtn = e.target.closest('.btn-clear');
-            if (!clearBtn) return;
-        
-            const reqId = clearBtn.getAttribute('data-id');
-        
-            // Prompt for Dealer Claim
-            const dealerClaimCleared = confirm("Have you cleared Dealer Claim?");
-            if (!dealerClaimCleared) {
-                showMessageBox('Action Required', 'Clear dealer claim first');
-                return;
-            }
-        
-            // Prompt for Supplier Claim
-            const supplierClaimCleared = confirm("Have you cleared Supplier Claim?");
-            if (!supplierClaimCleared) {
-                showMessageBox('Action Required', 'Clear Supplier Claim first');
-                return;
-            }
-        
-            // If both are cleared, send the POST request
-            await sendClearRequest(reqId);
-        });
-        
-        // Add this function within the main script block
-        const sendClearRequest = async (reqId) => {
-            showLoader('Clearing the claim request...');
-            const postUrl = 'https://script.google.com/macros/s/AKfycbxKHLxhcxparrfNpCcC8jExol17fJjmL-uuMxia_uld7t8AcsMrDUxZkIrRT-GT9d1AJw/exec';
-            const payload = {
-                reqId: reqId,
-                action: 'clear'
-            };
-        
-            try {
-                const response = await fetch(postUrl, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-        
-                showMessageBox('Success!', `Request ID ${reqId} has been cleared.`);
-                await loadRequests();
-            } catch (error) {
-                console.error('Error sending clear request:', error);
-                showMessageBox('Error', 'Could not clear claim on the server.');
-            } finally {
-                hideLoader();
-            }
-        };
-            
+    showMessageBox('Success!', `Dealer claim submitted for REQ-ID ${reqId}.`);
+    await loadRequests(); // refresh the list/cards
+  } catch (error) {
+    console.error('Error sending dealer claim POST request:', error);
+    showMessageBox('Error', 'Could not submit dealer claim to server.');
+  } finally {
+    hideLoader();
+  }
+};
 
 // ---------------------- NEW CODE FOR DEALER CLAIM END ----------------------
 
