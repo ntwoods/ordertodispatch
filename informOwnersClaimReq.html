@@ -630,13 +630,14 @@ const buildItemsTable = (product, details, qty, issue) => {
                   colorClass = 'bg-blue-100 border-blue-400';
                   const salespersonRemark = escapeHtml(item['Marketing Person Remark'] || '');
                   footerHtml = `
-                    <button class="discuss-btn w-full px-4 py-2 text-sm font-semibold text-white bg-blue-500 rounded-lg hover:bg-blue-600 transition-colors shadow-md">
-                            data-req-id="${reqId}" 
-                            data-qty="${onlyNumber(qty)}"
-                            data-salesperson-remark="${salespersonRemark}">
-                            data-products="${encProducts}"
-                            data-details="${encDetails}"
-                            data-qtycsv="${encQtys}"                            
+                    <button
+                      class="discuss-btn w-full px-4 py-2 text-sm font-semibold text-white bg-blue-500 rounded-lg hover:bg-blue-600 transition-colors shadow-md"
+                      data-req-id="${reqId}"
+                      data-qty="${onlyNumber(qty)}"
+                      data-salesperson-remark="${salespersonRemark}"
+                      data-products="${encProducts}"
+                      data-details="${encDetails}"
+                      data-qtycsv="${encQtys}">
                       <i class="fas fa-comments mr-2"></i>Discuss Verification Report with Owners
                     </button>`;
                   statusTagHtml = '<div class="mt-2 text-sm font-semibold text-gray-700">🛈 Report Submitted</div>';
