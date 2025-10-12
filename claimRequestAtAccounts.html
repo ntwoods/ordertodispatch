@@ -262,10 +262,10 @@
                     loaderOverlay.classList.add('hidden');
                 }, 300);
             };
-
+            const API_URL = 'https://script.google.com/macros/s/AKfycbz0AMQP0qbmcpDl85pjfhF-0B1PW1GxQz_qRJj0ShDS0Pf4-CgVjslrY8CFmfX_hbzdeg/exec';
             // Function to fetch actual claim requests from the Apps Script API
             const getClaimRequests = async () => {
-                const apiUrl = 'https://script.google.com/macros/s/AKfycbz0AMQP0qbmcpDl85pjfhF-0B1PW1GxQz_qRJj0ShDS0Pf4-CgVjslrY8CFmfX_hbzdeg/exec';
+                const apiUrl = API_URL;
                 try {
                     const response = await fetch(apiUrl);
                     if (!response.ok) {
@@ -590,7 +590,7 @@ const sendPostRequest = async (reqId, supplierName, supplierEmail) => {
   const remark  = card?.dataset.remark  || "";   // remark paragraph
   const invoice = card?.dataset.invoice || "";   // subject + intro line
 
-  const postUrl = 'https://script.google.com/macros/s/AKfycbz0AMQP0qbmcpDl85pjfhF-0B1PW1GxQz_qRJj0ShDS0Pf4-CgVjslrY8CFmfX_hbzdeg/exec';
+  const postUrl = API_URL;
 
   const payload = {
     action: 'supplierClaim',
@@ -687,7 +687,7 @@ const sendPostRequest = async (reqId, supplierName, supplierEmail) => {
             // Function to send the POST request for dealer claims
             const sendDealerClaimRequest = async (reqId, cnNo) => {
                 showLoader('Submitting CN No. for dealer claim...');
-                const postUrl = 'https://script.google.com/macros/s/AKfycbz0AMQP0qbmcpDl85pjfhF-0B1PW1GxQz_qRJj0ShDS0Pf4-CgVjslrY8CFmfX_hbzdeg/exec';
+                const postUrl = API_URL;
                 const payload = {
                     reqId: reqId,
                     cnNo: cnNo,
@@ -739,7 +739,7 @@ const sendPostRequest = async (reqId, supplierName, supplierEmail) => {
         // Add this function within the main script block
         const sendClearRequest = async (reqId) => {
             showLoader('Clearing the claim request...');
-            const postUrl = 'https://script.google.com/macros/s/AKfycbxKHLxhcxparrfNpCcC8jExol17fJjmL-uuMxia_uld7t8AcsMrDUxZkIrRT-GT9d1AJw/exec';
+            const postUrl = API_URL;
             const payload = {
                 reqId: reqId,
                 action: 'clear'
