@@ -22,6 +22,11 @@
             max-width: 1200px;
             margin: 0 auto;
         }
+		.gola-section {
+			margin-top: 15px;
+			margin-bottom: 15px;
+		}
+		
 
         h1 {
             text-align: center;
@@ -482,6 +487,15 @@
                                 <label class="remark-label">Remark:</label>
                                 <input type="text" class="remark-input" id="remark-${index}" placeholder="Enter remark here">
                             </div>
+							<div class="gola-section">
+							    <label class="remark-label">Gola Options:</label>
+							    <select class="remark-input" id="gola-${index}" required>
+							        <option value="" disabled selected>Select Gola Option</option>
+							        <option value="GOLA">GOLA</option>
+							        <option value="NON-GOLA">NON-GOLA</option>
+							    </select>
+							</div>
+							
                             <div class="radio-section">
                                 <label class="radio-label">Status:</label>
                                 <div class="radio-group">
@@ -667,6 +681,7 @@ async function submitOrder(orderIndex, actionType) {
     const holdUntilInput = document.getElementById(`hold-until-${orderIndex}`);
     const holdUntilRemark = document.getElementById(`hold-until-remark-${orderIndex}`);
     const remarkInput = document.getElementById(`remark-${orderIndex}`); // Get the new remark input
+	const golaSelect = document.getElementById(`gola-${orderIndex}`);
     const successMessage = document.getElementById(`success-${orderIndex}`);
     const errorMessage = document.getElementById(`error-${orderIndex}`);
 
@@ -691,6 +706,7 @@ async function submitOrder(orderIndex, actionType) {
         location: orders[orderIndex].location,
         holdRemark: holdUntilRemark.value,
         remark: remarkInput.value, // Add the new remark to the payload
+		golaOption: golaSelect.value,
         crmName: orders[orderIndex].crmName,
         ownersInformed: ownersInformedRadio ? ownersInformedRadio.value : ''
     };
@@ -698,7 +714,10 @@ async function submitOrder(orderIndex, actionType) {
     try {
         if (actionType === 'Approve') {
             approveBtn.textContent = 'Converting & Approving...';
-
+		if (!golaSelect.value) {
+		    alert('Please select a Gola Option before proceeding.');
+		    throw new Error('Gola Option is required');
+		}	
             if (!fileInput.files.length) {
                 alert('Please attach a file before approving.');
                 throw new Error('File is required for approval');
