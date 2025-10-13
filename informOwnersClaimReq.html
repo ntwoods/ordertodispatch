@@ -451,15 +451,19 @@ const zipLongest = (arrays) => {
   return out;
 };
 
-const buildItemsTable = (product, details, qty, issue) => {
+const buildItemsTable = (product, details, qty, issue, approvedQty = '') => {
   const P = splitCsv(product);
   const D = splitCsv(details);
   const Q = splitCsv(qty);
   const I = splitCsv(issue);
+  const A = splitCsv(approvedQty);
 
-  const rows = zipLongest([P, D, Q, I]).map(row =>
+  const rows = zipLongest([P, D, Q, I, A]).map(row =>
     row.map(cell => escapeHtml(cell))
   );
+
+  // Determine if Approved Qty column should appear
+  const showApproved = A.length > 0 && A.some(v => v.trim() !== '');
 
   return `
     <div class="mt-3 overflow-x-auto">
@@ -470,20 +474,18 @@ const buildItemsTable = (product, details, qty, issue) => {
             <th class="px-3 py-2 text-left font-semibold border-b border-slate-200">Details</th>
             <th class="px-3 py-2 text-left font-semibold border-b border-slate-200">Qty</th>
             <th class="px-3 py-2 text-left font-semibold border-b border-slate-200">Issue</th>
+            ${showApproved ? `<th class="px-3 py-2 text-left font-semibold border-b border-slate-200">Approved Qty</th>` : ''}
           </tr>
         </thead>
         <tbody class="text-sm text-slate-700">
-          ${rows
-            .map(
-              r => `
-              <tr class="odd:bg-white even:bg-slate-50">
-                <td class="px-3 py-2 align-top border-b border-slate-200">${r[0] || ""}</td>
-                <td class="px-3 py-2 align-top border-b border-slate-200 whitespace-pre-wrap">${r[1] || ""}</td>
-                <td class="px-3 py-2 align-top border-b border-slate-200">${r[2] || ""}</td>
-                <td class="px-3 py-2 align-top border-b border-slate-200 whitespace-pre-wrap">${r[3] || ""}</td>
-              </tr>`
-            )
-            .join("")}
+          ${rows.map(r => `
+            <tr class="odd:bg-white even:bg-slate-50">
+              <td class="px-3 py-2 align-top border-b border-slate-200">${r[0] || ''}</td>
+              <td class="px-3 py-2 align-top border-b border-slate-200 whitespace-pre-wrap">${r[1] || ''}</td>
+              <td class="px-3 py-2 align-top border-b border-slate-200">${r[2] || ''}</td>
+              <td class="px-3 py-2 align-top border-b border-slate-200 whitespace-pre-wrap">${r[3] || ''}</td>
+              ${showApproved ? `<td class="px-3 py-2 align-top border-b border-slate-200">${r[4] || ''}</td>` : ''}
+            </tr>`).join('')}
         </tbody>
       </table>
     </div>
@@ -691,7 +693,14 @@ const buildItemsTable = (product, details, qty, issue) => {
             }
         
             // Build the table for Product / Details / Qty / Issue
-            const itemsTableHtml = buildItemsTable(item['Product'], item['Details'], item['Qty'], item['Issue']);
+            const itemsTableHtml = buildItemsTable(
+              item['Product'],
+              item['Details'],
+              item['Qty'],
+              item['Issue'],
+              item['Approved Qty'] || ''
+            );
+
         
             card.innerHTML = `
               <div class="flex-grow">
