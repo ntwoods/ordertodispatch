@@ -260,20 +260,12 @@
       const payload = { action, timestamp };
       const res = await fetch(API_BASE, {
         method:'POST',
+        mode:'no-cors',        
         headers:{ 'Content-Type':'application/json' },
         body: JSON.stringify(payload)
         // If you hit CORS issues, add: , mode: 'no-cors'
       });
-
-      // If the web app returns proper JSON, use it. Otherwise, fall back to optimistic toast.
-      let ok = res.ok, msg = 'Done.';
-      try{
-        const out = await res.json();
-        ok = out?.status === 'success';
-        msg = out?.message || msg;
-      }catch(_){ /* opaque/no-cors */ }
-
-      toast(ok ? (action==='informNextree'?'NexTree informed':'Dispatch confirmed') : 'Failed', ok?'ok':'err');
+      toast('Done');
     }catch(err){
       console.error(err);
       toast('Action failed', 'err');
@@ -281,7 +273,6 @@
       btn.disabled = false; showOverlay(false); inFlight = false;
     }
   }
-
   refreshBtn.addEventListener('click', load);
   load();
 })();
