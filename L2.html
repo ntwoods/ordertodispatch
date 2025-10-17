@@ -706,7 +706,7 @@ async function submitOrder(orderIndex, actionType) {
         location: orders[orderIndex].location,
         holdRemark: holdUntilRemark.value,
         remark: remarkInput.value, // Add the new remark to the payload
-		golaOption: golaSelect.value,
+		golaOption: "NON-GOLA",
         crmName: orders[orderIndex].crmName,
         ownersInformed: ownersInformedRadio ? ownersInformedRadio.value : ''
     };
