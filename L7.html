@@ -45,8 +45,14 @@
         h1 {
             text-align: center;
             color: var(--primary-color);
-            margin-bottom: 30px;
+            margin-bottom: 6px;
             font-weight: 600;
+        }
+        .subhead {
+            text-align:center;
+            color: var(--secondary-color);
+            margin-bottom: 22px;
+            font-size: 0.95em;
         }
 
         .loading-indicator {
@@ -91,24 +97,25 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            width: 50px; /* Fixed width for circular shape */
-            height: 50px; /* Fixed height for circular shape */
-            border-radius: 50%; /* Make it perfectly circular */
-            font-size: 0.75em; /* text-xs */
-            font-weight: 600; /* font-semibold */
-            color: white; /* text-white */
-            margin-left: 10px; /* spacing from text */
-            flex-shrink: 0; /* Prevent shrinking */
-            text-transform: capitalize; /* Make the text look nicer */
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            font-size: 0.75em;
+            font-weight: 600;
+            color: white;
+            margin-left: 10px;
+            flex-shrink: 0;
+            text-transform: capitalize;
         }
-        .bg-red { background-color: #dc3545; } /* Red */
-        .bg-yellow { background-color: #ffc107; } /* Yellow */
-        .bg-green { background-color: #28a745; } /* Green */
-        .bg-gray { background-color: #6c757d; } /* Default/Fallback Gray */
+        .bg-red { background-color: #dc3545; }
+        .bg-yellow { background-color: #ffc107; }
+        .bg-green { background-color: #28a745; }
+        .bg-gray { background-color: #6c757d; }
+
         .order-details p strong {
             color: var(--primary-color);
             margin-right: 8px;
-            min-width: 120px; /* Align text better */
+            min-width: 120px;
         }
 
         .order-details a {
@@ -158,9 +165,8 @@
             text-align: center;
         }
 
-        .approve-btn {
-            background-color: var(--accent-color);
-            color: white;
+        .approve-btn,
+        .set-hold-btn {
             border: none;
             padding: 12px 25px;
             border-radius: 8px;
@@ -170,140 +176,96 @@
             transition: background-color 0.3s ease, transform 0.1s ease;
             width: 100%;
             box-shadow: 0 4px 8px rgba(0, 123, 255, 0.2);
+            margin-top: 10px;
         }
 
+        .approve-btn {
+            background-color: var(--accent-color);
+            color: white;
+        }
         .approve-btn:hover {
             background-color: #0056b3;
             transform: translateY(-2px);
         }
 
-        .approve-btn:active {
-            transform: translateY(0);
-        }
-
-        /* Responsive adjustments */
-        @media (max-width: 768px) {
-            .container {
-                padding: 20px;
-            }
-            .order-cards-container {
-                grid-template-columns: 1fr;
-            }
-            .order-card {
-                padding: 20px;
-            }
-        }
-
-        @media (max-width: 480px) {
-            h1 {
-                font-size: 1.8em;
-            }
-            .order-card {
-                padding: 15px;
-            }
-            .approve-btn {
-                padding: 10px 20px;
-                font-size: 1em;
-            }
-        }
-       /* Modal Styling */
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 999;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            justify-content: center;
-            align-items: center;
-        }
-
-        .modal-content {
-            background-color: white;
-            padding: 20px;
-            border-radius: 10px;
-            width: 90%;
-            max-width: 400px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-            animation: fadeIn 0.3s ease;
-        }
-
-        .modal-header {
-            font-size: 1.3em;
-            margin-bottom: 15px;
-            font-weight: bold;
-            text-align: center;
-        }
-
-        .modal-content input, .modal-content textarea {
-            width: 100%;
-            padding: 10px;
-            margin: 8px 0;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-            font-size: 1em;
-        }
-
-        .modal-actions {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 15px;
-        }
-
-        .modal-actions button {
-            padding: 10px 18px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 500;
-        }
-
-        .btn-update {
-            background-color: var(--primary-color);
-            color: white;
-        }
-
-        .btn-cancel {
-            background-color: var(--secondary-color);
-            color: white;
-        }
-
         .set-hold-btn {
-            margin-top: 10px;
             background-color: #ff9800;
             color: white;
-            border: none;
-            padding: 12px 25px;
-            border-radius: 8px;
-            font-size: 1.05em;
-            font-weight: 500;
-            cursor: pointer;
-            transition: background-color 0.3s ease, transform 0.1s ease;
-            width: 100%;
             box-shadow: 0 4px 8px rgba(255, 152, 0, 0.2);
         }
-
         .set-hold-btn:hover {
             background-color: #e68900;
             transform: translateY(-2px);
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: scale(0.95); }
-            to { opacity: 1; transform: scale(1); }
+        .approve-btn:disabled,
+        .set-hold-btn:disabled {
+            opacity: 0.65;
+            cursor: not-allowed;
+            transform: none;
         }
-    </style>        
 
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .container { padding: 20px; }
+            .order-cards-container { grid-template-columns: 1fr; }
+            .order-card { padding: 20px; }
+        }
+
+        @media (max-width: 480px) {
+            h1 { font-size: 1.8em; }
+            .order-card { padding: 15px; }
+            .approve-btn, .set-hold-btn { padding: 10px 20px; font-size: 1em; }
+        }
+
+        /* Modal Styling */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 999;
+            left: 0; top: 0; width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center; align-items: center;
+        }
+        .modal-content {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            width: 90%; max-width: 400px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            animation: fadeIn 0.3s ease;
+        }
+        .modal-header {
+            font-size: 1.3em; margin-bottom: 15px; font-weight: bold; text-align: center;
+        }
+        .modal-content input, .modal-content textarea {
+            width: 100%; padding: 10px; margin: 8px 0;
+            border: 1px solid #ccc; border-radius: 6px; font-size: 1em;
+        }
+        .modal-actions { display: flex; justify-content: space-between; margin-top: 15px; }
+        .modal-actions button { padding: 10px 18px; border: none; border-radius: 6px; cursor: pointer; font-weight: 500; }
+        .btn-update { background-color: var(--primary-color); color: white; }
+        .btn-cancel { background-color: var(--secondary-color); color: white; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+
+        /* Simple view-only feel */
+        .view-only .editable { opacity: 0.6; pointer-events: none; }
+        .mode-chip {
+            display:inline-block; padding:6px 10px; border-radius:999px; font-size:.8em;
+            background:#eef2ff; color:#3b82f6; border:1px solid #dbeafe;
+        }
+    </style>
 </head>
 <body>
-    <div class="container">
+    <div class="container" id="rootContainer">
         <h1>Hold Orders Dashboard</h1>
+        <div class="subhead" id="modeLine">Loading...</div>
+
         <div id="loading" class="loading-indicator">Loading orders...</div>
-        <div id="order-cards-container" class="order-cards-container">
-            </div>
+        <div id="order-cards-container" class="order-cards-container"></div>
     </div>
+
     <!-- Modal for Updating Hold Until -->
     <div id="holdModal" class="modal">
         <div class="modal-content">
@@ -315,14 +277,38 @@
                 <button class="btn-cancel" onclick="closeModal()">Cancel</button>
             </div>
         </div>
-    </div>    
+    </div>
 
     <script>
+        // ---------- CONFIG ----------
         const BASE_API_URL = "https://script.google.com/macros/s/AKfycbx8Ourjem3diO9CTDl_wdGuJXSksFUImwIvq2gB1tFjeOUdNkLDdUso8he0-6CTlSJc/exec";
+
+        // ---------- MODE PARSING ----------
+        const urlParams = new URLSearchParams(window.location.search);
+        const paramCrm = urlParams.get('crm');
+        const rawMode = (urlParams.get('mode') || '').toLowerCase();
+        const isViewOnly = rawMode === 'view';
+        const useCrmFilter = !!paramCrm && !isViewOnly; // only add crm when not in view mode
+
+        // Header subline
+        const modeLineEl = document.getElementById('modeLine');
+        if (useCrmFilter) {
+            modeLineEl.innerHTML = `<span class="mode-chip">CRM Filter:</span> <strong>${decodeURIComponent(paramCrm)}</strong> • <span class="mode-chip">Mode:</span> <strong>Editable</strong>`;
+        } else if (isViewOnly) {
+            modeLineEl.innerHTML = `<span class="mode-chip">CRM Filter:</span> <strong>ALL</strong> • <span class="mode-chip">Mode:</span> <strong>View Only</strong>`;
+        } else {
+            modeLineEl.innerHTML = `<span class="mode-chip">CRM Filter:</span> <strong>ALL</strong> • <span class="mode-chip">Mode:</span> <strong>Editable</strong>`;
+        }
+
+        // Apply a light visual cue for view-only
+        if (isViewOnly) {
+            document.getElementById('rootContainer').classList.add('view-only');
+        }
+
         const orderCardsContainer = document.getElementById('order-cards-container');
         const loadingIndicator = document.getElementById('loading');
 
-        let currentTimestamp = null; // will hold the timestamp for which we're setting hold
+        let currentTimestamp = null; // for modal
 
         function openModal(timestamp) {
             currentTimestamp = timestamp;
@@ -330,12 +316,13 @@
             document.getElementById('holdDateInput').value = '';
             document.getElementById('holdModal').style.display = 'flex';
         }
-
         function closeModal() {
             document.getElementById('holdModal').style.display = 'none';
         }
 
         async function submitHoldUpdate() {
+            if (isViewOnly) return; // guard
+
             const remark = document.getElementById('holdRemarkInput').value.trim();
             const newHoldDate = document.getElementById('holdDateInput').value;
 
@@ -345,11 +332,9 @@
             }
 
             try {
-                const crmName = getCrmNameFromUrl();
+                // Respect same rule: only append crm in non-view mode & when provided
                 let postApiUrl = BASE_API_URL;
-                if (crmName) {
-                    postApiUrl += `?crm=${encodeURIComponent(crmName)}`;
-                }
+                if (useCrmFilter) postApiUrl += `?crm=${encodeURIComponent(paramCrm)}`;
 
                 const response = await fetch(postApiUrl, {
                     method: 'POST',
@@ -376,60 +361,45 @@
             }
         }
 
-        // Helper function to format date
         function formatDate(dateString) {
             if (!dateString) return 'N/A';
             try {
-                // Ensure date string is robustly parsed for both formats
                 let date;
-                if (dateString.includes('T')) { // ISO 8601 format (e.g., "2025-06-07T05:19:35.000Z")
+                if (dateString.includes('T')) {
                     date = new Date(dateString);
-                } else { // Assume DD/MM/YYYY or YYYY/MM/DD
+                } else {
                     const parts = dateString.split(/[\/\-]/);
                     if (parts.length === 3) {
-                         // Try YYYY-MM-DD or YYYY/MM/DD first
                         date = new Date(`${parts[0]}-${parts[1]}-${parts[2]}`);
                         if (isNaN(date.getTime())) {
-                            // If YYYY-MM-DD fails, try DD-MM-YYYY
                             date = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
                         }
                     } else {
-                        date = new Date(dateString); // Fallback for other formats
+                        date = new Date(dateString);
                     }
                 }
-
-                if (isNaN(date.getTime())) {
-                    return 'Invalid Date';
-                }
-
-                return date.toLocaleDateString('en-GB', {
-                    day: '2-digit',
-                    month: 'short',
-                    year: 'numeric'
-                }).replace(/ /g, '-');
+                if (isNaN(date.getTime())) return 'Invalid Date';
+                return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).replace(/ /g, '-');
             } catch (e) {
                 console.error("Error formatting date:", dateString, e);
                 return 'N/A';
             }
         }
 
-        // Function to start countdown timer
         function startCountdown(deadlineDateString, countdownElement) {
-            // Parse the date string and set time to 18:00:00 (6 PM)
             const deadline = new Date(deadlineDateString);
-            deadline.setHours(18, 0, 0, 0); // Set deadline to 6 PM IST (Local Time)
+            deadline.setHours(18, 0, 0, 0);
 
-            const updateCountdown = () => {
+            const tick = () => {
                 const now = new Date().getTime();
                 const distance = deadline - now;
 
                 if (distance < 0) {
                     countdownElement.innerHTML = "OVERDUE";
                     countdownElement.classList.add('overdue');
-                    clearInterval(countdownElement.timerInterval); // Stop the interval
+                    clearInterval(countdownElement._timer);
                     return;
                 }
-
                 const days = Math.floor(distance / (1000 * 60 * 60 * 24));
                 const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
                 const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
@@ -438,44 +408,32 @@
                 countdownElement.innerHTML = `${days}d ${hours}h ${minutes}m ${seconds}s left`;
             };
 
-            // Initial call to display immediately
-            updateCountdown();
-            // Set interval to update every second
-            countdownElement.timerInterval = setInterval(updateCountdown, 1000);
+            tick();
+            countdownElement._timer = setInterval(tick, 1000);
         }
 
-        // Function to handle "Approve" button click
         async function handleApprove(timestamp) {
+            if (isViewOnly) return; // guard
             if (!confirm(`Are you sure you want to approve the order marked hold on ${formatDate(timestamp)}?`)) {
                 return;
             }
 
-            console.log("Approving order with timestamp:", timestamp);
-
             try {
-                // Ensure API_URL for POST also includes the CRM parameter if needed by script
-                const crmName = getCrmNameFromUrl();
                 let postApiUrl = BASE_API_URL;
-                if (crmName) {
-                    postApiUrl += `?crm=${encodeURIComponent(crmName)}`;
-                }
+                if (useCrmFilter) postApiUrl += `?crm=${encodeURIComponent(paramCrm)}`;
 
                 const response = await fetch(postApiUrl, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                    },
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                     body: new URLSearchParams({
-                        action: 'approveOrder', // A hypothetical action for your Google Script
+                        action: 'approveOrder',
                         timestamp: timestamp
                     }).toString(),
                 });
 
                 const result = await response.json();
-
                 if (result.status === 'success') {
                     alert('Order approved successfully!');
-                    // Re-fetch data to reflect changes
                     fetchData();
                 } else {
                     alert('Error approving order: ' + (result.message || 'Unknown error'));
@@ -486,16 +444,9 @@
             }
         }
 
-        // Function to get CRM name from URL
-        function getCrmNameFromUrl() {
-            const urlParams = new URLSearchParams(window.location.search);
-            return urlParams.get('crm'); // Returns the value of the 'crm' parameter
-        }
-
-        // Function to render order cards
         function renderOrderCards(orders) {
             orderCardsContainer.innerHTML = '';
-            if (orders.length === 0) {
+            if (!orders || orders.length === 0) {
                 orderCardsContainer.innerHTML = '<p style="text-align: center; color: var(--secondary-color);">No hold orders found.</p>';
                 return;
             }
@@ -511,104 +462,111 @@
                 const holdUntil = order.holdUntil;
                 const formattedHoldUntil = formatDate(holdUntil);
 
+                // Dealer Type Badge
+                let badgeClass = 'bg-gray';
+                if (order.dealerType) {
+                    const t = String(order.dealerType).toLowerCase();
+                    if (t === 'red') badgeClass = 'bg-red';
+                    else if (t === 'yellow') badgeClass = 'bg-yellow';
+                    else if (t === 'green') badgeClass = 'bg-green';
+                }
+
+                const safeId = `cd-${index}-${(order.timestamp || '').replace(/[^a-zA-Z0-9_-]/g,'')}`;
+
                 orderCard.innerHTML = `
                     <div class="order-details">
-                        <p><strong>Dealer Name:</strong> ${dealerName}</p>
+                        <p><strong>Dealer Name:</strong> ${dealerName}
+                           ${order.dealerType ? `<span class="dealer-type-badge ${badgeClass}" title="Dealer Type">${order.dealerType}</span>` : ''}</p>
                         <p><strong>Marketing Person:</strong> ${marketingPersonName}</p>
                         <p><strong>CRM Name:</strong> ${crmName}</p>
-                        <p><strong>Hold Remark:</strong> ${order.holdRemark}</p>
+                        <p><strong>Hold Remark:</strong> ${order.holdRemark || ''}</p>
                     </div>
+
                     <div class="date-info">
                         <p><strong>Marked Hold On:</strong> ${markedHoldOn}</p>
                         <p><strong>Hold Until:</strong> ${formattedHoldUntil}</p>
                     </div>
-                    <div class="countdown-timer" id="countdown-${order.timestamp}">Calculating...</div>
-                    <div class="card-actions">
-                        <button class="approve-btn" data-timestamp="${order.timestamp}">Approve</button>
-                        <button class="set-hold-btn" onclick="openModal('${order.timestamp}')">Set New Hold Until</button>
+
+                    <div class="countdown-timer" id="${safeId}">Calculating...</div>
+
+                    <div class="editable">
+                      <div class="card-actions">
+                          <button class="approve-btn" data-timestamp="${order.timestamp}">Approve</button>
+                          <button class="set-hold-btn" type="button">Set New Hold Until</button>
+                      </div>
                     </div>
                 `;
 
                 orderCardsContainer.appendChild(orderCard);
-                const countdownElement = document.getElementById(`countdown-${order.timestamp}`);
-                startCountdown(holdUntil, countdownElement);
 
-                orderCard.querySelector('.approve-btn')
-                    .addEventListener('click', () => handleApprove(order.timestamp));
+                // Countdown
+                const countdownElement = document.getElementById(safeId);
+                if (holdUntil) startCountdown(holdUntil, countdownElement);
+
+                // Buttons
+                const approveBtn = orderCard.querySelector('.approve-btn');
+                const holdBtn = orderCard.querySelector('.set-hold-btn');
+
+                // If view-only → disable buttons
+                if (isViewOnly) {
+                    approveBtn.disabled = true;
+                    holdBtn.disabled = true;
+                } else {
+                    approveBtn.addEventListener('click', () => handleApprove(order.timestamp));
+                    holdBtn.addEventListener('click', () => openModal(order.timestamp));
+                }
             });
         }
-        // Function to fetch data from the API
+
         async function fetchData() {
-            loadingIndicator.style.display = 'block'; // Show loading
-            orderCardsContainer.innerHTML = ''; // Clear existing cards
+            loadingIndicator.style.display = 'block';
+            orderCardsContainer.innerHTML = '';
 
-            const crmName = getCrmNameFromUrl(); // Get CRM name from URL
-            if (!crmName) {
-                loadingIndicator.style.display = 'none';
-                orderCardsContainer.innerHTML = '<p style="text-align: center; color: var(--overdue-color);">Error: CRM name parameter is missing in the URL. Please add `?crm=Your%20Name` to the URL.</p>';
-                return;
-            }
-
-            const API_URL_WITH_CRM = `${BASE_API_URL}?crm=${encodeURIComponent(crmName)}`;
-            console.log("Fetching data from:", API_URL_WITH_CRM);
+            // Build GET URL:
+            // - If useCrmFilter true → include ?crm=...
+            // - Else call BASE_API_URL as-is to fetch ALL CRMs
+            const url = useCrmFilter
+                ? `${BASE_API_URL}?crm=${encodeURIComponent(paramCrm)}`
+                : BASE_API_URL;
 
             try {
-                const response = await fetch(API_URL_WITH_CRM);
-                if (!response.ok) {
-                    // Try to parse error as JSON, if not, use plain text
-                    const errorText = await response.text();
-                    try {
-                        const errorJson = JSON.parse(errorText);
-                        throw new Error(errorJson.message || `HTTP error! Status: ${response.status}`);
-                    } catch (jsonError) {
-                        throw new Error(`HTTP error! Status: ${response.status}. Server response: "${errorText}"`);
-                    }
-                }
+                const response = await fetch(url);
                 const result = await response.json();
 
-                if (result.status === 'success' && result.data) {
-                    // Filter for "Hold" orders (assuming script returns all for the CRM, then we filter status)
-                    renderOrderCards(result.data);                   
-                if (typeof setReadOnlyMode === "function") {
-                      setReadOnlyMode();
-                    }                    
+                if (result.status === 'success' && Array.isArray(result.data)) {
+                    renderOrderCards(result.data);
+                    // If you load external viewOnly.js which toggles UI, call it only in view mode
+                    if (typeof setReadOnlyMode === "function" && isViewOnly) {
+                        setReadOnlyMode();
+                    }
                 } else {
-                    orderCardsContainer.innerHTML = '<p style="text-align: center; color: var(--overdue-color);">Error: ' + (result.message || 'Failed to fetch data.') + '</p>';
+                    orderCardsContainer.innerHTML =
+                        `<p style="text-align:center;color:var(--overdue-color);">Error: ${result.message || 'Failed to fetch data.'}</p>`;
                 }
-            } catch (error) {
-                console.error("Could not fetch data:", error);
-                orderCardsContainer.innerHTML = '<p style="text-align: center; color: var(--overdue-color);">Failed to load orders. ' + error.message + '</p>';
+            } catch (err) {
+                console.error('Fetch error:', err);
+                orderCardsContainer.innerHTML =
+                    `<p style="text-align:center;color:var(--overdue-color);">Failed to load orders. ${err.message}</p>`;
             } finally {
-                loadingIndicator.style.display = 'none'; // Hide loading
+                loadingIndicator.style.display = 'none';
             }
         }
-    function openMultipleDocuments(urlString, index) {
-        // Split the URLs by comma and trim whitespace
-        const urls = urlString.split(',').map(url => url.trim()).filter(url => url.length > 0);
-        
-        if (urls.length === 0) {
-            alert('No valid URLs found');
-            return;
-        }
-        
-        // Show a confirmation if there are multiple URLs
-        if (urls.length > 1) {
-            const confirmed = confirm(`This will open ${urls.length} documents in separate tabs. Continue?`);
-            if (!confirmed) {
+
+        // Utilities
+        function openMultipleDocuments(urlString) {
+            const urls = (urlString || '').split(',').map(u => u.trim()).filter(Boolean);
+            if (urls.length === 0) {
+                alert('No valid URLs found');
                 return;
             }
+            if (urls.length > 1) {
+                const ok = confirm(`This will open ${urls.length} documents in separate tabs. Continue?`);
+                if (!ok) return;
+            }
+            urls.forEach((url, i) => setTimeout(() => window.open(url, '_blank'), i * 100));
         }
-        
-        // Open each URL in a new tab with a small delay to prevent popup blocker
-        urls.forEach((url, urlIndex) => {
-            setTimeout(() => {
-                window.open(url, '_blank');
-            }, urlIndex * 100); // 100ms delay between each tab opening
-        });
-    }
-        
 
-        // Initial fetch on page load
+        // Init
         document.addEventListener('DOMContentLoaded', fetchData);
     </script>
     <script src="js/viewOnly.js"></script>
