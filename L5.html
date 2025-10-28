@@ -3,85 +3,99 @@
 <head>
   <meta charset="UTF-8">
   <title>Inform The Dealer About Dispatch Details</title>
-<link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
-</head>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
   <style>
-.dealer-type-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.25rem 0.75rem; /* px-3 py-1 */
-  border-radius: 9999px; /* rounded-full */
-  font-size: 0.75rem; /* text-xs */
-  font-weight: 600; /* font-semibold */
-  color: white; /* text-white */
-  margin-left: 0.5rem; /* ml-2 */
-  white-space: nowrap; /* Prevent text wrapping */
-  z-index: 30;
-}
-.bg-red-500 { background-color: #ef4444; }
-.bg-yellow-500 { background-color: #f59e0b; }
-.bg-green-500 { background-color: #22c55e; }
-.bg-gray-500 { background-color: #6b7280; }
+    .dealer-type-badge {
+      display: inline-flex; align-items: center; justify-content: center;
+      padding: 0.25rem 0.75rem; border-radius: 9999px;
+      font-size: 0.75rem; font-weight: 600; color: white;
+      margin-left: 0.5rem; white-space: nowrap; z-index: 30;
+    }
+    .bg-red-500 { background-color: #ef4444; }
+    .bg-yellow-500 { background-color: #f59e0b; }
+    .bg-green-500 { background-color: #22c55e; }
+    .bg-gray-500 { background-color: #6b7280; }
   </style>
+</head>
 <body class="bg-gray-100 min-h-screen p-4">
+  <!-- Mode banner -->
+  <div id="modeBanner" class="mb-3 hidden rounded-lg px-4 py-2 text-sm font-semibold"></div>
+
   <div id="loader" class="text-center text-xl text-blue-600 font-semibold">Loading orders...</div>
   <div id="ordersContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6 hidden"></div>
 
   <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbwUr0UhENK6RGtdvYMC6-V0Khwb3kibKP4SLXC4nzL6Hm4idr6P-Olx4XTWvgZ_e2xk-Q/exec";
 
+    // --------- URL mode detection ----------
+    const urlParams = new URLSearchParams(window.location.search);
+    const modeParam = (urlParams.get('mode') || '').trim().toLowerCase();
+    const crmParam = (urlParams.get('crm') || '').trim();
+
+    // Priority: if mode=view present => view-only + all CRMs (ignore crm)
+    const IS_VIEW_ONLY = modeParam === 'view';
+    const FETCH_ALL = IS_VIEW_ONLY || !crmParam; // all when view-only OR when no crm provided
+    const apiFetchUrl = FETCH_ALL ? API_URL : `${API_URL}?crm=${encodeURIComponent(crmParam)}`;
+
+    // Banner text + style
+    function showModeBanner() {
+      const banner = document.getElementById('modeBanner');
+      let text = '', classes = '';
+      if (IS_VIEW_ONLY) {
+        text = 'Mode: View Only • Showing orders for ALL CRMs';
+        classes = 'bg-yellow-100 text-yellow-800 border border-yellow-300';
+      } else if (!FETCH_ALL) {
+        text = `Mode: Normal • CRM Filter: ${crmParam}`;
+        classes = 'bg-blue-100 text-blue-800 border border-blue-300';
+      } else {
+        text = 'Mode: Normal • Showing orders for ALL CRMs';
+        classes = 'bg-green-100 text-green-800 border border-green-300';
+      }
+      banner.textContent = text;
+      banner.className = `mb-3 rounded-lg px-4 py-2 text-sm font-semibold ${classes}`;
+      banner.classList.remove('hidden');
+    }
+    showModeBanner();
+
     let globalOrders = [];
-function formatDateToDDMMMYYYY(dateStr) {
-  const date = new Date(dateStr);
-  const options = { day: '2-digit', month: 'short', year: 'numeric' };
-  return date.toLocaleDateString('en-GB', options).replace(/ /g, '-');
-}
 
+    function formatDateToDDMMMYYYY(dateStr) {
+      if (!dateStr) return 'N/A';
+      const date = new Date(dateStr);
+      if (isNaN(date)) return 'N/A';
+      const options = { day: '2-digit', month: 'short', year: 'numeric' };
+      return date.toLocaleDateString('en-GB', options).replace(/ /g, '-');
+    }
 
-function openMultipleDocuments(urlString, index) {
-    // Split the URLs by comma and trim whitespace
-    const urls = urlString.split(',').map(url => url.trim()).filter(url => url.length > 0);
-    
-    if (urls.length === 0) {
+    function openMultipleDocuments(urlString, index) {
+      const urls = (urlString || '').split(',').map(u => u.trim()).filter(Boolean);
+      if (urls.length === 0) {
         alert('No valid URLs found');
         return;
-    }
-    
-    // Show a confirmation if there are multiple URLs
-    if (urls.length > 1) {
+      }
+      if (urls.length > 1) {
         const confirmed = confirm(`This will open ${urls.length} documents in separate tabs. Continue?`);
-        if (!confirmed) {
-            return;
-        }
+        if (!confirmed) return;
+      }
+      urls.forEach((url, urlIndex) => {
+        setTimeout(() => window.open(url, '_blank'), urlIndex * 100);
+      });
     }
-    
-    // Open each URL in a new tab with a small delay to prevent popup blocker
-    urls.forEach((url, urlIndex) => {
-        setTimeout(() => {
-            window.open(url, '_blank');
-        }, urlIndex * 100); // 100ms delay between each tab opening
-    });
-}
+
     async function fetchOrders() {
       try {
-        const urlParams = new URLSearchParams(window.location.search);
-        const crmName = urlParams.get('crm');
-        if (!crmName) {
-            throw new Error('CRM name is missing in URL');
-        }
-        // Append crmName to the API URL
-        const response = await fetch(`${API_URL}?crm=${encodeURIComponent(crmName)}`);
+        const response = await fetch(apiFetchUrl);
         const result = await response.json();
         if (result.status === "success") {
           document.getElementById("loader").classList.add("hidden");
           document.getElementById("ordersContainer").classList.remove("hidden");
-          globalOrders = result.data;
+          globalOrders = result.data || [];
           renderOrders(globalOrders);
-          if (typeof setReadOnlyMode === "function") {
+
+          // If external viewOnly.js provides setReadOnlyMode, still honor it
+          if (IS_VIEW_ONLY && typeof setReadOnlyMode === "function") {
             setReadOnlyMode();
           }
-
         } else {
           throw new Error("Invalid response");
         }
@@ -94,16 +108,8 @@ function openMultipleDocuments(urlString, index) {
     function getDeadline(originalTimestampStr) {
       const original = new Date(originalTimestampStr);
       let deadline = new Date(original);
-      const day = original.getUTCDay(); // 1 = Monday
-
-      // If timestamp is Monday (1), subtract 2 days
-      if (day === 1) {
-        deadline.setDate(deadline.getDate());
-      } else {
-        deadline.setDate(deadline.getDate());
-      }
-
-      deadline.setHours(18, 0, 0, 0); // 6:00 PM
+      // Keeping your 6:00 PM rule
+      deadline.setHours(18, 0, 0, 0);
       return deadline;
     }
 
@@ -111,121 +117,142 @@ function openMultipleDocuments(urlString, index) {
       const container = document.getElementById("ordersContainer");
       container.innerHTML = "";
 
-        if (orders.length === 0) {
-    container.innerHTML = `
-      <div class="col-span-full text-center text-xl text-gray-600 font-semibold">
-        📦 No Pending Orders
-      </div>
-    `;
-    return;
-  }
-
-orders.forEach((order, index) => {
-  const deadline = getDeadline(order.timestamp);
-
-  const hasInvoice = order.invoiceUrl && order.invoiceUrl.trim() !== "";
-  const bgColor = hasInvoice ? "bg-green-100 border border-green-300" : "bg-red-100 border border-red-300";
-
-  const card = document.createElement("div");
-  card.className = `${bgColor} p-6 rounded-2xl shadow-md relative transition hover:scale-[1.02]`;
-
-  const overdue = new Date() > deadline;
-  const deadlineLabel = overdue ? "Overdue" : "Active";
-
-  // --- NEW: Dealer Type Badge HTML Logic for L5.html ---
-  let dealerTypeBadge = '';
-  if (order.dealerType) {
-      let badgeColorClass = '';
-      switch (order.dealerType.toLowerCase()) {
-          case 'red':
-              badgeColorClass = 'bg-red-500';
-              break;
-          case 'yellow':
-              badgeColorClass = 'bg-yellow-500';
-              break;
-          case 'green':
-              badgeColorClass = 'bg-green-500';
-              break;
-          default:
-              badgeColorClass = 'bg-gray-500'; // Fallback color
-      }
-      dealerTypeBadge = `
-          <div class="dealer-type-badge ${badgeColorClass} text-white text-xs font-semibold px-3 py-1 rounded-full flex items-center justify-center ml-2">
-              ${order.dealerType}
+      if (!orders || orders.length === 0) {
+        container.innerHTML = `
+          <div class="col-span-full text-center text-xl text-gray-600 font-semibold">
+            📦 No Pending Orders
           </div>
-      `;
-  }
-  // --- END NEW ---
+        `;
+        return;
+      }
 
-  card.innerHTML = `
-    <div class="absolute top-2 right-2 text-sm font-semibold px-3 py-1 rounded-full ${overdue ? 'bg-red-200 text-red-800' : 'bg-green-200 text-green-800'}">
-      ${deadlineLabel}
-    </div>
+      orders.forEach((order, index) => {
+        const deadline = getDeadline(order.timestamp);
 
-    ${!hasInvoice ? `<div class="absolute top-2 left-2 text-xs font-semibold px-2 py-1 rounded-full bg-red-200 text-red-800">Missing Invoice</div>` : ""}
+        const hasInvoice = order.invoiceUrl && order.invoiceUrl.trim() !== "";
+        const bgColor = hasInvoice ? "bg-green-100 border border-green-300" : "bg-red-100 border border-red-300";
 
-    <div class="flex items-center">
-        <div class="text-xl font-bold mb-2">${order.dealerName}</div>
-        ${dealerTypeBadge}
-    </div>
-    <p><strong>Marketing:</strong> ${order.marketingPersonName}</p>
-    <p><strong>Location:</strong> ${order.location}</p>
-    <p><strong>CRM:</strong> ${order.crmName}</p>
-    <p><strong>Con. Owner:</strong> ${order.concernedOwner}</p>    
-    <p><strong>Expected Delivery:</strong> ${formatDateToDDMMMYYYY(order.expectedDeliveryDate)}</p>
-    <p><strong>Dispatch Date & Time:</strong> ${formatDateToDDMMMYYYY(order.timestamp)}</p>
-    <p><strong>Deadline:</strong> ${formatDateToDDMMMYYYY(deadline)}</p>
-    <p><strong>Time Left:</strong> <span id="countdown-${index}" class="font-mono text-blue-700"></span></p>
-    <p><strong>Vehicle No:</strong> ${order.vehicleNo || 'N/A'}</p>
-    <p><strong>Freight:</strong> ${order.freight || 'N/A'}</p>
-    <p><strong>Driver Name:</strong> ${order.driverName || 'N/A'}</p>
-    <p><strong>Driver Mobile:</strong> ${order.driverMob || 'N/A'}</p>
-    <div class="editable">
-    <span class="text-m text-black-600">Dispatch Receipt:</span>
-    <button onclick="openMultipleDocuments('${order.dispatchDetailUrl.replace(/'/g, "\\'")}', ${index})" class="text-sm text-blue-600 hover:text-blue-800 underline bg-transparent border-none cursor-pointer">View Dispatch Receipts</button>
+        const card = document.createElement("div");
+        card.className = `${bgColor} p-6 rounded-2xl shadow-md relative transition hover:scale-[1.02]`;
 
-    <span class="text-m text-black-600">Raw File:</span>
-    <button onclick="openMultipleDocuments('${order.fileUploadLink.replace(/'/g, "\\'")}', ${index})" class="text-sm text-blue-600 hover:text-blue-800 underline bg-transparent border-none cursor-pointer">Raw File</button>
+        const overdue = new Date() > deadline;
+        const deadlineLabel = overdue ? "Overdue" : "Active";
 
-    <span class="text-m text-black-600">Final Order:</span>
-    <button onclick="openMultipleDocuments('${order.finalOrder.replace(/'/g, "\\'")}', ${index})" class="text-sm text-blue-600 hover:text-blue-800 underline bg-transparent border-none cursor-pointer">Final File</button>   
+        // Dealer Type Badge
+        let dealerTypeBadge = '';
+        if (order.dealerType) {
+          let badgeColorClass = '';
+          switch ((order.dealerType || '').toLowerCase()) {
+            case 'red': badgeColorClass = 'bg-red-500'; break;
+            case 'yellow': badgeColorClass = 'bg-yellow-500'; break;
+            case 'green': badgeColorClass = 'bg-green-500'; break;
+            default: badgeColorClass = 'bg-gray-500';
+          }
+          dealerTypeBadge = `
+            <div class="dealer-type-badge ${badgeColorClass}">
+              ${order.dealerType}
+            </div>
+          `;
+        }
 
-    ${order.additionalOrder ? `
-      <span class="text-m text-red-600">Additional Order:</span>
-      <button onclick="openMultipleDocuments('${order.additionalOrder.replace(/'/g, "\\'")}', ${index})" 
+        // Editable section (hidden/omitted in view-only)
+        const editableBlock = IS_VIEW_ONLY ? `
+          <div class="mt-4 text-sm text-gray-600 italic">
+            View Only Mode: Editing controls are disabled.
+          </div>
+        ` : `
+          <div class="editable">
+            <span class="text-m text-black-600">Dispatch Receipt:</span>
+            <button onclick="openMultipleDocuments('${(order.dispatchDetailUrl || '').replace(/'/g, "\\'")}', ${index})"
               class="text-sm text-blue-600 hover:text-blue-800 underline bg-transparent border-none cursor-pointer">
-        Additional Order File
-      </button>
-    ` : ''}
+              View Dispatch Receipts
+            </button>
 
-    <span class="text-m text-black-600">Invoices:</span>
-    <button onclick="openMultipleDocuments('${order.invoiceUrl.replace(/'/g, "\\'")}', ${index})" class="text-sm text-blue-600 hover:text-blue-800 underline bg-transparent border-none cursor-pointer">View Invoices</button>
+            <span class="text-m text-black-600">Raw File:</span>
+            <button onclick="openMultipleDocuments('${(order.fileUploadLink || '').replace(/'/g, "\\'")}', ${index})"
+              class="text-sm text-blue-600 hover:text-blue-800 underline bg-transparent border-none cursor-pointer">
+              Raw File
+            </button>
 
-    <div class="mt-4">
-      <label class="inline-flex items-center">
-        <input type="radio" name="confirm-${index}" id="radio-${index}" class="form-radio h-4 w-4 text-blue-600">
-        <span class="ml-2 text-sm">Dispatch Details Sent To Dealer</span>
-      </label>
-    </div>
-    <div class="mt-2">
-        <label for="remark-${index}" class="block text-sm font-medium text-gray-700">Remark:</label>
-        <input type="text" id="remark-${index}" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-    </div>
-    <button id="submit-${index}" onclick="submitConfirmation(${index})"
-      class="mt-4 w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
-      Submit
-    </button>
-    <button onclick="copyDispatchDetails(${index})"
-      class="mt-2 w-full bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition">
-      Copy Dispatch Details
-    </button>
-    </div>
-  `;
+            <span class="text-m text-black-600">Final Order:</span>
+            <button onclick="openMultipleDocuments('${(order.finalOrder || '').replace(/'/g, "\\'")}', ${index})"
+              class="text-sm text-blue-600 hover:text-blue-800 underline bg-transparent border-none cursor-pointer">
+              Final File
+            </button>
 
-  container.appendChild(card);
-  startCountdown(deadline, index);
-});
-}
+            ${order.additionalOrder ? `
+              <span class="text-m text-red-600">Additional Order:</span>
+              <button onclick="openMultipleDocuments('${(order.additionalOrder || '').replace(/'/g, "\\'")}', ${index})"
+                class="text-sm text-blue-600 hover:text-blue-800 underline bg-transparent border-none cursor-pointer">
+                Additional Order File
+              </button>
+            ` : ''}
+
+            <span class="text-m text-black-600">Invoices:</span>
+            <button onclick="openMultipleDocuments('${(order.invoiceUrl || '').replace(/'/g, "\\'")}', ${index})"
+              class="text-sm text-blue-600 hover:text-blue-800 underline bg-transparent border-none cursor-pointer">
+              View Invoices
+            </button>
+
+            <div class="mt-4">
+              <label class="inline-flex items-center">
+                <input type="radio" name="confirm-${index}" id="radio-${index}" class="form-radio h-4 w-4 text-blue-600">
+                <span class="ml-2 text-sm">Dispatch Details Sent To Dealer</span>
+              </label>
+            </div>
+
+            <div class="mt-2">
+              <label for="remark-${index}" class="block text-sm font-medium text-gray-700">Remark:</label>
+              <input type="text" id="remark-${index}"
+                class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+            </div>
+
+            <button id="submit-${index}" onclick="submitConfirmation(${index})"
+              class="mt-4 w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
+              Submit
+            </button>
+
+            <button onclick="copyDispatchDetails(${index})"
+              class="mt-2 w-full bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition">
+              Copy Dispatch Details
+            </button>
+          </div>
+        `;
+
+        card.innerHTML = `
+          <div class="absolute top-2 right-2 text-sm font-semibold px-3 py-1 rounded-full ${overdue ? 'bg-red-200 text-red-800' : 'bg-green-200 text-green-800'}">
+            ${deadlineLabel}
+          </div>
+
+          ${!hasInvoice ? `<div class="absolute top-2 left-2 text-xs font-semibold px-2 py-1 rounded-full bg-red-200 text-red-800">Missing Invoice</div>` : ""}
+
+          <div class="flex items-center">
+            <div class="text-xl font-bold mb-2">${order.dealerName}</div>
+            ${dealerTypeBadge}
+          </div>
+          <p><strong>Marketing:</strong> ${order.marketingPersonName}</p>
+          <p><strong>Location:</strong> ${order.location}</p>
+          <p><strong>CRM:</strong> ${order.crmName}</p>
+          <p><strong>Con. Owner:</strong> ${order.concernedOwner}</p>
+          <p><strong>Expected Delivery:</strong> ${formatDateToDDMMMYYYY(order.expectedDeliveryDate)}</p>
+          <p><strong>Dispatch Date & Time:</strong> ${formatDateToDDMMMYYYY(order.timestamp)}</p>
+          <p><strong>Deadline:</strong> ${formatDateToDDMMMYYYY(deadline)}</p>
+          <p><strong>Time Left:</strong> <span id="countdown-${index}" class="font-mono text-blue-700"></span></p>
+          <p><strong>Vehicle No:</strong> ${order.vehicleNo || 'N/A'}</p>
+          <p><strong>Freight:</strong> ${order.freight || 'N/A'}</p>
+          <p><strong>Driver Name:</strong> ${order.driverName || 'N/A'}</p>
+          <p><strong>Driver Mobile:</strong> ${order.driverMob || 'N/A'}</p>
+
+          ${editableBlock}
+        `;
+
+        container.appendChild(card);
+
+        // Countdown timer should still run in both modes
+        startCountdown(deadline, index);
+      });
+    }
+
     function startCountdown(deadline, index) {
       const el = document.getElementById(`countdown-${index}`);
       function update() {
@@ -246,70 +273,71 @@ orders.forEach((order, index) => {
     }
 
     async function submitConfirmation(index) {
+      if (IS_VIEW_ONLY) {
+        alert("View Only mode mein submission allowed nahi hai.");
+        return;
+      }
+
       const radio = document.getElementById(`radio-${index}`);
-      const remarkInput = document.getElementById(`remark-${index}`); // Get the remark input
-      if (!radio.checked) {
+      const remarkInput = document.getElementById(`remark-${index}`);
+      if (!radio || !radio.checked) {
         alert("Please confirm that the Dispatch Department is informed.");
         return;
       }
-    const button = document.getElementById(`submit-${index}`);
- // Show loading state
-  const originalText = button.textContent;
-  button.textContent = "Submitting...";
-  button.disabled = true;
 
- 
-     const payload = {
+      const button = document.getElementById(`submit-${index}`);
+      const originalText = button.textContent;
+      button.textContent = "Submitting...";
+      button.disabled = true;
+
+      const payload = {
         timestampForMap: globalOrders[index].timestampForMap,
-        remark: remarkInput.value // Add the remark to the payload
+        remark: remarkInput ? remarkInput.value : ""
       };
+
       try {
-        const res = await fetch(API_URL, {
+        await fetch(API_URL, {
           method: "POST",
           mode: "no-cors",
           body: JSON.stringify(payload),
           headers: { "Content-Type": "application/json" }
         });
 
-    setTimeout(() => {
-      alert("Submitted successfully!");
-      button.textContent = "Submitted ✓";
-      button.style.backgroundColor = "#10B981"; // Green color
-      fetchOrders();
-      
-      // Optional: Remove the card or disable further submissions
-      // button.disabled = true;
-    }, 1000);
+        setTimeout(() => {
+          alert("Submitted successfully!");
+          button.textContent = "Submitted ✓";
+          button.style.backgroundColor = "#10B981";
+          fetchOrders();
+        }, 1000);
 
-  } catch (err) {
-    console.error('Submit error:', err);
-    button.textContent = originalText;
-    button.disabled = false;
-    alert("Submission failed. Please try again.");
-    fetchOrders();      
-  }
-}
+      } catch (err) {
+        console.error('Submit error:', err);
+        button.textContent = originalText;
+        button.disabled = false;
+        alert("Submission failed. Please try again.");
+        fetchOrders();
+      }
+    }
 
     function copyDispatchDetails(index) {
       const order = globalOrders[index];
       const details = `Expected Delivery Date: ${formatDateToDDMMMYYYY(order.expectedDeliveryDate)}
-      Dispatch Date & Time: ${formatDateToDDMMMYYYY(order.timestamp)}
-      Vehicle No: ${order.vehicleNo || 'N/A'}
-      Freight Amt: ${order.freight || 'N/A'}
-      Driver Name: ${order.driverName || 'N/A'}
-      Driver Mobile: ${order.driverMob || 'N/A'}
-      Invoice URL: ${order.invoiceUrl || 'N/A'}`;
+Dispatch Date & Time: ${formatDateToDDMMMYYYY(order.timestamp)}
+Vehicle No: ${order.vehicleNo || 'N/A'}
+Freight Amt: ${order.freight || 'N/A'}
+Driver Name: ${order.driverName || 'N/A'}
+Driver Mobile: ${order.driverMob || 'N/A'}
+Invoice URL: ${order.invoiceUrl || 'N/A'}`;
 
       navigator.clipboard.writeText(details)
-        .then(() => {
-          alert('Dispatch details copied to clipboard!');
-        })
+        .then(() => alert('Dispatch details copied to clipboard!'))
         .catch(err => {
           console.error('Failed to copy dispatch details:', err);
           alert('Failed to copy dispatch details. Please try again or copy manually.');
         });
     }
 
+    // Kickoff
     fetchOrders();
   </script>
   <script src="js/viewOnly.js"></script>
