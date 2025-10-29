@@ -12,9 +12,9 @@
     --panel:#ffffff;
     --ink:#0f172a;
     --muted:#5b6b88;
-    --brand:#1e66f5;        /* primary blue */
-    --brand-900:#134bb1;    /* darker blue */
-    --brand-50:#e9f1ff;     /* pale blue */
+    --brand:#1e66f5;
+    --brand-900:#134bb1;
+    --brand-50:#e9f1ff;
     --ok:#18a957;
     --warn:#f59f00;
     --err:#e03131;
@@ -56,8 +56,6 @@
   .btn.warn{background:var(--brand)}
   .btn:disabled{opacity:.6;cursor:not-allowed}
   .actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px}
-
-  /* NEW: status tags */
   .tags{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
   .tag{
     display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;font-size:12px;font-weight:700;
@@ -65,7 +63,6 @@
   }
   .tag.ok{border-color:#cdebd9;background:#f3fcf6;color:#0f5c33}
   .tag.info{border-color:#d6e6ff;background:#eef5ff;color:#17499a}
-
   .empty{border:1px dashed #cfe0ff;background:linear-gradient(180deg,#fff,#f7fbff);padding:28px;border-radius:16px;color:var(--muted);text-align:center}
   .overlay{position:fixed;inset:0;background:rgba(15,23,42,.18);backdrop-filter:blur(2px);display:none;align-items:center;justify-content:center;z-index:50}
   .spinner{width:58px;height:58px;border-radius:50%;border:6px solid #d9e6ff;border-top-color:var(--brand);animation:spin .9s linear infinite;background:#fff;box-shadow:0 8px 28px rgba(16,59,138,.18);border-bottom-color:transparent;}
@@ -76,6 +73,14 @@
   .toast.err{border-left-color:var(--err)}
   .toast.warn{border-left-color:var(--warn)}
   .sr{position:absolute;left:-9999px}
+
+  /* modal */
+  .modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(15,23,42,.32);z-index:70}
+  .modal .panel{width:min(92vw,420px);background:#fff;border:1px solid #e6efff;border-radius:16px;box-shadow:0 16px 44px rgba(16,59,138,.18);padding:16px}
+  .modal h3{margin:0 0 10px 0;font-size:16px}
+  .field{display:flex;flex-direction:column;gap:6px;margin:10px 0}
+  .input{border:1px solid #dbe7ff;border-radius:12px;padding:10px 12px;font-size:14px}
+  .row{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
 </style>
 </head>
 <body>
@@ -93,6 +98,21 @@
   </div>
   <div class="toasts" id="toasts"></div>
 
+  <!-- Tentative Dispatch Modal -->
+  <div class="modal" id="tentativeModal" aria-hidden="true">
+    <div class="panel">
+      <h3>Select Tentative Dispatch Date &amp; Time</h3>
+      <div class="field">
+        <label for="tentativeDT">Tentative Dispatch</label>
+        <input id="tentativeDT" type="datetime-local" class="input" />
+      </div>
+      <div class="row">
+        <button class="btn ghost" id="cancelTentative">Cancel</button>
+        <button class="btn ok" id="saveTentative">Submit</button>
+      </div>
+    </div>
+  </div>
+
 <script>
 (function(){
   const API_BASE = 'https://script.google.com/macros/s/AKfycbw-Wh4YZ4zWjMa0msQ6aA00kbJrclRKModm1spzOQzfj7MxmMtAGU7o2bx7jK4QSgj6/exec';
@@ -104,6 +124,14 @@
   const refreshBtn = $('#refreshBtn');
   const crm = new URLSearchParams(location.search).get('crm') || '';
   $('#crmBadge').textContent = 'CRM: ' + (crm || '— (missing)');
+
+  // Modal refs
+  const modal = $('#tentativeModal');
+  const tentativeInput = $('#tentativeDT');
+  const cancelBtn = $('#cancelTentative');
+  const saveBtn = $('#saveTentative');
+  let modalTimestamp = null;   // which order's timestamp we are acting on
+  let modalBtnRef = null;      // button ref to disable during submit
 
   if(!crm){
     empty.style.display='block';
@@ -123,12 +151,31 @@
 
   function showOverlay(v){ overlay.style.display = v ? 'flex' : 'none'; }
 
-  function fmt(s){
-    try{
-      const d = new Date(s);
-      if(isNaN(d)) return '—';
-      return d.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', hour12: true });
-    }catch{ return '—'; }
+  function openModal(ts, btn){
+    modalTimestamp = ts;
+    modalBtnRef = btn || null;
+    // default value: next working day 18:00 IST
+    const d = new Date();
+    d.setDate(d.getDate() + 1);
+    d.setHours(18,0,0,0);
+    tentativeInput.value = toLocalInputValue(d);
+    modal.style.display = 'flex';
+    tentativeInput.focus();
+  }
+  function closeModal(){
+    modal.style.display = 'none';
+    modalTimestamp = null;
+    modalBtnRef = null;
+  }
+  function toLocalInputValue(dateObj){
+    // returns "YYYY-MM-DDTHH:mm" in local time
+    const pad = n => String(n).padStart(2,'0');
+    const y = dateObj.getFullYear();
+    const m = pad(dateObj.getMonth()+1);
+    const d = pad(dateObj.getDate());
+    const h = pad(dateObj.getHours());
+    const mi = pad(dateObj.getMinutes());
+    return `${y}-${m}-${d}T${h}:${mi}`;
   }
 
   async function load(){
@@ -188,10 +235,8 @@
       files.append(rawBtn, finalBtn);
       card.appendChild(files);
 
-      // NEW: status tags + conditional actions
       const tags = document.createElement('div');
       tags.className = 'tags';
-
       const nextree = safe(item.nextreeInformed);
       const dispatch = safe(item.dispatchConfirmed);
 
@@ -212,15 +257,13 @@
       const actions = document.createElement('div');
       actions.className='actions';
 
-      // Show only those buttons whose status is still blank
       if(!nextree){
         const informBtn = document.createElement('button');
         informBtn.className='btn warn';
         informBtn.textContent='Inform NexTree';
-        informBtn.onclick = ()=> act('informNextree', item.timestamp, informBtn); // action name kept as existing
+        informBtn.onclick = ()=> openModal(item.timestamp, informBtn);
         actions.append(informBtn);
       } else {
-        // placeholder to keep grid structure even if only one button appears
         const spacer=document.createElement('div'); spacer.style.visibility='hidden'; actions.append(spacer);
       }
 
@@ -233,7 +276,6 @@
       }
 
       if(actions.children.length){ card.appendChild(actions); }
-
       frag.appendChild(card);
     });
     cardWrap.appendChild(frag);
@@ -246,21 +288,24 @@
   }
 
   let inFlight = false;
-  async function act(action, timestamp, btn){
+  async function act(action, timestamp, btn, tentativeISO=null){
     if(inFlight) return;
     inFlight = true;
     if(btn) btn.disabled = true;
     showOverlay(true);
-
     try{
       const payload = { action, timestamp };
+      if(action === 'informNextree' && tentativeISO){
+        // Convert local "YYYY-MM-DDTHH:mm" to ISO string
+        const local = new Date(tentativeISO);
+        if(!isNaN(local)) payload.tentativeDispatch = local.toISOString();
+      }
       await fetch(API_BASE, {
         method:'POST',
         headers:{ 'Content-Type':'application/json' },
         body: JSON.stringify(payload),
-        mode: 'no-cors'   // Apps Script CORS-friendly; we'll reload immediately
+        mode: 'no-cors'
       });
-      // Immediately reload page to reflect updated nextreeInformed/dispatchConfirmed
       location.reload();
     }catch(err){
       console.error(err);
@@ -270,6 +315,14 @@
       showOverlay(false);
     }
   }
+
+  // Modal events
+  cancelBtn.addEventListener('click', closeModal);
+  saveBtn.addEventListener('click', ()=>{
+    const val = tentativeInput.value?.trim();
+    if(!val){ toast('Please select tentative date & time', 'warn'); return; }
+    act('informNextree', modalTimestamp, modalBtnRef, val);
+  });
 
   refreshBtn.addEventListener('click', load);
   load();
