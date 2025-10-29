@@ -28,51 +28,26 @@
     background:linear-gradient(180deg,var(--bg),#eef5ff);
     color:var(--ink);
   }
-  .shell{
-    max-width:1400px;
-    margin:0 auto;
-    padding:20px 20px 48px;
-  }
-  .topbar{
-    display:flex;align-items:center;justify-content:space-between;
-    gap:16px;margin-bottom:18px;
-  }
-  .brand{
-    display:flex;align-items:center;gap:12px;
-    font-weight:700;font-size:20px;color:var(--brand-900);
-  }
-  .badge{
-    background:var(--brand-50); color:var(--brand-900);
-    font-weight:600; padding:6px 10px; border-radius:999px; font-size:12px;
-    border:1px solid #d6e6ff;
-  }
+  .shell{max-width:1400px;margin:0 auto;padding:20px 20px 48px;}
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:18px;}
+  .brand{display:flex;align-items:center;gap:12px;font-weight:700;font-size:20px;color:var(--brand-900);}
+  .badge{background:var(--brand-50);color:var(--brand-900);font-weight:600;padding:6px 10px;border-radius:999px;font-size:12px;border:1px solid #d6e6ff;}
   .toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
   .hint{font-size:12px;color:var(--muted)}
-  .grid{
-    display:grid;
-    grid-template-columns:repeat(auto-fill,minmax(240px,1fr));
-    gap:14px; align-items:start;
-  }
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px;align-items:start;}
   .card{
-    background:var(--panel);
-    border:1px solid #e6efff;
-    border-radius:16px;
-    box-shadow:0 4px 16px rgba(16,59,138,0.06);
-    padding:14px;
-    display:flex;flex-direction:column;gap:10px;
-    transition:transform .12s ease, box-shadow .12s ease;
+    background:var(--panel);border:1px solid #e6efff;border-radius:16px;
+    box-shadow:0 4px 16px rgba(16,59,138,0.06);padding:14px;
+    display:flex;flex-direction:column;gap:10px;transition:transform .12s ease, box-shadow .12s ease;
   }
   .card:hover{ transform:translateY(-2px); box-shadow:0 6px 22px rgba(16,59,138,0.08);}
   .kv{display:grid;grid-template-columns:88px 1fr;row-gap:6px;column-gap:10px;font-size:13px}
   .k{color:var(--muted)}
   .v{font-weight:600}
-  .filegrid{
-    display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:2px
-  }
+  .filegrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:2px}
   .btn{
-    appearance:none;border:1px solid transparent;background:var(--brand);
-    color:#fff;border-radius:12px;padding:10px 12px;font-weight:700;
-    font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;
+    appearance:none;border:1px solid transparent;background:var(--brand);color:#fff;border-radius:12px;
+    padding:10px 12px;font-weight:700;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;
   }
   .btn:focus{outline:none;box-shadow:var(--ring)}
   .btn.secondary{background:#fff;border-color:#d8e7ff;color:var(--brand-900)}
@@ -81,32 +56,22 @@
   .btn.warn{background:var(--brand)}
   .btn:disabled{opacity:.6;cursor:not-allowed}
   .actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px}
-  .empty{
-    border:1px dashed #cfe0ff;background:linear-gradient(180deg,#fff, #f7fbff);
-    padding:28px;border-radius:16px;color:var(--muted);text-align:center
+
+  /* NEW: status tags */
+  .tags{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
+  .tag{
+    display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;font-size:12px;font-weight:700;
+    border:1px solid #dbe7ff;background:#f6faff;color:#1d3b78;
   }
-  /* Loader overlay */
-  .overlay{
-    position:fixed;inset:0;background:rgba(15,23,42,.18);
-    backdrop-filter:blur(2px);
-    display:none;align-items:center;justify-content:center;z-index:50;
-  }
-  .spinner{
-    width:58px;height:58px;border-radius:50%;
-    border:6px solid #d9e6ff;border-top-color:var(--brand);
-    animation:spin .9s linear infinite;background:#fff;
-    box-shadow:0 8px 28px rgba(16,59,138,.18); border-bottom-color:transparent;
-  }
+  .tag.ok{border-color:#cdebd9;background:#f3fcf6;color:#0f5c33}
+  .tag.info{border-color:#d6e6ff;background:#eef5ff;color:#17499a}
+
+  .empty{border:1px dashed #cfe0ff;background:linear-gradient(180deg,#fff,#f7fbff);padding:28px;border-radius:16px;color:var(--muted);text-align:center}
+  .overlay{position:fixed;inset:0;background:rgba(15,23,42,.18);backdrop-filter:blur(2px);display:none;align-items:center;justify-content:center;z-index:50}
+  .spinner{width:58px;height:58px;border-radius:50%;border:6px solid #d9e6ff;border-top-color:var(--brand);animation:spin .9s linear infinite;background:#fff;box-shadow:0 8px 28px rgba(16,59,138,.18);border-bottom-color:transparent;}
   @keyframes spin{to{transform:rotate(360deg)}}
-  /* Toasts */
-  .toasts{
-    position:fixed;right:16px;bottom:16px;display:flex;flex-direction:column;gap:10px;z-index:60
-  }
-  .toast{
-    background:#fff;border:1px solid #e6efff;border-left:5px solid var(--brand);
-    border-radius:12px;padding:12px 14px;min-width:260px;box-shadow:0 10px 30px rgba(16,59,138,.08);
-    font-size:13px
-  }
+  .toasts{position:fixed;right:16px;bottom:16px;display:flex;flex-direction:column;gap:10px;z-index:60}
+  .toast{background:#fff;border:1px solid #e6efff;border-left:5px solid var(--brand);border-radius:12px;padding:12px 14px;min-width:260px;box-shadow:0 10px 30px rgba(16,59,138,.08);font-size:13px}
   .toast.ok{border-left-color:var(--ok)}
   .toast.err{border-left-color:var(--err)}
   .toast.warn{border-left-color:var(--warn)}
@@ -185,7 +150,7 @@
     }
   }
 
-  function safe(txt){ return (txt ?? '').toString(); }
+  function safe(txt){ return (txt ?? '').toString().trim(); }
 
   function render(data){
     cardWrap.innerHTML='';
@@ -223,20 +188,51 @@
       files.append(rawBtn, finalBtn);
       card.appendChild(files);
 
+      // NEW: status tags + conditional actions
+      const tags = document.createElement('div');
+      tags.className = 'tags';
+
+      const nextree = safe(item.nextreeInformed);
+      const dispatch = safe(item.dispatchConfirmed);
+
+      if(nextree){
+        const t = document.createElement('span');
+        t.className = 'tag info';
+        t.textContent = 'NexTree Informed';
+        tags.appendChild(t);
+      }
+      if(dispatch){
+        const t = document.createElement('span');
+        t.className = 'tag ok';
+        t.textContent = 'Dispatch Confirmed';
+        tags.appendChild(t);
+      }
+      if(tags.children.length){ card.appendChild(tags); }
+
       const actions = document.createElement('div');
       actions.className='actions';
-      const informBtn = document.createElement('button');
-      informBtn.className='btn warn';
-      informBtn.textContent='Inform NexTree';
-      informBtn.onclick = ()=> act('informNextree', item.timestamp, informBtn);
 
-      const dispatchBtn = document.createElement('button');
-      dispatchBtn.className='btn ok';
-      dispatchBtn.textContent='Confirm Dispatch';
-      dispatchBtn.onclick = ()=> act('confirmDispatch', item.timestamp, dispatchBtn);
+      // Show only those buttons whose status is still blank
+      if(!nextree){
+        const informBtn = document.createElement('button');
+        informBtn.className='btn warn';
+        informBtn.textContent='Inform NexTree';
+        informBtn.onclick = ()=> act('informNextree', item.timestamp, informBtn); // action name kept as existing
+        actions.append(informBtn);
+      } else {
+        // placeholder to keep grid structure even if only one button appears
+        const spacer=document.createElement('div'); spacer.style.visibility='hidden'; actions.append(spacer);
+      }
 
-      actions.append(informBtn, dispatchBtn);
-      card.appendChild(actions);
+      if(!dispatch){
+        const dispatchBtn = document.createElement('button');
+        dispatchBtn.className='btn ok';
+        dispatchBtn.textContent='Confirm Dispatch';
+        dispatchBtn.onclick = ()=> act('confirmDispatch', item.timestamp, dispatchBtn);
+        actions.append(dispatchBtn);
+      }
+
+      if(actions.children.length){ card.appendChild(actions); }
 
       frag.appendChild(card);
     });
@@ -245,7 +241,6 @@
 
   function openFile(url){
     if(!url){ toast('No file URL', 'warn'); return; }
-    // If a comma-separated list sneaks in, open all in new tabs.
     const parts = String(url).split(',').map(s=>s.trim()).filter(Boolean);
     parts.forEach(u => window.open(u, '_blank', 'noopener'));
   }
@@ -254,25 +249,28 @@
   async function act(action, timestamp, btn){
     if(inFlight) return;
     inFlight = true;
-    btn.disabled = true; showOverlay(true);
+    if(btn) btn.disabled = true;
+    showOverlay(true);
 
     try{
       const payload = { action, timestamp };
-      const res = await fetch(API_BASE, {
+      await fetch(API_BASE, {
         method:'POST',
-        mode:'no-cors',        
         headers:{ 'Content-Type':'application/json' },
-        body: JSON.stringify(payload)
-        // If you hit CORS issues, add: , mode: 'no-cors'
+        body: JSON.stringify(payload),
+        mode: 'no-cors'   // Apps Script CORS-friendly; we'll reload immediately
       });
-      toast('Done');
+      // Immediately reload page to reflect updated nextreeInformed/dispatchConfirmed
+      location.reload();
     }catch(err){
       console.error(err);
       toast('Action failed', 'err');
     }finally{
-      btn.disabled = false; showOverlay(false); inFlight = false;
+      inFlight = false;
+      showOverlay(false);
     }
   }
+
   refreshBtn.addEventListener('click', load);
   load();
 })();
