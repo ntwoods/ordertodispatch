@@ -491,8 +491,8 @@
 							    <label class="remark-label">Gola Options:</label>
 							    <select class="remark-input" id="gola-${index}" required>
 							        <option value="" disabled selected>Select Gola Option</option>
-							        <option value="GOLA">GOLA</option>
-							        <option value="NON-GOLA">NON-GOLA</option>
+							        <option value="GOLA">NexTree</option>
+							        <option value="NON-GOLA">NT Woods</option>
 							    </select>
 							</div>
 							
@@ -706,7 +706,7 @@ async function submitOrder(orderIndex, actionType) {
         location: orders[orderIndex].location,
         holdRemark: holdUntilRemark.value,
         remark: remarkInput.value, // Add the new remark to the payload
-		golaOption: "NON-GOLA",
+		golaOption: golaSelect.value,
         crmName: orders[orderIndex].crmName,
         ownersInformed: ownersInformedRadio ? ownersInformedRadio.value : ''
     };
