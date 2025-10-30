@@ -38,7 +38,7 @@
   .card{
     background:var(--panel);border:1px solid #e6efff;border-radius:16px;
     box-shadow:0 4px 16px rgba(16,59,138,0.06);padding:14px;
-    display:flex;flex-direction:column;gap:10px;transition:transform .12s ease, box-shadow .12s ease;
+    display:flex;flex-direction:column;gap:10px;transition:transform .12s ease, box-shadow .12s ease, background .2s ease, border-color .2s ease;
   }
   .card:hover{ transform:translateY(-2px); box-shadow:0 6px 22px rgba(16,59,138,0.08);}
   .kv{display:grid;grid-template-columns:88px 1fr;row-gap:6px;column-gap:10px;font-size:13px}
@@ -81,7 +81,8 @@
   .field{display:flex;flex-direction:column;gap:6px;margin:10px 0}
   .input{border:1px solid #dbe7ff;border-radius:12px;padding:10px 12px;font-size:14px}
   .row{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
-  /* --- Expected Dispatch / Overdue styles --- */
+
+  /* ---- Added for Expected Dispatch + Overdue ---- */
   .countdown{ font-variant-numeric: tabular-nums; font-weight:700; }
   .tag.overdue{ border-color:#ffd6d6; background:#fff2f2; color:#a61b1b; }
   .card.overdue{
@@ -89,7 +90,6 @@
     border-color:#ffd6d6;
     box-shadow:0 4px 16px rgba(224,49,49,.08);
   }
-  
 </style>
 </head>
 <body>
@@ -163,7 +163,7 @@
   function openModal(ts, btn){
     modalTimestamp = ts;
     modalBtnRef = btn || null;
-    // default value: next working day 18:00 IST
+    // default value: next day 18:00 local
     const d = new Date();
     d.setDate(d.getDate() + 1);
     d.setHours(18,0,0,0);
@@ -177,7 +177,6 @@
     modalBtnRef = null;
   }
   function toLocalInputValue(dateObj){
-    // returns "YYYY-MM-DDTHH:mm" in local time
     const pad = n => String(n).padStart(2,'0');
     const y = dateObj.getFullYear();
     const m = pad(dateObj.getMonth()+1);
@@ -207,6 +206,57 @@
   }
 
   function safe(txt){ return (txt ?? '').toString().trim(); }
+
+  // ---------- Countdown utilities (global) ----------
+  let countdownTimerId = null;
+
+  function startCountdowns(){
+    if (countdownTimerId) clearInterval(countdownTimerId);
+
+    const nodes = Array.from(document.querySelectorAll('.countdown'));
+
+    function pretty(ms){
+      let s = Math.max(0, Math.floor(ms/1000));
+      const d = Math.floor(s / 86400); s %= 86400;
+      const h = Math.floor(s / 3600);  s %= 3600;
+      const m = Math.floor(s / 60);    const sec = s % 60;
+      const parts = [];
+      if (d) parts.push(d+'d');
+      parts.push(String(h).padStart(2,'0')+'h', String(m).padStart(2,'0')+'m', String(sec).padStart(2,'0')+'s');
+      return parts.join(' ');
+    }
+
+    function tick(){
+      const now = Date.now();
+      nodes.forEach(el=>{
+        const iso = el.getAttribute('data-target') || '';
+        const ts = Date.parse(iso);
+        const card = el.closest('.card');
+        const tag = el.closest('.tag');
+
+        if (isNaN(ts)){
+          el.textContent = '—';
+          return;
+        }
+
+        const diff = ts - now;
+        if (diff <= 0){
+          el.textContent = 'Overdue';
+          if (tag && !tag.classList.contains('overdue')) tag.classList.add('overdue');
+          if (card && !card.classList.contains('overdue')) card.classList.add('overdue');
+          return;
+        }
+
+        if (tag) tag.classList.remove('overdue');
+        if (card) card.classList.remove('overdue');
+        el.textContent = pretty(diff);
+      });
+    }
+
+    tick(); // initial paint
+    countdownTimerId = setInterval(tick, 1000);
+  }
+  // --------------------------------------------------
 
   function render(data){
     cardWrap.innerHTML='';
@@ -249,6 +299,7 @@
       const nextree = safe(item.nextreeInformed);
       const dispatch = safe(item.dispatchConfirmed);
 
+      // Existing tags
       if(nextree){
         const t = document.createElement('span');
         t.className = 'tag info';
@@ -261,6 +312,26 @@
         t.textContent = 'Dispatch Confirmed';
         tags.appendChild(t);
       }
+
+      // ---- NEW: Expected Dispatch + live countdown ----
+      const expectedISOraw = safe(item.dispatchDateAndTime); // API se aata hai
+      if (expectedISOraw){
+        const d = new Date(expectedISOraw);
+        const expectedTag = document.createElement('span');
+        expectedTag.className = 'tag info expectedTag';
+
+        const human = isNaN(d)
+          ? '—'
+          : d.toLocaleString('en-IN', { dateStyle:'medium', timeStyle:'short' });
+
+        // countdown span with target ISO (if parseable)
+        const targetISO = isNaN(d) ? '' : d.toISOString();
+        expectedTag.innerHTML = `Expected Dispatch: <strong>${human}</strong> • <span class="countdown" data-target="${targetISO}">calculating…</span>`;
+        // keep this tag at the beginning for visibility
+        tags.prepend(expectedTag);
+      }
+      // -------------------------------------------------
+
       if(tags.children.length){ card.appendChild(tags); }
 
       const actions = document.createElement('div');
@@ -288,23 +359,11 @@
       frag.appendChild(card);
     });
     cardWrap.appendChild(frag);
+
+    // Start/refresh all countdowns after DOM is ready
+    startCountdowns();
   }
 
-  // 👇 add this right after nextree/dispatch tags logic (before appending tags)
-  const expectedISO = safe(item.dispatchDateAndTime);
-  if (expectedISO) {
-    const expectedTag = document.createElement('span');
-    expectedTag.className = 'tag info expectedTag';
-  
-    const d = new Date(expectedISO);
-    const human = isNaN(d) ? '—' : d.toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' });
-  
-    // We will live-update the <span class="countdown"> below
-    expectedTag.innerHTML = `Expected Dispatch: <strong>${human}</strong> • <span class="countdown" data-target="${isNaN(d)?'':d.toISOString()}">calculating…</span>`;
-    tags.prepend(expectedTag); // keep it first
-  }
-
-  
   function openFile(url){
     if(!url){ toast('No file URL', 'warn'); return; }
     const parts = String(url).split(',').map(s=>s.trim()).filter(Boolean);
@@ -320,7 +379,6 @@
     try{
       const payload = { action, timestamp };
       if(action === 'informNextree' && tentativeISO){
-        // Convert local "YYYY-MM-DDTHH:mm" to ISO string
         const local = new Date(tentativeISO);
         if(!isNaN(local)) payload.tentativeDispatch = local.toISOString();
       }
