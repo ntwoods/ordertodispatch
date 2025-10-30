@@ -290,6 +290,21 @@
     cardWrap.appendChild(frag);
   }
 
+  // 👇 add this right after nextree/dispatch tags logic (before appending tags)
+  const expectedISO = safe(item.dispatchDateAndTime);
+  if (expectedISO) {
+    const expectedTag = document.createElement('span');
+    expectedTag.className = 'tag info expectedTag';
+  
+    const d = new Date(expectedISO);
+    const human = isNaN(d) ? '—' : d.toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' });
+  
+    // We will live-update the <span class="countdown"> below
+    expectedTag.innerHTML = `Expected Dispatch: <strong>${human}</strong> • <span class="countdown" data-target="${isNaN(d)?'':d.toISOString()}">calculating…</span>`;
+    tags.prepend(expectedTag); // keep it first
+  }
+
+  
   function openFile(url){
     if(!url){ toast('No file URL', 'warn'); return; }
     const parts = String(url).split(',').map(s=>s.trim()).filter(Boolean);
