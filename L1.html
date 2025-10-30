@@ -216,7 +216,7 @@
         </div>
 
         <div class="flex space-x-3">
-          <button id="approve-btn-${index}" onclick="approveOrder('${order.timestamp}', ${index})"
+          <button id="approve-btn-${index}" onclick="openProceedDialog('${order.timestamp}', ${index})"
                   class="flex-1 bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded-lg font-medium">
             Proceed
           </button>
@@ -257,6 +257,73 @@
       }, 1000);
       countdownIntervals.push(it);
     }
+/* ===== Proceed (Bill To Ship To?) state ===== */
+let pendingProceed = { timestamp: null, index: null };
+
+/* Proceed button click par modal open */
+function openProceedDialog(timestamp, index) {
+  pendingProceed.timestamp = timestamp;
+  pendingProceed.index = index;
+
+  // Remark validate (pehle hi check kar lein)
+  const input = document.getElementById(`proceedRemark-${index}`);
+  const remark = (input?.value || '').trim();
+  if (!remark) {
+    alert('Please provide a remark to proceed with the order.');
+    input?.focus();
+    return;
+  }
+  document.getElementById('proceedModal').classList.remove('hidden');
+}
+
+/* Modal close */
+function closeProceedModal() {
+  document.getElementById('proceedModal').classList.add('hidden');
+  pendingProceed = { timestamp: null, index: null };
+}
+
+/* User ne Yes/No choose kiya -> final submit */
+async function approveOrderPending(billToShipTo) {
+  try {
+    const { timestamp, index } = pendingProceed || {};
+    if (timestamp == null || index == null) return;
+
+    const input = document.getElementById(`proceedRemark-${index}`);
+    const remark = (input?.value || '').trim();
+    if (!remark) {
+      alert('Please provide a remark to proceed with the order.');
+      input?.focus();
+      return;
+    }
+
+    const btn = document.getElementById(`approve-btn-${index}`);
+    btn?.classList.add('btn-loading');
+
+    await fetch(API_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'approveOrder',
+        timestamp: timestamp,
+        proceedRemark: remark,
+        billToShipTo: billToShipTo   // <— NEW FIELD sent to backend
+      })
+    });
+
+    // UI feedback
+    setTimeout(() => {
+      btn?.classList.remove('btn-loading');
+      showSuccessNotification(`Order approved (BillToShipTo: ${billToShipTo})`);
+      closeProceedModal();
+      fetchOrders(); // refresh list
+    }, 1000);
+  } catch (e) {
+    console.error(e);
+    closeProceedModal();
+  }
+}
+    
 
     async function toggleCreditStatus(index, status){
       const a = document.querySelector(`.credit-approved-${index}`);
@@ -343,5 +410,20 @@
 
   <!-- Keeps your view-only toggle behavior intact if present -->
   <script src="js/viewOnly.js"></script>
+<!-- Proceed: Bill To Ship To? Modal -->
+<div id="proceedModal" class="fixed inset-0 modal-overlay z-50 hidden">
+  <div class="flex items-center justify-center min-h-screen px-4">
+    <div class="bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
+      <h3 class="text-lg font-semibold text-gray-900 mb-3">Is Bill To Ship To Order?</h3>
+      <p class="text-gray-600 mb-4">Please confirm. Your selection will be sent with the approval payload.</p>
+      <div class="flex items-center justify-end space-x-3">
+        <button onclick="closeProceedModal()" class="px-4 py-2 text-gray-600 hover:text-gray-800">Cancel</button>
+        <button onclick="approveOrderPending('No')" class="px-5 py-2 bg-gray-700 hover:bg-gray-800 text-white rounded-lg">No</button>
+        <button onclick="approveOrderPending('Yes')" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg">Yes</button>
+      </div>
+    </div>
+  </div>
+</div>
+  
 </body>
 </html>
