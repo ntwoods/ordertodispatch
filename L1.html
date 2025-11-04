@@ -7,42 +7,36 @@
   <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    /* ----- Minimal custom CSS (keep only what's necessary) ----- */
     * { box-sizing: border-box; }
     body { font-family: 'Inter', sans-serif; background:#f8fafc; }
-
-    /* Hover lift for cards */
     .card-hover { transition: transform .2s, box-shadow .2s; }
     .card-hover:hover { transform: translateY(-4px); box-shadow: 0 20px 25px -5px rgba(0,0,0,.1), 0 10px 10px -5px rgba(0,0,0,.04); }
-
-    /* Loader + small inline spinners */
     .loading-spinner { animation: spin 1s linear infinite; }
     @keyframes spin { from{transform:rotate(0)} to{transform:rotate(360deg)} }
     .btn-loading { position:relative; color:transparent!important; pointer-events:none; }
     .btn-loading::after { content:""; position:absolute; width:16px;height:16px; top:50%;left:50%; margin:-8px; border:2px solid #fff; border-top-color:transparent; border-radius:50%; animation: spin 1s linear infinite; }
     .status-loading { position:relative; pointer-events:none; }
     .status-loading::after { content:""; position:absolute; width:12px;height:12px; top:50%;left:50%; margin:-6px; border:1px solid #6b7280; border-top-color:transparent; border-radius:50%; animation: spin 1s linear infinite; }
-
-    /* Modal dim */
     .modal-overlay { background: rgba(0,0,0,.45); backdrop-filter: blur(2px); }
-
-    /* Success toast */
     .success-notification { position:fixed; top:20px; right:20px; background:#10b981; color:#fff; padding:12px 16px; border-radius:8px;
       box-shadow:0 6px 18px rgba(0,0,0,.15); transform:translateX(120%); transition: transform .3s; z-index:1000; }
     .success-notification.show { transform:translateX(0); }
     .success-notification.hide { transform:translateX(120%); }
-
-    /* Dealer type pill */
     .dealer-type-badge { display:inline-flex; align-items:center; padding:.25rem .6rem; border-radius:9999px; font-size:.75rem; font-weight:600; color:#fff; margin-left:.5rem; }
+    /* mode pill */
+    .mode-pill{display:inline-block;margin:0 auto 10px auto;padding:6px 12px;border-radius:999px;font-size:12px;font-weight:600}
+    .mode-view{background:#e8f3ff;color:#0b63b6;border:1px solid #bcdcff}
+    .mode-crm{background:#eafff0;color:#0b7a2b;border:1px solid #bff0cf}
+    .mode-ea{background:#fff6e8;color:#a05a00;border:1px solid #f2ddb9}
   </style>
 </head>
 
 <body class="min-h-screen">
-  <!-- Simple black header text as requested -->
-  <header class="px-4 py-5">
-    <h1 class="text-xl md:text-2xl font-semibold text-black text-center">
+  <header class="px-4 py-5 text-center">
+    <h1 class="text-xl md:text-2xl font-semibold text-black">
       Credibility & Stock Availability Check by CRM
     </h1>
+    <div id="modePill" class="mode-pill mode-ea" style="display:none;">EA Mode</div>
   </header>
 
   <!-- Success toast -->
@@ -85,7 +79,30 @@
     </div>
   </div>
 
+  <!-- Proceed: Bill To Ship To? Modal -->
+  <div id="proceedModal" class="fixed inset-0 modal-overlay z-50 hidden">
+    <div class="flex items-center justify-center min-h-screen px-4">
+      <div class="bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-3">Is Bill To Ship To Order?</h3>
+        <p class="text-gray-600 mb-4">Please confirm. Your selection will be sent with the approval payload.</p>
+        <div class="flex items-center justify-end space-x-3">
+          <button onclick="closeProceedModal()" class="px-4 py-2 text-gray-600 hover:text-gray-800">Cancel</button>
+          <button onclick="approveOrderPending('No')" class="px-5 py-2 bg-gray-700 hover:bg-gray-800 text-white rounded-lg">No</button>
+          <button onclick="approveOrderPending('Yes')" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg">Yes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script>
+    /* ===== Mode resolution from URL ===== */
+    const urlParams = new URLSearchParams(location.search);
+    const rawMode = (urlParams.get('mode') || '').toLowerCase();
+    const crmParam = urlParams.get('crm');
+    // crm present -> CRM mode ; else if mode=view -> View ; else -> EA
+    const MODE = crmParam ? 'crm' : (rawMode === 'view' ? 'view' : 'ea');
+    const isViewOnly = MODE === 'view';
+
     /* ===== Config ===== */
     const API_URL = 'https://script.google.com/macros/s/AKfycby7o8IwfJ1vgI-_2Ad-epHZHmOdVqTbNVWnncuv4BnDIiIcWNmuzrEspA9jIvgy9G84eQ/exec';
 
@@ -93,11 +110,25 @@
     let ordersData = [];
     let countdownIntervals = [];
     let currentStockTimestamp = null, currentStockStatus = null, currentStockIndex = null;
+    let pendingProceed = { timestamp: null, index: null };
 
-    /* ===== Init ===== */
     document.addEventListener('DOMContentLoaded', () => fetchOrders());
 
-    /* ===== Utils: toast + loading ===== */
+    /* ===== UI helpers ===== */
+    function paintModePill(){
+      const pill = document.getElementById('modePill');
+      pill.style.display = 'inline-block';
+      if (MODE === 'crm') {
+        pill.textContent = `CRM Mode — ${crmParam}`;
+        pill.className = 'mode-pill mode-crm';
+      } else if (MODE === 'view') {
+        pill.textContent = 'View Mode — Read Only';
+        pill.className = 'mode-pill mode-view';
+      } else {
+        pill.textContent = 'EA Mode — All CRMs, Editable';
+        pill.className = 'mode-pill mode-ea';
+      }
+    }
     function showSuccessNotification(message) {
       const n = document.getElementById('successNotification');
       document.getElementById('successMessage').textContent = message || 'Done';
@@ -115,16 +146,28 @@
       document.getElementById('noDataContainer').classList.remove('hidden');
     }
 
-    /* ===== Data fetch & render ===== */
+    /* ===== Data fetch ===== */
     async function fetchOrders(){
       try{
+        paintModePill();
         showLoading(true);
-        const crm = new URLSearchParams(location.search).get('crm');
-        if(!crm) throw new Error('CRM name missing in URL');
-        const res = await fetch(`${API_URL}?crm=${encodeURIComponent(crm)}`);
+
+        let requestUrl = API_URL;
+        if (MODE === 'crm') {
+          requestUrl += `?crm=${encodeURIComponent(crmParam)}`;
+        } else if (MODE === 'view') {
+          requestUrl += `?mode=view`;
+        } // EA: no params
+
+        const res = await fetch(requestUrl);
         const json = await res.json();
         ordersData = (json.status==='success' && json.data) ? json.data : [];
         renderOrders();
+
+        // Apply read-only only in view mode if helper exists
+        if (isViewOnly && typeof setReadOnlyMode === "function") {
+          setReadOnlyMode();
+        }
       } catch(e){
         console.error(e); showNoData();
       } finally{
@@ -132,6 +175,7 @@
       }
     }
 
+    /* ===== Render ===== */
     function renderOrders(){
       const container = document.getElementById('ordersContainer');
       container.innerHTML = '';
@@ -140,7 +184,6 @@
 
       ordersData.forEach((order, i) => container.appendChild(createOrderCard(order, i)));
       container.classList.remove('hidden');
-      if (typeof setReadOnlyMode === "function") setReadOnlyMode();
     }
 
     function createOrderCard(order, index){
@@ -159,17 +202,17 @@
       card.innerHTML = `
         <div class="flex justify-between items-start mb-4">
           <div class="flex items-center">
-            <h3 class="text-lg font-bold text-gray-900">${order.dealerName}</h3>
+            <h3 class="text-lg font-bold text-gray-900">${order.dealerName || ''}</h3>
             ${badge}
           </div>
           <div class="text-right"><div id="${countdownId}" class="text-sm font-mono bg-white px-2 py-1 rounded"></div></div>
         </div>
 
         <div class="space-y-3 mb-6">
-          <div class="flex justify-between text-sm"><span class="text-gray-600">Marketing Person:</span><span class="font-medium">${order.marketingPersonName}</span></div>
-          <div class="flex justify-between text-sm"><span class="text-gray-600">Location:</span><span class="font-medium">${order.location}</span></div>
-          <div class="flex justify-between text-sm"><span class="text-gray-600">CRM:</span><span class="font-medium">${order.crmName}</span></div>
-          <div class="flex justify-between text-sm"><span class="text-gray-600">Concerned Owner:</span><span class="font-medium">${order.concernedOwner}</span></div>
+          <div class="flex justify-between text-sm"><span class="text-gray-600">Marketing Person:</span><span class="font-medium">${order.marketingPersonName || ''}</span></div>
+          <div class="flex justify-between text-sm"><span class="text-gray-600">Location:</span><span class="font-medium">${order.location || ''}</span></div>
+          <div class="flex justify-between text-sm"><span class="text-gray-600">CRM:</span><span class="font-medium">${order.crmName || ''}</span></div>
+          <div class="flex justify-between text-sm"><span class="text-gray-600">Concerned Owner:</span><span class="font-medium">${order.concernedOwner || ''}</span></div>
           <div class="flex justify-between text-sm">
             <span class="text-gray-600">File:</span>
             <button onclick="openMultipleDocuments('${(order.fileUploadLink||'').replace(/'/g, "\\'")}', ${index})" class="text-blue-600 hover:text-blue-800 underline">View Document</button>
@@ -227,6 +270,7 @@
       return card;
     }
 
+    /* ===== Deadline/Countdown ===== */
     const isSunday = d => d.getDay() === 0;
     function calculateDeadline(ts){
       const d = new Date(ts);
@@ -257,81 +301,71 @@
       }, 1000);
       countdownIntervals.push(it);
     }
-/* ===== Proceed (Bill To Ship To?) state ===== */
-let pendingProceed = { timestamp: null, index: null };
 
-/* Proceed button click par modal open */
-function openProceedDialog(timestamp, index) {
-  pendingProceed.timestamp = timestamp;
-  pendingProceed.index = index;
+    /* ===== Proceed (Bill To Ship To?) ===== */
+    function openProceedDialog(timestamp, index) {
+      pendingProceed.timestamp = timestamp;
+      pendingProceed.index = index;
 
-  // Remark validate (pehle hi check kar lein)
-  const input = document.getElementById(`proceedRemark-${index}`);
-  const remark = (input?.value || '').trim();
-  if (!remark) {
-    alert('Please provide a remark to proceed with the order.');
-    input?.focus();
-    return;
-  }
-  document.getElementById('proceedModal').classList.remove('hidden');
-}
+      const input = document.getElementById(`proceedRemark-${index}`);
+      const remark = (input?.value || '').trim();
+      if (!remark) {
+        alert('Please provide a remark to proceed with the order.');
+        input?.focus();
+        return;
+      }
+      document.getElementById('proceedModal').classList.remove('hidden');
+    }
+    function closeProceedModal() {
+      document.getElementById('proceedModal').classList.add('hidden');
+      pendingProceed = { timestamp: null, index: null };
+    }
+    async function approveOrderPending(billToShipTo) {
+      try {
+        const { timestamp, index } = pendingProceed || {};
+        if (timestamp == null || index == null) return;
 
-/* Modal close */
-function closeProceedModal() {
-  document.getElementById('proceedModal').classList.add('hidden');
-  pendingProceed = { timestamp: null, index: null };
-}
+        const input = document.getElementById(`proceedRemark-${index}`);
+        const remark = (input?.value || '').trim();
+        if (!remark) {
+          alert('Please provide a remark to proceed with the order.');
+          input?.focus(); return;
+        }
 
-/* User ne Yes/No choose kiya -> final submit */
-async function approveOrderPending(billToShipTo) {
-  try {
-    const { timestamp, index } = pendingProceed || {};
-    if (timestamp == null || index == null) return;
+        const btn = document.getElementById(`approve-btn-${index}`);
+        btn?.classList.add('btn-loading');
 
-    const input = document.getElementById(`proceedRemark-${index}`);
-    const remark = (input?.value || '').trim();
-    if (!remark) {
-      alert('Please provide a remark to proceed with the order.');
-      input?.focus();
-      return;
+        await fetch(API_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'approveOrder',
+            timestamp: timestamp,
+            proceedRemark: remark,
+            billToShipTo: billToShipTo
+          })
+        });
+
+        setTimeout(() => {
+          btn?.classList.remove('btn-loading');
+          showSuccessNotification(`Order approved (BillToShipTo: ${billToShipTo})`);
+          closeProceedModal();
+          fetchOrders();
+        }, 1000);
+      } catch (e) {
+        console.error(e);
+        closeProceedModal();
+      }
     }
 
-    const btn = document.getElementById(`approve-btn-${index}`);
-    btn?.classList.add('btn-loading');
-
-    await fetch(API_URL, {
-      method: 'POST',
-      mode: 'no-cors',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        action: 'approveOrder',
-        timestamp: timestamp,
-        proceedRemark: remark,
-        billToShipTo: billToShipTo   // <— NEW FIELD sent to backend
-      })
-    });
-
-    // UI feedback
-    setTimeout(() => {
-      btn?.classList.remove('btn-loading');
-      showSuccessNotification(`Order approved (BillToShipTo: ${billToShipTo})`);
-      closeProceedModal();
-      fetchOrders(); // refresh list
-    }, 1000);
-  } catch (e) {
-    console.error(e);
-    closeProceedModal();
-  }
-}
-    
-
+    /* ===== Credit/Stock toggles ===== */
     async function toggleCreditStatus(index, status){
       const a = document.querySelector(`.credit-approved-${index}`);
       const r = document.querySelector(`.credit-rejected-${index}`);
       const target = status==='approved'? a : r;
       target.classList.add('status-loading'); target.disabled = true;
 
-      // reset
       [a,r].forEach(b => { b.classList.remove('bg-green-500','bg-red-500'); b.classList.add('bg-gray-200'); });
 
       try{
@@ -349,13 +383,6 @@ async function approveOrderPending(billToShipTo) {
       }
     }
 
-    function openMultipleDocuments(urlString){
-      const urls = (urlString||'').split(',').map(u=>u.trim()).filter(Boolean);
-      if(!urls.length){ alert('No valid URLs found'); return; }
-      if(urls.length>1 && !confirm(`This will open ${urls.length} documents in separate tabs. Continue?`)) return;
-      urls.forEach((u,i)=> setTimeout(()=>window.open(u,'_blank'), i*100));
-    }
-
     function promptStockStatus(timestamp, index, status){
       currentStockTimestamp = timestamp; currentStockStatus = status; currentStockIndex = index;
       document.getElementById('stockModal').classList.remove('hidden');
@@ -366,7 +393,6 @@ async function approveOrderPending(billToShipTo) {
       document.getElementById('stockRemark').value = '';
       currentStockTimestamp = currentStockStatus = currentStockIndex = null;
     }
-
     async function submitStockStatus(){
       const remark = document.getElementById('stockRemark').value.trim();
       if(!remark){ alert('Please provide a remark for the stock status.'); return; }
@@ -391,39 +417,16 @@ async function approveOrderPending(billToShipTo) {
       }
     }
 
-    async function approveOrder(timestamp, index){
-      const input = document.getElementById(`proceedRemark-${index}`);
-      const remark = input.value.trim();
-      if(!remark){ alert('Please provide a remark to proceed with the order.'); input.focus(); return; }
-      const btn = document.getElementById(`approve-btn-${index}`); btn.classList.add('btn-loading');
-
-      try{
-        await fetch(API_URL,{ method:'POST', mode:'no-cors', headers:{'Content-Type':'application/json'},
-          body: JSON.stringify({ action:'approveOrder', timestamp, proceedRemark: remark })
-        });
-        setTimeout(()=>{ btn.classList.remove('btn-loading'); showSuccessNotification('Order approved successfully!'); fetchOrders(); }, 1200);
-      } catch(e){
-        console.error(e); btn.classList.remove('btn-loading');
-      }
+    /* ===== Helpers ===== */
+    function openMultipleDocuments(urlString){
+      const urls = (urlString||'').split(',').map(u=>u.trim()).filter(Boolean);
+      if(!urls.length){ alert('No valid URLs found'); return; }
+      if(urls.length>1 && !confirm(`This will open ${urls.length} documents in separate tabs. Continue?`)) return;
+      urls.forEach((u,i)=> setTimeout(()=>window.open(u,'_blank'), i*100));
     }
   </script>
 
-  <!-- Keeps your view-only toggle behavior intact if present -->
+  <!-- Your read-only helper: only has effect in View mode (we call it conditionally) -->
   <script src="js/viewOnly.js"></script>
-<!-- Proceed: Bill To Ship To? Modal -->
-<div id="proceedModal" class="fixed inset-0 modal-overlay z-50 hidden">
-  <div class="flex items-center justify-center min-h-screen px-4">
-    <div class="bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
-      <h3 class="text-lg font-semibold text-gray-900 mb-3">Is Bill To Ship To Order?</h3>
-      <p class="text-gray-600 mb-4">Please confirm. Your selection will be sent with the approval payload.</p>
-      <div class="flex items-center justify-end space-x-3">
-        <button onclick="closeProceedModal()" class="px-4 py-2 text-gray-600 hover:text-gray-800">Cancel</button>
-        <button onclick="approveOrderPending('No')" class="px-5 py-2 bg-gray-700 hover:bg-gray-800 text-white rounded-lg">No</button>
-        <button onclick="approveOrderPending('Yes')" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg">Yes</button>
-      </div>
-    </div>
-  </div>
-</div>
-  
 </body>
 </html>
