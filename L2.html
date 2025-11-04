@@ -1,678 +1,355 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
-    <title>Sales Orders Dashboard</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+  <title>Sales Orders Dashboard</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:Arial,sans-serif;background-color:#f5f9ff;padding:20px}
+    .container{max-width:1200px;margin:0 auto}
+    h2{color:#0b63b6;text-align:center;margin-bottom:8px}
+    .mode-pill{display:inline-block;margin:0 auto 20px auto;padding:6px 12px;border-radius:999px;font-size:12px;font-weight:600}
+    .mode-view{background:#e8f3ff;color:#0b63b6;border:1px solid #bcdcff}
+    .mode-crm{background:#eafff0;color:#0b7a2b;border:1px solid #bff0cf}
+    .mode-ea{background:#fff6e8;color:#a05a00;border:1px solid #f2ddb9}
 
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #e0f2f7; /* Light blue background */
-            padding: 20px;
-        }
+    .loading{text-align:center;font-size:16px;color:#0b63b6}
+    .error{background:#fdecee;color:#b10016;padding:14px;border-radius:8px;text-align:center;margin-bottom:16px;border:1px solid #ffd3d8}
+    .orders-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(350px,1fr));gap:20px}
+    .order-card{background:white;border-radius:12px;box-shadow:0 4px 16px rgba(8,47,73,0.06);padding:18px;border:1px solid #e7eef7;transition:transform .2s}
+    .order-card:hover{transform:translateY(-2px)}
+    .order-header{border-bottom:2px solid #e6f1ff;padding-bottom:10px;margin-bottom:12px}
+    .dealer-name{font-size:20px;font-weight:800;color:#0b63b6;margin-bottom:4px}
+    .timestamp{color:#475569;font-size:13px}
+    .order-details{margin-bottom:12px}
+    .detail-row{display:flex;justify-content:space-between;margin-bottom:6px;padding:3px 0}
+    .detail-label{font-weight:700;color:#1e293b;flex:1}
+    .detail-value{color:#334155;flex:2;text-align:right}
+    .file-link{color:#0b63b6;text-decoration:none}
+    .file-link:hover{text-decoration:underline}
 
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-		.gola-section {
-			margin-top: 15px;
-			margin-bottom: 15px;
-		}
-		
+    .countdown-section{background:#f0f7ff;border-radius:10px;padding:12px;text-align:center;border:1px solid #dbe9ff}
+    .countdown-label{font-size:12px;color:#0f172a;margin-bottom:4px}
+    .countdown-timer{font-size:22px;font-weight:800;font-family:monospace}
+    .countdown-urgent{color:#c1121f;animation:pulse 1s infinite}
+    .countdown-warning{color:#f59e0b}
+    .countdown-normal{color:#15803d}
+    .countdown-expired{color:#b91c1c;background:#fff1f2;border-radius:8px;padding:4px 8px;display:inline-block}
 
-        h1 {
-            text-align: center;
-            color: #01579b; /* Darker blue for heading */
-            margin-bottom: 30px;
-        }
+    @keyframes pulse{0%{opacity:1}50%{opacity:.5}100%{opacity:1}}
 
-        .loading {
-            text-align: center;
-            font-size: 18px;
-            color: #0277bd; /* Medium blue for loading */
-        }
-
-        .error {
-            background-color: #bbdefb; /* Light blue for error background */
-            color: #c62828; /* Red for error text */
-            padding: 15px;
-            border-radius: 5px;
-            text-align: center;
-            margin-bottom: 20px;
-        }
-
-        .orders-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-            gap: 20px;
-        }
-
-        .order-card {
-            background: white; /* White background for cards */
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            padding: 20px;
-            transition: transform 0.2s;
-        }
-
-        .order-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-        }
-
-        .order-header {
-            border-bottom: 2px solid #90caf9; /* Lighter blue border */
-            padding-bottom: 10px;
-            margin-bottom: 15px;
-        }
-
-        .dealer-name {
-            font-size: 20px;
-            font-weight: bold;
-            color: #1976d2; /* Blue for dealer name */
-            margin-bottom: 5px;
-        }
-
-        .timestamp {
-            color: #424242; /* Dark gray for timestamp */
-            font-size: 14px;
-        }
-
-        .order-details {
-            margin-bottom: 15px;
-        }
-
-        .detail-row {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 8px;
-            padding: 5px 0;
-        }
-
-        .detail-label {
-            font-weight: bold;
-            color: #212121; /* Darker gray for labels */
-            flex: 1;
-        }
-
-        .detail-value {
-            color: #424242; /* Dark gray for values */
-            flex: 2;
-            text-align: right;
-        }
-
-        .file-link {
-            color: #1976d2; /* Blue for file link */
-            text-decoration: none;
-        }
-
-        .file-link:hover {
-            text-decoration: underline;
-        }
-
-        .countdown-section {
-            background-color: #e3f2fd; /* Very light blue for countdown section */
-            border-radius: 5px;
-            padding: 15px;
-            text-align: center;
-        }
-
-        .countdown-label {
-            font-size: 14px;
-            color: #424242; /* Dark gray for countdown label */
-            margin-bottom: 5px;
-        }
-
-        .countdown-timer {
-            font-size: 24px;
-            font-weight: bold;
-            font-family: monospace;
-        }
-
-        .countdown-urgent {
-            color: #d32f2f; /* Red for urgent countdown */
-            animation: pulse 1s infinite;
-        }
-
-        .countdown-warning {
-            color: #f57c00; /* Orange for warning countdown */
-        }
-
-        .countdown-normal {
-            color: #2e7d32; /* Green for normal countdown */
-        }
-
-        .countdown-expired {
-            color: #d32f2f; /* Red for expired countdown */
-            background-color: #ffebee; /* Light red background for expired */
-        }
-
-        @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.5; }
-            100% { opacity: 1; }
-        }
-
-        .refresh-btn {
-            background-color: #1976d2; /* Blue for refresh button */
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-            margin-bottom: 20px;
-        }
-
-        .refresh-btn:hover {
-            background-color: #1565c0; /* Darker blue on hover */
-        }
-
-        .action-section {
-            border-top: 2px solid #90caf9; /* Lighter blue border */
-            padding-top: 15px;
-            margin-top: 15px;
-        }
-
-        .file-upload-section {
-            margin-bottom: 15px;
-        }
-
-        .file-upload-label {
-            display: block;
-            font-weight: bold;
-            color: #212121; /* Darker gray for label */
-            margin-bottom: 8px;
-        }
-
-        .file-input {
-            width: 100%;
-            padding: 8px;
-            border: 2px dashed #90caf9; /* Lighter blue dashed border */
-            border-radius: 5px;
-            background-color: #e3f2fd; /* Very light blue background */
-            cursor: pointer;
-            transition: border-color 0.3s;
-        }
-
-        .file-input:hover {
-            border-color: #1976d2; /* Blue on hover */
-        }
-
-        .file-selected {
-            color: #2e7d32; /* Green for file selected text */
-            font-size: 14px;
-            margin-top: 5px;
-            display: none;
-        }
-
-        .radio-section {
-            margin-bottom: 15px;
-        }
-
-        .radio-label {
-            font-weight: bold;
-            color: #212121; /* Darker gray for label */
-            margin-bottom: 8px;
-            display: block;
-        }
-
-        .radio-group {
-            display: flex;
-            gap: 15px;
-        }
-
-        .radio-option {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .radio-option input[type="radio"] {
-            margin: 0;
-        }
-
-        .radio-option label {
-            color: #424242; /* Dark gray for label */
-            cursor: pointer;
-            font-weight: normal;
-        }
-
-        .button-group {
-            display: flex;
-            gap: 10px;
-            margin-top: 15px;
-        }
-
-        .submit-btn, .hold-btn, .cancel-btn {
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 14px;
-            flex-grow: 1;
-            transition: background-color 0.3s;
-        }
-
-        .submit-btn {
-            background-color: #1976d2; /* Blue for Approve */
-        }
-
-        .submit-btn:hover {
-            background-color: #1565c0; /* Darker blue on hover */
-        }
-
-        .submit-btn:disabled {
-            background-color: #90caf9; /* Lighter blue when disabled */
-            cursor: not-allowed;
-        }
-
-        .hold-btn {
-            background-color: #2196f3; /* Lighter blue for Hold */
-        }
-        
-		.cancel-btn {
-            background-color: #ef5350; /* Red for Cancel */
-        }
-
-        .hold-btn:hover {
-            background-color: #1e88e5; /* Darker blue on hover */
-        }
-
-        .hold-btn:disabled {
-            background-color: #90caf9; /* Lighter blue when disabled */
-            cursor: not-allowed;
-        }
-
-        .hold-until-section {
-            margin-top: 15px;
-            margin-bottom: 15px;
-            display: none; /* Hidden by default */
-        }
-
-        .hold-until-label {
-            display: block;
-            font-weight: bold;
-            color: #212121; /* Darker gray for label */
-            margin-bottom: 8px;
-        }
-
-        .hold-until-input {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #90caf9; /* Lighter blue border */
-            border-radius: 5px;
-        }
-
-        .success-message {
-            background-color: #e3f2fd; /* Very light blue for success background */
-            color: #1976d2; /* Blue for success text */
-            padding: 10px;
-            border-radius: 5px;
-            margin-top: 10px;
-            display: none;
-        }
-
-        .error-message {
-            background-color: #ffebee; /* Light red for error background */
-            color: #c62828; /* Red for error text */
-            padding: 10px;
-            border-radius: 5px;
-            margin-top: 10px;
-            display: none;
-        }
-        /* Added for the new remark field */
-        .remark-section {
-            margin-top: 15px;
-            margin-bottom: 15px;
-        }
-
-        .remark-label {
-            display: block;
-            font-weight: bold;
-            color: #212121; /* Darker gray for label */
-            margin-bottom: 8px;
-        }
-
-        .remark-input {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #90caf9; /* Lighter blue border */
-            border-radius: 5px;
-        }
-    </style>
+    .action-section{border-top:2px solid #e6f1ff;padding-top:12px;margin-top:12px}
+    .file-upload-label,.radio-label,.remark-label,.hold-until-label{display:block;font-weight:700;color:#1e293b;margin-bottom:6px}
+    .file-input{width:100%;padding:8px;border:2px dashed #cfe3ff;border-radius:8px;background:#f5f9ff;cursor:pointer}
+    .file-selected{color:#15803d;font-size:13px;margin-top:4px;display:none}
+    .radio-section{margin-bottom:12px}
+    .radio-group{display:flex;gap:14px}
+    .radio-option{display:flex;align-items:center;gap:6px}
+    .remark-input,.hold-until-input, .select-input {width:100%;padding:8px;border:1px solid #cfe3ff;border-radius:8px}
+    .button-group{display:flex;gap:10px;margin-top:12px}
+    .submit-btn,.hold-btn,.cancel-btn{color:#fff;border:none;padding:10px 16px;border-radius:10px;cursor:pointer;font-size:14px;flex-grow:1}
+    .submit-btn{background:#0b63b6}.submit-btn:hover{background:#0a57a0}.submit-btn:disabled{background:#bcdcff;cursor:not-allowed}
+    .hold-btn{background:#2196f3}.hold-btn:hover{background:#1e88e5}.hold-btn:disabled{background:#bcdcff;cursor:not-allowed}
+    .cancel-btn{background:#ef5350}
+    .success-message{background:#eef7ff;color:#0b63b6;padding:10px;border-radius:8px;margin-top:8px;display:none;border:1px solid #d3e7ff}
+    .error-message{background:#fff1f2;color:#b10016;padding:10px;border-radius:8px;margin-top:8px;display:none;border:1px solid #ffd3d8}
+    .dealer-type-badge{height:24px}
+    .refresh-btn{background:#0b63b6;color:#fff;border:none;padding:8px 14px;border-radius:10px;cursor:pointer;font-size:14px;margin:10px auto 18px auto;display:block}
+    .gola-section{margin:12px 0}
+  </style>
 </head>
 <body>
-    <div class="container">
-        <h2>Send To Owners</h2>
-        <button class="refresh-btn" onclick="fetchOrders()">Refresh Orders</button>
-        <div id="content">
-            <div class="loading">Loading orders...</div>
-        </div>
-    </div>
+  <div class="container">
+    <h2>Send To Owners</h2>
+    <div id="modePill" class="mode-pill mode-ea" style="display:none;">EA Mode</div>
+    <button class="refresh-btn" onclick="fetchOrders()">Refresh Orders</button>
+    <div id="content"><div class="loading">Loading orders...</div></div>
+  </div>
 
 <script>
-    let orders = [];
-    let countdownInterval;
+  let orders = [];
+  let countdownInterval;
 
-    // Your API endpoint URL
-    const API_URL = 'https://script.google.com/macros/s/AKfycbyA-Q0NczExlSQmU9ZSNqFsUzVU5u3mK1gQewekQA2L7VOL7rJzTiI-Vmhqc3fiu9bb/exec';
+  // ====== URL Mode Resolution ======
+  const urlParams = new URLSearchParams(window.location.search);
+  const rawMode = (urlParams.get('mode') || '').toLowerCase();
+  const crmParam = urlParams.get('crm');
+  // If crm present => crm mode; else if mode=view => view; else => ea
+  const MODE = crmParam ? 'crm' : (rawMode === 'view' ? 'view' : 'ea');
+  const isViewOnly = MODE === 'view';
+  const modePill = document.getElementById('modePill');
 
-    // Function to fetch orders from the API
-    async function fetchOrders() {
-        try {
-            document.getElementById('content').innerHTML = '<div class="loading">Loading orders...</div>';
+  // ====== API endpoint ======
+  const API_URL = 'https://script.google.com/macros/s/AKfycbyA-Q0NczExlSQmU9ZSNqFsUzVU5u3mK1gQewekQA2L7VOL7rJzTiI-Vmhqc3fiu9bb/exec';
 
-            const urlParams = new URLSearchParams(window.location.search);
-            const crmName = urlParams.get('crm');
+  // Pretty label on top
+  function paintModePill() {
+    if (MODE === 'crm') {
+      modePill.textContent = `CRM Mode — ${crmParam}`;
+      modePill.className = 'mode-pill mode-crm';
+      modePill.style.display = 'inline-block';
+    } else if (MODE === 'view') {
+      modePill.textContent = 'View Mode — Read Only';
+      modePill.className = 'mode-pill mode-view';
+      modePill.style.display = 'inline-block';
+    } else {
+      modePill.textContent = 'EA Mode — All CRMs, Editable';
+      modePill.className = 'mode-pill mode-ea';
+      modePill.style.display = 'inline-block';
+    }
+  }
 
-            if (!crmName) {
-                throw new Error('CRM name is missing in URL');
-            }
+  // ====== Fetch Orders ======
+  async function fetchOrders() {
+    try {
+      document.getElementById('content').innerHTML = '<div class="loading">Loading orders...</div>';
 
-            const response = await fetch(`${API_URL}?crm=${encodeURIComponent(crmName)}`);
-            const result = await response.json();
+      // Build URL per mode
+      let requestUrl = API_URL;
+      if (MODE === 'crm') {
+        requestUrl += `?crm=${encodeURIComponent(crmParam)}`;
+      } else if (MODE === 'view') {
+        requestUrl += `?mode=view`;
+      } // EA mode sends no params
 
-            if (result.status === 'success') {
-                orders = result.data;
-                displayOrders();
-				if (typeof setReadOnlyMode === "function") {
-				  setReadOnlyMode();
-				}	    
-                startCountdown();
-            } else {
-                throw new Error('Failed to fetch orders');
-            }
-        } catch (error) {
-            console.error('Error fetching orders:', error);
-            document.getElementById('content').innerHTML =
-                '<div class="error">Error loading orders. Please check your API URL and try again.</div>';
+      const response = await fetch(requestUrl);
+      const result = await response.json();
+
+      if (result.status === 'success') {
+        orders = result.data || [];
+        displayOrders();
+        // Apply read-only only in view mode (and only if the helper exists)
+        if (isViewOnly && typeof setReadOnlyMode === 'function') {
+          setReadOnlyMode();
         }
+        startCountdown();
+      } else {
+        throw new Error(result.message || 'Failed to fetch orders');
+      }
+    } catch (error) {
+      console.error('Error fetching orders:', error);
+      document.getElementById('content').innerHTML =
+        '<div class="error">Error loading orders. Please check your deployment and try again.</div>';
+    }
+  }
+
+  // ====== Render ======
+  function displayOrders() {
+    paintModePill();
+
+    const content = document.getElementById('content');
+    if (!orders || orders.length === 0) {
+      content.innerHTML = '<div class="loading">No orders found.</div>';
+      return;
     }
 
-        // Function to display orders in cards
-        function displayOrders() {
-            const content = document.getElementById('content');
+    const ordersHTML = orders.map((order, index) => {
+      // Dealer Type badge color
+      let dealerTypeBadge = '';
+      if (order.dealerType) {
+        let badgeColorClass = 'bg-gray-500';
+        const d = String(order.dealerType).toLowerCase();
+        if (d === 'red') badgeColorClass = 'bg-red-500';
+        else if (d === 'yellow') badgeColorClass = 'bg-yellow-500';
+        else if (d === 'green') badgeColorClass = 'bg-green-500';
 
-            if (orders.length === 0) {
-                content.innerHTML = '<div class="loading">No orders found.</div>';
-                return;
-            }
+        dealerTypeBadge = `
+          <div class="dealer-type-badge ${badgeColorClass} text-white text-xs font-semibold px-3 py-1 rounded-full flex items-center justify-center ml-2">
+            ${order.dealerType}
+          </div>
+        `;
+      }
 
-            const ordersHTML = orders.map((order, index) => {
-                // --- NEW: Dealer Type Badge HTML Logic ---
-                let dealerTypeBadge = '';
-                if (order.dealerType) {
-                    let badgeColorClass = '';
-                    switch (order.dealerType.toLowerCase()) {
-                        case 'red':
-                            badgeColorClass = 'bg-red-500';
-                            break;
-                        case 'yellow':
-                            badgeColorClass = 'bg-yellow-500';
-                            break;
-                        case 'green':
-                            badgeColorClass = 'bg-green-500';
-                            break;
-                        default:
-                            badgeColorClass = 'bg-gray-500'; // Fallback color
-                    }
-                    dealerTypeBadge = `
-                        <div class="dealer-type-badge ${badgeColorClass} text-white text-xs font-semibold px-3 py-1 rounded-full flex items-center justify-center ml-2">
-                            ${order.dealerType}
-                        </div>
-                    `;
-                }
-                // --- END NEW ---
+      const editableWrapperStart = `<div class="editable">`;
+      const editableWrapperEnd = `</div>`;
 
-                return `
-                    <div class="order-card" id="order-${index}">
-                        <div class="order-header">
-                            <div class="flex items-center"> <div class="dealer-name">${order.dealerName}</div>
-                                ${dealerTypeBadge} </div>
-                            <div class="timestamp">Order Time: ${formatDateTime(order.timestamp)}</div>
-                        </div>
+      return `
+        <div class="order-card" id="order-${index}">
+          <div class="order-header">
+            <div class="flex items-center">
+              <div class="dealer-name">${order.dealerName || ''}</div>
+              ${dealerTypeBadge}
+            </div>
+            <div class="timestamp">Order Time: ${formatDateTime(order.timestamp)}</div>
+          </div>
 
-                        <div class="order-details">
-                            <div class="detail-row">
-                                <span class="detail-label">Marketing:</span>
-                                <span class="detail-value">${order.marketingPersonName}</span>
-                            </div>
-                            <div class="detail-row">
-                                <span class="detail-label">Location:</span>
-                                <span class="detail-value">${order.location}</span>
-                            </div>
-                            <div class="detail-row">
-                                <span class="detail-label">CRM Name:</span>
-                                <span class="detail-value">${order.crmName}</span>
-                            </div>
-                            <div class="detail-row">
-                                <span class="detail-label">Concerned Owner:</span>
-                                <span class="detail-value">${order.concernedOwner}</span>
-                            </div>	
-							<div class="detail-row">
-                                <span class="detail-label">L-1 Remark:</span>
-                                <span class="detail-value">${order.level1Remark}</span>
-                            </div>			
-                            <div class="detail-row">
-                                <span class="detail-label">File:</span>
-                                <span class="detail-value">
-                                    <a href="${order.fileUploadLink}" target="_blank" class="file-link">View File</a>
-                                </span>
-                            </div>
-                        </div>
+          <div class="order-details">
+            <div class="detail-row"><span class="detail-label">Marketing:</span><span class="detail-value">${order.marketingPersonName || ''}</span></div>
+            <div class="detail-row"><span class="detail-label">Location:</span><span class="detail-value">${order.location || ''}</span></div>
+            <div class="detail-row"><span class="detail-label">CRM Name:</span><span class="detail-value">${order.crmName || ''}</span></div>
+            <div class="detail-row"><span class="detail-label">Concerned Owner:</span><span class="detail-value">${order.concernedOwner || ''}</span></div>
+            <div class="detail-row"><span class="detail-label">L-1 Remark:</span><span class="detail-value">${order.level1Remark || ''}</span></div>
+            <div class="detail-row"><span class="detail-label">File:</span><span class="detail-value"><a href="${order.fileUploadLink || '#'}" target="_blank" class="file-link">View File</a></span></div>
+          </div>
 
-                        <div class="countdown-section">
-                            <div class="countdown-label">Time Remaining:</div>
-                            <div class="countdown-timer" id="countdown-${index}">Calculating...</div>
-                        </div>
-                        <div class="editable">
-                        <div class="action-section">
-                            <div class="file-upload-section" id="file-upload-section-${index}">
-                                <label class="file-upload-label">Attach Final Order Here:</label>
-                                <input type="file" class="file-input" id="file-${index}" onchange="handleFileSelect(${index})">
-                                <div class="file-selected" id="file-selected-${index}">✓ File selected</div>
-                            </div>
+          <div class="countdown-section">
+            <div class="countdown-label">Time Remaining:</div>
+            <div class="countdown-timer" id="countdown-${index}">Calculating...</div>
+          </div>
 
-                            <div class="remark-section">
-                                <label class="remark-label">Remark:</label>
-                                <input type="text" class="remark-input" id="remark-${index}" placeholder="Enter remark here">
-                            </div>
-							<div class="gola-section">
-							    <label class="remark-label">Gola Options:</label>
-							    <select class="remark-input" id="gola-${index}" required>
-							        <option value="" disabled selected>Select Gola Option</option>
-							        <option value="GOLA">NexTree</option>
-							        <option value="NON-GOLA">NT Woods</option>
-							    </select>
-							</div>
-							
-                            <div class="radio-section">
-                                <label class="radio-label">Status:</label>
-                                <div class="radio-group">
-                                    <div class="radio-option">
-                                        <input type="radio" id="owners-informed-yes-${index}" name="owners-informed-${index}" value="yes">
-                                        <label for="owners-informed-yes-${index}">Owners Informed</label>
-                                    </div>
-                                </div>
-                            </div>
+          ${isViewOnly ? '' : editableWrapperStart}
+            ${isViewOnly ? '' : `
+            <div class="action-section">
+              <div class="file-upload-section" id="file-upload-section-${index}">
+                <label class="file-upload-label">Attach Final Order Here:</label>
+                <input type="file" class="file-input" id="file-${index}" onchange="handleFileSelect(${index})">
+                <div class="file-selected" id="file-selected-${index}">✓ File selected</div>
+              </div>
 
-                            <div class="hold-until-section" id="hold-until-section-${index}">
-                                <label class="hold-until-label">Hold Until:</label>
-                                <input type="date" class="hold-until-input" id="hold-until-${index}">
-                                <label class="hold-until-label">Hold Remark:</label>
-                                <input type="text" class="hold-until-input" id="hold-until-remark-${index}">
-                            </div>
+              <div class="remark-section">
+                <label class="remark-label">Remark:</label>
+                <input type="text" class="remark-input" id="remark-${index}" placeholder="Enter remark here">
+              </div>
 
-                            <div class="button-group">
-                                <button class="submit-btn" onclick="submitOrder(${index}, 'Approve')">Approve</button>
-                                <button class="hold-btn" onclick="submitOrder(${index}, 'Hold')">Hold</button>
-                                <button class="cancel-btn" onclick="submitOrder(${index}, 'Cancel')">Cancel</button>
-                            </div>
+              <div class="gola-section">
+                <label class="remark-label">Gola Options:</label>
+                <select class="select-input" id="gola-${index}" required>
+                  <option value="" disabled selected>Select Gola Option</option>
+                  <option value="GOLA">NexTree</option>
+                  <option value="NON-GOLA">NT Woods</option>
+                </select>
+              </div>
 
-                            <div class="success-message" id="success-${index}">Order submitted successfully!</div>
-                            <div class="error-message" id="error-${index}">Error submitting order. Please try again.</div>
-                        </div>
-                        </div>
-                    </div>
-                `;
-            }).join('');
+              <div class="radio-section">
+                <label class="radio-label">Status:</label>
+                <div class="radio-group">
+                  <div class="radio-option">
+                    <input type="radio" id="owners-informed-yes-${index}" name="owners-informed-${index}" value="yes">
+                    <label for="owners-informed-yes-${index}">Owners Informed</label>
+                  </div>
+                </div>
+              </div>
 
-            content.innerHTML = `<div class="orders-grid">${ordersHTML}</div>`;
-        }
-        // Function to calculate deadline based on business rules
-        function calculateDeadline(timestamp) {
-            const orderTime = new Date(timestamp);
-            const hour = orderTime.getHours();
+              <div class="hold-until-section" id="hold-until-section-${index}" style="display:none;">
+                <label class="hold-until-label">Hold Until:</label>
+                <input type="date" class="hold-until-input" id="hold-until-${index}">
+                <label class="hold-until-label">Hold Remark:</label>
+                <input type="text" class="hold-until-input" id="hold-until-remark-${index}">
+              </div>
 
-            let deadline;
+              <div class="button-group">
+                <button class="submit-btn" onclick="submitOrder(${index}, 'Approve')">Approve</button>
+                <button class="hold-btn" onclick="submitOrder(${index}, 'Hold')">Hold</button>
+                <button class="cancel-btn" onclick="submitOrder(${index}, 'Cancel')">Cancel</button>
+              </div>
 
-            if (hour >= 17) {
-                // After 5 PM, deadline is next business day at 10 AM
-                deadline = getNextBusinessDay(orderTime);
-                deadline.setHours(10, 0, 0, 0);
-            } else {
-                // Before 5 PM, deadline is same day + 1 hour
-                deadline = new Date(orderTime.getTime() + (60 * 60 * 1000));
-            }
+              <div class="success-message" id="success-${index}">Order submitted successfully!</div>
+              <div class="error-message" id="error-${index}">Error submitting order. Please try again.</div>
+            </div>`}
+          ${isViewOnly ? '' : editableWrapperEnd}
+        </div>
+      `;
+    }).join('');
 
-            return deadline;
-        }
+    content.innerHTML = `<div class="orders-grid">${ordersHTML}</div>`;
+  }
 
-        // Function to get next business day (skipping weekends)
-        function getNextBusinessDay(date) {
-            const nextDay = new Date(date);
-            nextDay.setDate(nextDay.getDate() + 1);
+  // ====== Business rules (unchanged) ======
+  function calculateDeadline(timestamp) {
+    const orderTime = new Date(timestamp);
+    const hour = orderTime.getHours();
+    let deadline;
 
-            // If it's Saturday (6) or Sunday (0), move to Monday
-            while (nextDay.getDay() === 0 || nextDay.getDay() === 6) {
-                nextDay.setDate(nextDay.getDate() + 1);
-            }
+    if (hour >= 17) {
+      deadline = getNextBusinessDay(orderTime);
+      deadline.setHours(10, 0, 0, 0);
+    } else {
+      deadline = new Date(orderTime.getTime() + (60 * 60 * 1000));
+    }
+    return deadline;
+  }
 
-            return nextDay;
-        }
+  function getNextBusinessDay(date) {
+    const nextDay = new Date(date);
+    nextDay.setDate(nextDay.getDate() + 1);
+    while (nextDay.getDay() === 0 || nextDay.getDay() === 6) {
+      nextDay.setDate(nextDay.getDate() + 1);
+    }
+    return nextDay;
+  }
 
-        // Function to format date and time
-        function formatDateTime(timestamp) {
-            const date = new Date(timestamp);
-            return date.toLocaleString();
-        }
+  function formatDateTime(timestamp) {
+    if (!timestamp) return '';
+    const d = new Date(timestamp);
+    if (isNaN(d)) return '';
+    return d.toLocaleString();
+  }
 
-        // Function to format countdown display
-        function formatCountdown(milliseconds) {
-            if (milliseconds <= 0) {
-                return 'OVERDUE';
-            }
+  function formatCountdown(ms) {
+    if (ms <= 0) return 'OVERDUE';
+    const totalSeconds = Math.floor(ms / 1000);
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+    return `${String(hours).padStart(2,'0')}:${String(minutes).padStart(2,'0')}:${String(seconds).padStart(2,'0')}`;
+  }
 
-            const totalSeconds = Math.floor(milliseconds / 1000);
-            const hours = Math.floor(totalSeconds / 3600);
-            const minutes = Math.floor((totalSeconds % 3600) / 60);
-            const seconds = totalSeconds % 60;
+  function updateCountdowns() {
+    const now = new Date();
+    orders.forEach((order, index) => {
+      const deadline = calculateDeadline(order.timestamp);
+      const timeRemaining = deadline.getTime() - now.getTime();
+      const el = document.getElementById(`countdown-${index}`);
+      if (!el) return;
 
-            return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-        }
+      el.textContent = formatCountdown(timeRemaining);
+      el.className = 'countdown-timer';
+      if (timeRemaining <= 0) el.classList.add('countdown-expired');
+      else if (timeRemaining <= 30 * 60 * 1000) el.classList.add('countdown-urgent');
+      else if (timeRemaining <= 60 * 60 * 1000) el.classList.add('countdown-warning');
+      else el.classList.add('countdown-normal');
+    });
+  }
 
-        // Function to update countdown timers
-        function updateCountdowns() {
-            const now = new Date();
+  function startCountdown() {
+    if (countdownInterval) clearInterval(countdownInterval);
+    updateCountdowns();
+    countdownInterval = setInterval(updateCountdowns, 1000);
+  }
 
-            orders.forEach((order, index) => {
-                const deadline = calculateDeadline(order.timestamp);
-                const timeRemaining = deadline.getTime() - now.getTime();
-                const countdownElement = document.getElementById(`countdown-${index}`);
+  // ====== Helpers for actions (unchanged) ======
+  function fileToBase64(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result.split(',')[1]);
+      reader.onerror = err => reject(err);
+    });
+  }
 
-                if (countdownElement) {
-                    const formattedTime = formatCountdown(timeRemaining);
-                    countdownElement.textContent = formattedTime;
+  function handleFileSelect(orderIndex) {
+    const fileInput = document.getElementById(`file-${orderIndex}`);
+    const fileSelectedDiv = document.getElementById(`file-selected-${orderIndex}`);
+    if (fileInput.files.length > 0) {
+      const file = fileInput.files[0];
+      fileSelectedDiv.style.display = 'block';
+      fileSelectedDiv.textContent = `✓ ${file.name} selected (${(file.size/1024).toFixed(1)} KB)`;
+    } else {
+      fileSelectedDiv.style.display = 'none';
+    }
+  }
 
-                    // Apply styling based on time remaining
-                    countdownElement.className = 'countdown-timer';
+  function toggleHoldUntilField(orderIndex, actionType) {
+    const fileUploadSection = document.getElementById(`file-upload-section-${orderIndex}`);
+    const holdUntilSection = document.getElementById(`hold-until-section-${orderIndex}`);
+    const ownersInformedYes = document.getElementById(`owners-informed-yes-${orderIndex}`);
+    const remarkSection = document.querySelector(`#order-${orderIndex} .remark-section`);
 
-                    if (timeRemaining <= 0) {
-                        countdownElement.classList.add('countdown-expired');
-                    } else if (timeRemaining <= 30 * 60 * 1000) { // 30 minutes
-                        countdownElement.classList.add('countdown-urgent');
-                    } else if (timeRemaining <= 60 * 60 * 1000) { // 1 hour
-                        countdownElement.classList.add('countdown-warning');
-                    } else {
-                        countdownElement.classList.add('countdown-normal');
-                    }
-                }
-            });
-        }
+    if (actionType === 'Hold') {
+      holdUntilSection.style.display = 'block';
+      fileUploadSection.style.display = 'none';
+      if (ownersInformedYes) ownersInformedYes.checked = false;
+      if (remarkSection) remarkSection.style.display = 'none';
+    } else {
+      holdUntilSection.style.display = 'none';
+      fileUploadSection.style.display = 'block';
+      if (remarkSection) remarkSection.style.display = 'block';
+    }
+  }
 
-        // Function to start countdown timer
-        function startCountdown() {
-            // Clear existing interval
-            if (countdownInterval) {
-                clearInterval(countdownInterval);
-            }
-
-            // Update immediately
-            updateCountdowns();
-
-            // Update every second
-            countdownInterval = setInterval(updateCountdowns, 1000);
-        }
-
-        // Function to convert file to base64
-        function fileToBase64(file) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.readAsDataURL(file);
-                reader.onload = () => {
-                    // Remove the data:*/*;base64, prefix
-                    const base64 = reader.result.split(',')[1];
-                    resolve(base64);
-                };
-                reader.onerror = error => reject(error);
-            });
-        }
-
-        // Function to handle file selection
-        function handleFileSelect(orderIndex) {
-            const fileInput = document.getElementById(`file-${orderIndex}`);
-            const fileSelectedDiv = document.getElementById(`file-selected-${orderIndex}`);
-
-            if (fileInput.files.length > 0) {
-                const file = fileInput.files[0];
-                fileSelectedDiv.style.display = 'block';
-                fileSelectedDiv.textContent = `✓ ${file.name} selected (${(file.size / 1024).toFixed(1)} KB)`;
-            } else {
-                fileSelectedDiv.style.display = 'none';
-            }
-        }
-
-        // Function to toggle the visibility of the "Hold Until" date field and file input mandate
-        function toggleHoldUntilField(orderIndex, actionType) {
-            const fileUploadSection = document.getElementById(`file-upload-section-${orderIndex}`);
-            const holdUntilSection = document.getElementById(`hold-until-section-${orderIndex}`);
-            const ownersInformedRadioYes = document.getElementById(`owners-informed-yes-${orderIndex}`);
-            const remarkSection = document.querySelector(`#order-${orderIndex} .remark-section`); // Get the remark section
-
-            if (actionType === 'Hold') {
-                holdUntilSection.style.display = 'block'; // Show hold until field
-                fileUploadSection.style.display = 'none'; // Hide file upload for Hold
-                if (ownersInformedRadioYes) ownersInformedRadioYes.checked = false; // Uncheck Owners Informed
-                if (remarkSection) remarkSection.style.display = 'none'; // Hide remark for Hold
-            } else { // 'Approve' or 'Cancel'
-                holdUntilSection.style.display = 'none'; // Hide hold until field
-                fileUploadSection.style.display = 'block'; // Show file upload for Approve/Cancel
-                if (remarkSection) remarkSection.style.display = 'block'; // Show remark for Approve/Cancel
-            }
-        }
-
-        // Function to submit order data (Approve or Hold)
-async function submitOrder(orderIndex, actionType) {
+  async function submitOrder(orderIndex, actionType) {
     const fileInput = document.getElementById(`file-${orderIndex}`);
     const ownersInformedRadio = document.querySelector(`input[name="owners-informed-${orderIndex}"]:checked`);
     const approveBtn = document.querySelector(`#order-${orderIndex} .submit-btn`);
@@ -680,173 +357,135 @@ async function submitOrder(orderIndex, actionType) {
     const cancelBtn = document.querySelector(`#order-${orderIndex} .cancel-btn`);
     const holdUntilInput = document.getElementById(`hold-until-${orderIndex}`);
     const holdUntilRemark = document.getElementById(`hold-until-remark-${orderIndex}`);
-    const remarkInput = document.getElementById(`remark-${orderIndex}`); // Get the new remark input
-	const golaSelect = document.getElementById(`gola-${orderIndex}`);
+    const remarkInput = document.getElementById(`remark-${orderIndex}`);
+    const golaSelect = document.getElementById(`gola-${orderIndex}`);
     const successMessage = document.getElementById(`success-${orderIndex}`);
     const errorMessage = document.getElementById(`error-${orderIndex}`);
 
-    // Hide previous messages
     successMessage.style.display = 'none';
     errorMessage.style.display = 'none';
 
-    // Disable buttons during processing
     approveBtn.disabled = true;
     holdBtn.disabled = true;
     cancelBtn.disabled = true;
 
-    // Set field visibility based on action
     toggleHoldUntilField(orderIndex, actionType);
 
     let submitData = {
-        action: actionType, // 'Approve', 'Hold', or 'Cancel'
-        orderIndex: orderIndex,
-        dealerName: orders[orderIndex].dealerName,
-        timestamp: orders[orderIndex].timestamp,
-        marketingPersonName: orders[orderIndex].marketingPersonName,
-        location: orders[orderIndex].location,
-        holdRemark: holdUntilRemark.value,
-        remark: remarkInput.value, // Add the new remark to the payload
-		golaOption: golaSelect.value,
-        crmName: orders[orderIndex].crmName,
-        ownersInformed: ownersInformedRadio ? ownersInformedRadio.value : ''
+      action: actionType,
+      orderIndex: orderIndex,
+      dealerName: orders[orderIndex].dealerName,
+      timestamp: orders[orderIndex].timestamp,
+      marketingPersonName: orders[orderIndex].marketingPersonName,
+      location: orders[orderIndex].location,
+      holdRemark: holdUntilRemark ? holdUntilRemark.value : '',
+      remark: remarkInput ? remarkInput.value : '',
+      golaOption: golaSelect ? golaSelect.value : '',
+      crmName: orders[orderIndex].crmName,
+      ownersInformed: ownersInformedRadio ? ownersInformedRadio.value : ''
     };
 
     try {
-        if (actionType === 'Approve') {
-            approveBtn.textContent = 'Converting & Approving...';
-		if (!golaSelect.value) {
-		    alert('Please select a Gola Option before proceeding.');
-		    throw new Error('Gola Option is required');
-		}	
-            if (!fileInput.files.length) {
-                alert('Please attach a file before approving.');
-                throw new Error('File is required for approval');
-            }
-            if (!ownersInformedRadio) {
-                alert('Please select the owners informed status for approval.');
-                throw new Error('Owner informed status required');
-            }
-            if (!remarkInput.value.trim()) { // Validate the new remark field
-                alert('Please provide a remark for approval.');
-                throw new Error('Remark is required for approval');
-            }
+      if (actionType === 'Approve') {
+        approveBtn.textContent = 'Converting & Approving...';
+        if (!golaSelect.value) { alert('Please select a Gola Option before proceeding.'); throw new Error('Gola Option is required'); }
+        if (!fileInput.files.length) { alert('Please attach a file before approving.'); throw new Error('File is required for approval'); }
+        if (!ownersInformedRadio) { alert('Please select the owners informed status for approval.'); throw new Error('Owner informed status required'); }
+        if (!remarkInput.value.trim()) { alert('Please provide a remark for approval.'); throw new Error('Remark is required for approval'); }
 
-            const file = fileInput.files[0];
-            const fileBase64 = await fileToBase64(file);
-            submitData.file = {
-                name: file.name,
-                type: file.type,
-                size: file.size,
-                base64: fileBase64
-            };
+        const file = fileInput.files[0];
+        const fileBase64 = await fileToBase64(file);
+        submitData.file = {
+          name: file.name,
+          type: file.type,
+          size: file.size,
+          base64: fileBase64
+        };
 
-        } else if (actionType === 'Hold') {
-            holdBtn.textContent = 'Holding...';
-
-            if (!holdUntilInput.value || !holdUntilRemark.value) {
-                alert('Please provide a "Hold Until" date and remark.');
-                throw new Error('Hold details missing');
-            }
-            if (!ownersInformedRadio) {
-                alert('Please select the owners informed status for holding the order.');
-                throw new Error('Owner informed status required');
-            }
-
-            submitData.holdUntil = holdUntilInput.value;
-
-        } else if (actionType === 'Cancel') {
-            cancelBtn.textContent = 'Cancelling...';
-            if (!remarkInput.value.trim()) { // Validate the new remark field for cancel
-                alert('Please provide a remark for cancellation.');
-                throw new Error('Remark is required for cancellation');
-            }
+      } else if (actionType === 'Hold') {
+        holdBtn.textContent = 'Holding...';
+        if (!holdUntilInput.value || !holdUntilRemark.value) {
+          alert('Please provide a "Hold Until" date and remark.');
+          throw new Error('Hold details missing');
         }
+        if (!ownersInformedRadio) {
+          alert('Please select the owners informed status for holding the order.');
+          throw new Error('Owner informed status required');
+        }
+        submitData.holdUntil = holdUntilInput.value;
 
-        console.log('Submitting order data:', {
-            ...submitData,
-            file: submitData.file ? { ...submitData.file, base64: submitData.file.base64.substring(0, 50) + '...' } : undefined
-        });
+      } else if (actionType === 'Cancel') {
+        cancelBtn.textContent = 'Cancelling...';
+        if (!remarkInput.value.trim()) { alert('Please provide a remark for cancellation.'); throw new Error('Remark is required for cancellation'); }
+      }
 
-        await postData(submitData);
+      console.log('Submitting order data:', {
+        ...submitData,
+        file: submitData.file ? { ...submitData.file, base64: submitData.file.base64.substring(0, 50) + '...' } : undefined
+      });
 
-        successMessage.style.display = 'block';
-        setTimeout(() => {
-            successMessage.style.display = 'none';
-        }, 5000);
+      await postData(submitData);
 
-        // Reset form fields
-        fileInput.value = '';
-        document.getElementById(`file-selected-${orderIndex}`).style.display = 'none';
-        if (ownersInformedRadio) ownersInformedRadio.checked = false;
-        holdUntilInput.value = '';
-        holdUntilRemark.value = ''; // Clear hold remark
-        remarkInput.value = ''; // Clear the new remark field
-        document.getElementById(`hold-until-section-${orderIndex}`).style.display = 'none';
-        document.getElementById(`file-upload-section-${orderIndex}`).style.display = 'block';
-        document.querySelector(`#order-${orderIndex} .remark-section`).style.display = 'block';
+      successMessage.style.display = 'block';
+      setTimeout(() => { successMessage.style.display = 'none'; }, 4000);
 
+      // Reset
+      if (fileInput) fileInput.value = '';
+      const fs = document.getElementById(`file-selected-${orderIndex}`);
+      if (fs) fs.style.display = 'none';
+      if (ownersInformedRadio) ownersInformedRadio.checked = false;
+      if (holdUntilInput) holdUntilInput.value = '';
+      if (holdUntilRemark) holdUntilRemark.value = '';
+      if (remarkInput) remarkInput.value = '';
+      const holdSec = document.getElementById(`hold-until-section-${orderIndex}`);
+      if (holdSec) holdSec.style.display = 'none';
+      const fuSec = document.getElementById(`file-upload-section-${orderIndex}`);
+      if (fuSec) fuSec.style.display = 'block';
+      const rSec = document.querySelector(`#order-${orderIndex} .remark-section`);
+      if (rSec) rSec.style.display = 'block';
 
     } catch (error) {
-        console.error('Error submitting order:', error);
-        errorMessage.textContent = `Error: ${error.message}`;
-        errorMessage.style.display = 'block';
-        setTimeout(() => {
-            errorMessage.style.display = 'none';
-        }, 5000);
+      console.error('Error submitting order:', error);
+      errorMessage.textContent = `Error: ${error.message}`;
+      errorMessage.style.display = 'block';
+      setTimeout(() => { errorMessage.style.display = 'none'; }, 5000);
     } finally {
-        approveBtn.disabled = false;
-        holdBtn.disabled = false;
-        cancelBtn.disabled = false;
-        approveBtn.textContent = 'Approve';
-        holdBtn.textContent = 'Hold';
-        cancelBtn.textContent = 'Cancel';
+      approveBtn.disabled = false;
+      holdBtn.disabled = false;
+      cancelBtn.disabled = false;
+      approveBtn.textContent = 'Approve';
+      holdBtn.textContent = 'Hold';
+      cancelBtn.textContent = 'Cancel';
     }
-}
+  }
 
+  async function postData(data) {
+    try {
+      await fetch(API_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      // no-cors: assume success
+      setTimeout(fetchOrders, 1000);
+    } catch (error) {
+      console.error('Network error during submission:', error);
+      throw error;
+    }
+  }
 
-        // Function to post data in no-cors mode (assume success, ignore response)
-        async function postData(data) {
-            try {
-                await fetch(API_URL, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(data)
-                });
+  document.addEventListener('DOMContentLoaded', function(){
+    fetchOrders();
+    setInterval(fetchOrders, 10 * 60 * 1000); // every 10 minutes
+  });
 
-                // Since we're using no-cors, we can't read the response
-                // So we assume success and refresh the orders
-                console.log('Data submitted successfully (no-cors mode)');
+  window.addEventListener('beforeunload', function(){
+    if (countdownInterval) clearInterval(countdownInterval);
+  });
+</script>
 
-                // Refresh orders after a short delay to see updated data
-                setTimeout(() => {
-                    fetchOrders();
-                }, 1000);
-
-            } catch (error) {
-                // Only network-level errors will be caught here
-                console.error('Network error during submission:', error);
-                throw error;
-            }
-        }
-
-        // Initialize the application
-        document.addEventListener('DOMContentLoaded', function() {
-            fetchOrders();
-
-            // Auto-refresh every 5 minutes
-            setInterval(fetchOrders, 10 * 60 * 1000);
-        });
-
-        // Cleanup interval when page is unloaded
-        window.addEventListener('beforeunload', function() {
-            if (countdownInterval) {
-                clearInterval(countdownInterval);
-            }
-        });
-    </script>
-    <script src="js/viewOnly.js"></script>
+<!-- Keep this include the same; it will only be applied in view mode -->
+<script src="js/viewOnly.js"></script>
 </body>
 </html>
