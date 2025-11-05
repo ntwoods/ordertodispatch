@@ -1,152 +1,338 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dealer Submission Portal</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
-        body {
-            font-family: 'Poppins', sans-serif;
-            background-color: #f0f4f8; /* Light blue-gray background */
-        }
-        .form-container {
-            background-color: #ffffff;
-            border-radius: 1rem;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-            padding: 2rem;
-        }
-        .form-input, .form-button {
-            transition: all 0.3s ease;
-        }
-        .form-input:focus {
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5);
-        }
-        .form-button {
-            background-color: #2563eb;
-            color: #ffffff;
-        }
-        .form-button:hover {
-            background-color: #1d4ed8;
-            transform: translateY(-2px);
-        }
-        .form-label {
-            color: #1e3a8a;
-            font-weight: 600;
-        }
-    </style>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dealer Submission Portal</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+    body { font-family: 'Poppins', sans-serif; background-color:#f0f4f8; }
+    .form-container { background:#fff; border-radius:1rem; box-shadow:0 10px 25px rgba(0,0,0,.1); padding:2rem; }
+    .form-input, .form-button { transition:all .3s ease; }
+    .form-input:focus { border-color:#3b82f6; box-shadow:0 0 0 3px rgba(59,130,246,.5); }
+    .form-button { background:#2563eb; color:#fff; }
+    .form-button:hover { background:#1d4ed8; transform:translateY(-2px); }
+    .form-label { color:#1e3a8a; font-weight:600; }
+
+    /* Quick-mode searchable dropdown */
+    .search-wrap{ position:relative; }
+    .search-list{
+      position:absolute; left:0; right:0; top:100%;
+      background:#fff; border:1px solid #e5e7eb; border-radius:.75rem;
+      max-height:220px; overflow:auto; z-index:50; box-shadow:0 8px 20px rgba(2,8,23,.08);
+    }
+    .search-item{ padding:.5rem .75rem; cursor:pointer; }
+    .search-item:hover{ background:#f1f5f9; }
+    .hint{ font-size:.8rem; color:#64748b }
+    .color-dot{ width:10px; height:10px; border-radius:50%; display:inline-block; }
+  </style>
 </head>
 <body class="flex items-center justify-center min-h-screen p-4">
-    <div class="form-container w-full max-w-2xl">
-        <h1 class="text-3xl font-bold text-center text-blue-900 mb-8">Dealer Submission Portal</h1>
+  <div class="form-container w-full max-w-2xl">
+    <h1 class="text-3xl font-bold text-center text-blue-900 mb-8">Dealer Submission Portal</h1>
 
-        <form id="submissionForm" class="space-y-6">
-            <div>
-                <label for="dealerName" class="form-label block text-sm">Dealer Name</label>
-                <input type="text" id="dealerName" name="dealerName" required
-                       class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm p-3 focus:ring-2 focus:ring-blue-500">
+    <form id="submissionForm" class="space-y-6">
+      <!-- hidden context (quick mode) -->
+      <input type="hidden" id="scEmail" name="scEmail"/>
+
+      <!-- Dealer Name (legacy text input stays; quick-mode converts it to searchable with add-new) -->
+      <div id="dealerBlock">
+        <label for="dealerName" class="form-label block text-sm">Dealer Name</label>
+
+        <!-- LEGACY input (visible in legacy mode; hidden in quick mode) -->
+        <input type="text" id="dealerName" name="dealerName" required
+               class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm p-3 focus:ring-2 focus:ring-blue-500">
+
+        <!-- QUICK mode UI (hidden by default; shown only when variant=quick) -->
+        <div id="dealerQuickUI" class="hidden">
+          <div class="search-wrap">
+            <input type="text" id="dealerSearch" placeholder="Search dealer…"
+                   class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm p-3 focus:ring-2 focus:ring-blue-500"
+                   autocomplete="off">
+            <div id="dealerList" class="search-list hidden"></div>
+          </div>
+          <div class="hint mt-1">Type to filter. Press <b>Enter</b> to keep your typed value if no match.</div>
+
+          <!-- new dealer → color required -->
+          <div id="newDealerExtras" class="hidden mt-3">
+            <label class="form-label block text-sm mb-1">New Dealer Color</label>
+            <div class="grid grid-cols-3 gap-2">
+              <label class="flex items-center gap-2 border rounded-lg p-2">
+                <input type="radio" name="dealerColor" value="Red">
+                <span class="color-dot" style="background:#ef4444"></span> Red
+              </label>
+              <label class="flex items-center gap-2 border rounded-lg p-2">
+                <input type="radio" name="dealerColor" value="Yellow">
+                <span class="color-dot" style="background:#f59e0b"></span> Yellow
+              </label>
+              <label class="flex items-center gap-2 border rounded-lg p-2">
+                <input type="radio" name="dealerColor" value="Green">
+                <span class="color-dot" style="background:#10b981"></span> Green
+              </label>
             </div>
+            <p class="hint mt-1">Ye field sirf tab required hai jab aap naya dealer add kar rahe ho.</p>
+          </div>
+        </div>
+      </div>
 
-            <div>
-                <label for="marketingPersonName" class="form-label block text-sm">Marketing Person Name</label>
-                <input type="text" id="marketingPersonName" name="marketingPersonName" required
-                       class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm p-3 focus:ring-2 focus:ring-blue-500">
-            </div>
+      <div>
+        <label for="marketingPersonName" class="form-label block text-sm">Marketing Person Name</label>
+        <input type="text" id="marketingPersonName" name="marketingPersonName" required
+               class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm p-3 focus:ring-2 focus:ring-blue-500">
+      </div>
 
-            <div>
-                <label for="dealerLocation" class="form-label block text-sm">Dealer Location</label>
-                <input type="text" id="dealerLocation" name="dealerLocation" required
-                       class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm p-3 focus:ring-2 focus:ring-blue-500">
-            </div>
+      <div>
+        <label for="dealerLocation" class="form-label block text-sm">Dealer Location</label>
+        <input type="text" id="dealerLocation" name="dealerLocation" required
+               class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm p-3 focus:ring-2 focus:ring-blue-500">
+      </div>
 
-            <div>
-                <label for="fileUpload" class="form-label block text-sm">File Upload (Multiple files)</label>
-                <input type="file" id="fileUpload" name="fileUpload" multiple required
-                       class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm p-3 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
-            </div>
-            
-            <div id="loadingMessage" class="hidden text-center text-blue-600 font-semibold">
-                Submitting... Please wait.
-            </div>
+      <div>
+        <label for="fileUpload" class="form-label block text-sm">File Upload (Multiple files)</label>
+        <input type="file" id="fileUpload" name="fileUpload" multiple required
+               class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm p-3 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+      </div>
 
-            <div id="statusMessage" class="text-center font-medium mt-4"></div>
+      <div id="loadingMessage" class="hidden text-center text-blue-600 font-semibold">Submitting... Please wait.</div>
+      <div id="statusMessage" class="text-center font-medium mt-4"></div>
 
-            <button type="submit" id="submitButton"
-                    class="form-button w-full py-3 px-4 rounded-md font-semibold text-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                Submit
-            </button>
-        </form>
-    </div>
+      <button type="submit" id="submitButton"
+              class="form-button w-full py-3 px-4 rounded-md font-semibold text-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+        Submit
+      </button>
+    </form>
+  </div>
 
-    <script>
-        document.getElementById('submissionForm').addEventListener('submit', async function(event) {
-            event.preventDefault();
+  <script>
+    // ---------------- CONFIG (replace these with your live URLs) ----------------
+    const ORDER_POST_URL = 'https://script.google.com/macros/s/AKfycbxaVH3iboYQeFVYp_iFLGUYOtuVvD2sRDFIIorp8uy_QfP3V6D1E1v1iodONuyHPbgB/exec'; // existing endpoint
+    const SCOT_API_BASE  = 'https://script.google.com/macros/s/REPLACE_ME_SCOT_GET/exec';      // GET ?mode=scotDealers&email=...
+    const NEW_DEALER_API = 'https://script.google.com/macros/s/REPLACE_ME_NEW_DEALER/exec';    // POST {email,dealerName,color}
 
-            const form = event.target;
-            const submitButton = document.getElementById('submitButton');
-            const loadingMessage = document.getElementById('loadingMessage');
-            const statusMessage = document.getElementById('statusMessage');
+    // ---------------- Helpers ----------------
+    const qs = (s)=>document.querySelector(s);
+    const statusEl = qs('#statusMessage');
 
-            submitButton.disabled = true;
-            submitButton.style.opacity = 0.5;
-            loadingMessage.classList.remove('hidden');
-            statusMessage.textContent = '';
+    function getQP(){
+      const p = new URLSearchParams(location.search);
+      return Object.fromEntries(p.entries());
+    }
+    function show(el, on){ el.classList.toggle('hidden', !on); }
+    function normalize(s){ return (s||'').trim().toLowerCase(); }
+    function toast(msg, ok=true){
+      statusEl.textContent = msg;
+      statusEl.className = 'text-center font-medium mt-4 ' + (ok ? 'text-green-600' : 'text-red-600');
+    }
 
-            const dealerName = form.dealerName.value;
-            const marketingPersonName = form.marketingPersonName.value;
-            const dealerLocation = form.dealerLocation.value;
-            const files = form.fileUpload.files;
+    // ---------------- Mode detection ----------------
+    const QP = getQP();
+    const VARIANT = (QP.variant || '').toLowerCase();
+    const IS_QUICK = VARIANT === 'quick';
 
-            const filesData = [];
-            for (let i = 0; i < files.length; i++) {
-                const file = files[i];
-                const reader = new FileReader();
-                reader.readAsDataURL(file);
-                await new Promise(resolve => {
-                    reader.onloadend = () => {
-                        filesData.push({
-                            name: file.name,
-                            data: reader.result.split(',')[1] // Get base64 data
-                        });
-                        resolve();
-                    };
-                });
-            }
+    // ---------------- Quick-mode dealer list state ----------------
+    let DEALERS = [];
+    let selectedDealer = '';
+    let isNewDealer = false;
 
-            const formData = {
-                dealerName: dealerName,
-                marketingPersonName: marketingPersonName,
-                dealerLocation: dealerLocation,
-                files: filesData
-            };
+    const dealerInput      = qs('#dealerName');     // legacy input
+    const dealerQuickUI    = qs('#dealerQuickUI');  // wrapper for quick mode
+    const dealerSearch     = qs('#dealerSearch');
+    const dealerList       = qs('#dealerList');
+    const newDealerExtras  = qs('#newDealerExtras');
+    const scEmailHidden    = qs('#scEmail');
 
-            const url = 'https://script.google.com/macros/s/AKfycbxaVH3iboYQeFVYp_iFLGUYOtuVvD2sRDFIIorp8uy_QfP3V6D1E1v1iodONuyHPbgB/exec';
-
-            try {
-                const response = await fetch(url, {
-                    method: 'POST',
-                    mode: 'no-cors', // Use 'no-cors' to avoid CORS issues with simple POST
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(formData),
-                });
-                // Since we use no-cors, we can't check response.ok, so we just assume success for a 200 range status
-                statusMessage.textContent = '✅ Submission successful!';
-                statusMessage.className = 'text-center font-medium mt-4 text-green-600';
-                form.reset();
-            } catch (error) {
-                console.error('Error:', error);
-                statusMessage.textContent = '❌ An error occurred. Please try again.';
-                statusMessage.className = 'text-center font-medium mt-4 text-red-600';
-            } finally {
-                submitButton.disabled = false;
-                submitButton.style.opacity = 1;
-                loadingMessage.classList.add('hidden');
-            }
+    // Build list UI
+    function renderList(filter=''){
+      const f = normalize(filter);
+      const items = DEALERS.filter(x => normalize(x).includes(f));
+      dealerList.innerHTML = '';
+      if(items.length === 0){
+        const div = document.createElement('div');
+        div.className = 'search-item text-slate-500';
+        div.textContent = 'No match. Press Enter to use your typed value.';
+        dealerList.appendChild(div);
+      } else {
+        items.forEach(name=>{
+          const div = document.createElement('div');
+          div.className = 'search-item';
+          div.textContent = name;
+          div.addEventListener('click', ()=>{
+            setDealer(name, false);
+            show(dealerList, false);
+          });
+          dealerList.appendChild(div);
         });
-    </script>
+      }
+      show(dealerList, true);
+    }
+    function setDealer(name, newFlag){
+      selectedDealer = name;
+      isNewDealer = !!newFlag;
+      dealerSearch.value = name;
+      show(newDealerExtras, isNewDealer);
+    }
+
+    // ---------------- Init ----------------
+    async function init(){
+      // Toggle UI per mode
+      if(IS_QUICK){
+        // quick mode: show searchable UI, hide legacy input's required (to avoid double-validation)
+        dealerInput.required = false;
+        show(dealerInput, false);
+        show(dealerQuickUI, true);
+
+        // pick email from query params
+        if(QP.email) scEmailHidden.value = QP.email;
+
+        // fetch dealers for this email
+        if(QP.email){
+          try{
+            const url = `${SCOT_API_BASE}?mode=scotDealers&email=${encodeURIComponent(QP.email)}`;
+            const res = await fetch(url, { method:'GET' });
+            const json = await res.json(); // { ok:true, dealers:[...] }
+            if(json && json.ok && Array.isArray(json.dealers)){
+              DEALERS = json.dealers.filter(Boolean);
+            }
+          }catch(err){
+            console.warn('Dealer list fetch error:', err);
+          }
+        }
+
+        // wire events
+        dealerSearch.addEventListener('input',(e)=>{
+          const val = e.target.value;
+          renderList(val);
+          const exists = DEALERS.some(x => normalize(x) === normalize(val));
+          show(newDealerExtras, !exists && val.trim().length>0);
+        });
+        dealerSearch.addEventListener('focus', ()=> renderList(dealerSearch.value));
+        document.addEventListener('click', (e)=>{
+          if(!dealerList.contains(e.target) && e.target!==dealerSearch) show(dealerList,false);
+        });
+        dealerSearch.addEventListener('keydown', (e)=>{
+          if(e.key==='Enter'){
+            e.preventDefault();
+            const typed = dealerSearch.value.trim();
+            if(!typed) return;
+            const exists = DEALERS.some(x => normalize(x) === normalize(typed));
+            setDealer(typed, !exists);
+            show(dealerList,false);
+          }
+        });
+
+      } else {
+        // legacy: keep exactly as before
+        dealerInput.required = true;
+        show(dealerInput, true);
+        show(dealerQuickUI, false);
+      }
+    }
+
+    // ---------------- File to base64 helper ----------------
+    async function filesToBase64List(input){
+      const out = [];
+      const files = input.files || [];
+      for(let i=0;i<files.length;i++){
+        const file = files[i];
+        const b64 = await new Promise(res=>{
+          const r = new FileReader();
+          r.onloadend=()=>res(String(r.result).split(',')[1]);
+          r.readAsDataURL(file);
+        });
+        out.push({ name:file.name, data:b64 });
+      }
+      return out;
+    }
+
+    // ---------------- Submit ----------------
+    document.getElementById('submissionForm').addEventListener('submit', async function(event) {
+      event.preventDefault();
+
+      const form = event.target;
+      const submitButton = document.getElementById('submitButton');
+      const loadingMessage = document.getElementById('loadingMessage');
+
+      submitButton.disabled = true; submitButton.style.opacity = .5;
+      loadingMessage.classList.remove('hidden'); toast('');
+
+      // Dealer name depending on mode
+      let dealerName;
+      if(IS_QUICK){
+        dealerName = (dealerSearch.value || '').trim();
+        if(!dealerName){ toast('Please select/type a Dealer Name.', false); throw new Error('dealer missing'); }
+      } else {
+        dealerName = form.dealerName.value;
+      }
+
+      const marketingPersonName = form.marketingPersonName.value;
+      const dealerLocation = form.dealerLocation.value;
+
+      // files
+      const filesData = await filesToBase64List(form.fileUpload);
+
+      // Build main payload (unchanged structure)
+      const formData = {
+        dealerName,
+        marketingPersonName,
+        dealerLocation,
+        files: filesData
+      };
+
+      // 1) Post order (legacy behavior stays)
+      try {
+        await fetch(ORDER_POST_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData),
+        });
+        toast('✅ Submission successful!', true);
+        form.reset();
+      } catch (error) {
+        console.error('Order POST Error:', error);
+        toast('❌ An error occurred while submitting order.', false);
+      }
+
+      // 2) If QUICK mode and new dealer → also add to SCOT sheet
+      if(IS_QUICK){
+        const exists = DEALERS.some(x => normalize(x) === normalize(dealerName));
+        if(!exists){
+          const email = scEmailHidden.value || '';
+          const checked = document.querySelector('input[name="dealerColor"]:checked');
+          if(!checked){
+            toast('Select color for new dealer (Red/Yellow/Green).', false);
+          } else {
+            try{
+              await fetch(NEW_DEALER_API, {
+                method:'POST',
+                mode:'no-cors',
+                headers:{ 'Content-Type':'application/json' },
+                body: JSON.stringify({
+                  email,
+                  dealerName,
+                  color: checked.value
+                })
+              });
+            }catch(err){
+              console.error('New Dealer POST error:', err);
+              // Note: order already posted; we won’t block on this
+            }
+          }
+        }
+      }
+
+      // Notify parent (if embedded in SCOT modal)
+      try{
+        window.parent.postMessage({ type:'ORDER_PUNCHED' }, '*');
+      }catch(e){}
+
+      submitButton.disabled = false; submitButton.style.opacity = 1;
+      loadingMessage.classList.add('hidden');
+    });
+
+    // boot
+    init();
+  </script>
 </body>
 </html>
