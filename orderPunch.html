@@ -340,7 +340,10 @@
 
       // Notify parent (if embedded in SCOT modal)
       try{
-        window.parent.postMessage({ type:'ORDER_PUNCHED' }, '*');
+        window.parent.postMessage(
+          { type:'ORDER_PUNCHED', dealerName, isNew: !DEALERS.some(x => normalize(x) === normalize(dealerName)) },
+          '*'
+        );
       }catch(e){}
 
       submitButton.disabled = false; submitButton.style.opacity = 1;
