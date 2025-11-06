@@ -142,6 +142,22 @@
     const newDealerExtras  = qs('#newDealerExtras');
     const scEmailHidden    = qs('#scEmail');
 
+    // Accept dealers from parent (fallback or primary source)
+    window.addEventListener('message', (ev) => {
+      const msg = ev.data || {};
+      if (msg.type === 'DEALERS_INIT' && Array.isArray(msg.dealers)) {
+        DEALERS = msg.dealers.filter(Boolean);
+        if (QP.email && !document.getElementById('scEmail').value) {
+          document.getElementById('scEmail').value = msg.email || '';
+        }
+        // Re-render list if quick-mode field visible
+        if (IS_QUICK) {
+          const val = (dealerSearch.value || '');
+          renderList(val);
+        }
+      }
+    }, false);
+    
     // Build list UI
     function renderList(filter=''){
       const f = normalize(filter);
