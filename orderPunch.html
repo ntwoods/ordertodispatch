@@ -188,7 +188,7 @@
         // fetch dealers for this email
         if(QP.email){
           try{
-            const url = `${SCOT_API_BASE}?mode=scotDealers&email=${encodeURIComponent(QP.email)}`;
+            const url = `${SCOT_API_BASE}?path=scotDealers&email=${encodeURIComponent(QP.email)}`;
             const res = await fetch(url, { method:'GET' });
             const json = await res.json(); // { ok:true, dealers:[...] }
             if(json && json.ok && Array.isArray(json.dealers)){
