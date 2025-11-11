@@ -162,7 +162,6 @@
         const json = await res.json();
         ordersData = (json.status==='success' && json.data) ? json.data : [];
         renderOrders();
-
         // Apply read-only only in view mode if helper exists
         if (isViewOnly && typeof setReadOnlyMode === "function") {
           setReadOnlyMode();
