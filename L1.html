@@ -98,12 +98,13 @@
     const urlParams = new URLSearchParams(location.search);
     const rawMode = (urlParams.get('mode') || '').toLowerCase();
     const crmParam = urlParams.get('crm');
-    // crm present -> CRM mode ; else if mode=view -> View ; else -> EA
-    // mode=view ko hard-override do (CRM param hone par bhi)
+  
+    // 1) mode=view ko hard override
     const MODE = (rawMode === 'view') ? 'view' : (crmParam ? 'crm' : 'ea');
-    // isViewOnly ko rawMode se bind rakho
+    // 2) single source of truth for readonly
     const isViewOnly = (rawMode === 'view');
-
+    // 3) expose to viewOnly.js
+    window.__FORCE_VIEW__ = isViewOnly;
 
     /* ===== Config ===== */
     const API_URL = 'https://script.google.com/macros/s/AKfycby7o8IwfJ1vgI-_2Ad-epHZHmOdVqTbNVWnncuv4BnDIiIcWNmuzrEspA9jIvgy9G84eQ/exec';
