@@ -99,8 +99,11 @@
     const rawMode = (urlParams.get('mode') || '').toLowerCase();
     const crmParam = urlParams.get('crm');
     // crm present -> CRM mode ; else if mode=view -> View ; else -> EA
-    const MODE = crmParam ? 'crm' : (rawMode === 'view' ? 'view' : 'ea');
-    const isViewOnly = MODE === 'view';
+    // mode=view ko hard-override do (CRM param hone par bhi)
+    const MODE = (rawMode === 'view') ? 'view' : (crmParam ? 'crm' : 'ea');
+    // isViewOnly ko rawMode se bind rakho
+    const isViewOnly = (rawMode === 'view');
+
 
     /* ===== Config ===== */
     const API_URL = 'https://script.google.com/macros/s/AKfycby7o8IwfJ1vgI-_2Ad-epHZHmOdVqTbNVWnncuv4BnDIiIcWNmuzrEspA9jIvgy9G84eQ/exec';
