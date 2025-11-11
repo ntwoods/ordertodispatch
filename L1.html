@@ -98,13 +98,14 @@
     const urlParams = new URLSearchParams(location.search);
     const rawMode = (urlParams.get('mode') || '').toLowerCase();
     const crmParam = urlParams.get('crm');
-  
-    // 1) mode=view ko hard override
+    
+    // Always give "view" top priority
     const MODE = (rawMode === 'view') ? 'view' : (crmParam ? 'crm' : 'ea');
-    // 2) single source of truth for readonly
     const isViewOnly = (rawMode === 'view');
-    // 3) expose to viewOnly.js
+    
+    // Export flag so viewOnly.js can reuse
     window.__FORCE_VIEW__ = isViewOnly;
+
 
     /* ===== Config ===== */
     const API_URL = 'https://script.google.com/macros/s/AKfycby7o8IwfJ1vgI-_2Ad-epHZHmOdVqTbNVWnncuv4BnDIiIcWNmuzrEspA9jIvgy9G84eQ/exec';
@@ -186,9 +187,10 @@
 
       ordersData.forEach((order, i) => container.appendChild(createOrderCard(order, i)));
       container.classList.remove('hidden');
-        if (isViewOnly && typeof setReadOnlyMode === "function") {
+      // Apply read-only if mode=view and script loaded
+      if (window.__FORCE_VIEW__ && typeof setReadOnlyMode === "function") {
           setReadOnlyMode();
-        }      
+      }
     }
 
     function createOrderCard(order, index){
