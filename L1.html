@@ -182,6 +182,9 @@
 
       ordersData.forEach((order, i) => container.appendChild(createOrderCard(order, i)));
       container.classList.remove('hidden');
+        if (isViewOnly && typeof setReadOnlyMode === "function") {
+          setReadOnlyMode();
+        }      
     }
 
     function createOrderCard(order, index){
