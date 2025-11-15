@@ -109,7 +109,7 @@
       const original = new Date(originalTimestampStr);
       let deadline = new Date(original);
       // Keeping your 6:00 PM rule
-      deadline.setHours(18, 0, 0, 0);
+      deadline.setHours(18, 30, 0, 0);
       return deadline;
     }
 
@@ -343,3 +343,4 @@ Invoice URL: ${order.invoiceUrl || 'N/A'}`;
   <script src="js/viewOnly.js"></script>
 </body>
 </html>
+
