@@ -240,8 +240,26 @@
 
     orders.forEach((order, index) => {
       // Deadline = same-day 6 PM from order.timestamp (ISO from backend)
-      const deadline = new Date(order.timestamp);
-      deadline.setHours(18, 0, 0, 0);
+      const orderDate = new Date(order.timestamp);
+      const deadline  = new Date(order.timestamp);
+      
+      // Order ka time nikaalte hain
+      const orderHour   = orderDate.getHours();
+      const orderMinute = orderDate.getMinutes();
+      
+      // Condition: on or before 17:00:00
+      const isOnOrBefore5PM =
+        orderHour < 17 || (orderHour === 17 && orderMinute === 0);
+      
+      if (isOnOrBefore5PM) {
+        // Same day 6:30 PM
+        deadline.setHours(18, 30, 0, 0);
+      } else {
+        // Next working day 11:00 AM
+        // (Yahan Sunday bhi working day maana gaya hai, so simply +1 day)
+        deadline.setDate(deadline.getDate() + 1);
+        deadline.setHours(11, 0, 0, 0);
+      }
       const isOverdue = new Date() > deadline;
 
       const card = document.createElement("div");
@@ -462,3 +480,4 @@
 <script src="js/viewOnly.js"></script>
 </body>
 </html>
+
