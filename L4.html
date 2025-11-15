@@ -352,7 +352,7 @@
     function getDeadline(timestamp) {
       const orderTime = parseOrderDate(timestamp);
       if (isNaN(orderTime)) return new Date();
-      return new Date(orderTime.getFullYear(), orderTime.getMonth(), orderTime.getDate(), 18,0,0,0);
+      return new Date(orderTime.getFullYear(), orderTime.getMonth(), orderTime.getDate(), 18,30,0,0);
     }
 
     function startCountdown(deadline, elementId) {
@@ -470,3 +470,4 @@
   <script src="js/viewOnly.js"></script>
 </body>
 </html>
+
