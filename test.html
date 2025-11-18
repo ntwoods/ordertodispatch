@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sales Order Dashboard - Tabular</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-800 text-white">
+  <div class="p-6">
+    <h1 class="text-4xl font-bold mb-6 text-center">Sales Orders (Tabular)</h1>
+
+    <!-- Orders Table -->
+    <div class="overflow-x-auto bg-white/10 rounded-lg shadow-lg">
+      <table class="min-w-full divide-y divide-gray-600">
+        <thead class="bg-indigo-700">
+          <tr>
+            <th class="px-4 py-2 text-left">Received On</th>
+            <th class="px-4 py-2 text-left">Dealer Name</th>
+            <th class="px-4 py-2 text-left">Location</th>
+            <th class="px-4 py-2 text-left">Marketing Person</th>
+            <th class="px-4 py-2 text-left">Order File</th>
+            <th class="px-4 py-2 text-left">Deadline</th>
+            <th class="px-4 py-2 text-left">Action</th>
+          </tr>
+        </thead>
+        <tbody id="ordersTable" class="divide-y divide-gray-700"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Modal -->
+  <div id="submitModal" class="fixed inset-0 bg-black/70 hidden items-center justify-center z-50">
+    <div class="bg-white text-gray-900 rounded-lg p-6 w-full max-w-lg">
+      <h2 class="text-2xl font-bold mb-4">Submit Order</h2>
+      <form id="submitForm" class="space-y-4">
+        <input type="hidden" id="modalTimestamp">
+
+        <!-- Prepared Excel -->
+        <div>
+          <label class="block font-semibold">Prepared Excel File</label>
+          <input type="file" id="preparedFile" class="w-full border rounded px-2 py-1" required />
+        </div>
+
+        <!-- Concerned Owner -->
+        <div>
+          <label class="block font-semibold">Concerned Owner</label>
+          <select id="ownerSelect" class="w-full border rounded px-2 py-1" required>
+            <option value="">Select...</option>
+            <option value="Parakh Sir">Parakh Sir</option>
+            <option value="Pawan Sir">Pawan Sir</option>
+            <option value="Nitish Sir">Nitish Sir</option>
+          </select>
+        </div>
+
+        <!-- Select CRM -->
+        <div>
+          <label class="block font-semibold">Select CRM</label>
+          <select id="crmSelect" class="w-full border rounded px-2 py-1" required>
+            <option value="">Select...</option>
+            <option value="Km Kalpana">Km Kalpana</option>
+            <option value="Priyam Dixit">Priyam Dixit</option>
+            <option value="Akansha Jain">Akansha Jain</option>
+            <option value="Mahima Agarwal">Mahima Agarwal</option>
+          </select>
+        </div>
+
+        <!-- Select Sales Coordinator (NEW) -->
+        <div>
+          <label class="block font-semibold">Select Sales Coordinator</label>
+          <select id="scSelect" class="w-full border rounded px-2 py-1" required>
+            <option value="">Select...</option>
+            <option value="Km Kalpana">Km Kalpana</option>
+            <option value="Priyam Dixit">Priyam Dixit</option>
+            <option value="Akansha Jain">Akansha Jain</option>
+            <option value="Mahima Agarwal">Mahima Agarwal</option>
+          </select>
+        </div>
+
+        <!-- Dealer Type -->
+        <div>
+          <label class="block font-semibold">Dealer Type</label>
+          <select id="typeSelect" class="w-full border rounded px-2 py-1" required>
+            <option value="">Select...</option>
+            <option value="Red">Red</option>
+            <option value="Yellow">Yellow</option>
+            <option value="Green">Green</option>
+          </select>
+        </div>
+
+        <!-- Buttons -->
+        <div class="flex justify-end space-x-3 pt-4">
+          <button type="button" onclick="closeModal()" class="px-4 py-2 bg-gray-400 rounded">Cancel</button>
+          <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded">Submit</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const apiUrl = "https://script.google.com/macros/s/AKfycbwWKHlGOSpQ5Jcof9bqCDQp-Tnl8J4lCZZT7DnGIEg75DjXYjVrvRbbjefyjdKDDPpi/exec";
+
+    // detect URL params
+    const params = new URLSearchParams(window.location.search);
+    const isPowerEA = params.get("power") === "ea";
+    const isViewOnly = params.get("mode") === "view";
+
+    function parseUrlCsv(csv) {
+      if (!csv) return [];
+      return csv
+        .split(",")
+        .map(s => s.trim())
+        .filter(Boolean)
+        .filter(u => /^(https?:)?\/\//i.test(u) || /^https?:\/\//i.test(u));
+    }
+
+    // Open 1 or many links in new tabs (asks for confirmation if many)
+    function openOrderFiles(csv) {
+      const urls = parseUrlCsv(csv);
+      if (urls.length === 0) {
+        alert("No file URL(s) available.");
+        return;
+      }
+      if (urls.length === 1) {
+        window.open(urls[0], "_blank", "noopener");
+        return;
+      }
+      const ok = confirm(`Open ${urls.length} files in new tabs?`);
+      if (!ok) return;
+
+      // Stagger opens slightly to reduce popup-blocker likelihood
+      urls.forEach((u, i) =>
+        setTimeout(() => window.open(u, "_blank", "noopener"), i * 150)
+      );
+    }
+
+    function formatDateTime(ts) {
+      const d = new Date(ts);
+      const dd = String(d.getDate()).padStart(2,'0');
+      const mm = String(d.getMonth()+1).padStart(2,'0');
+      const yyyy = d.getFullYear();
+      const hh = String(d.getHours()).padStart(2,'0');
+      const mi = String(d.getMinutes()).padStart(2,'0');
+      const ss = String(d.getSeconds()).padStart(2,'0');
+      return `${dd}-${mm}-${yyyy} ${hh}:${mi}:${ss}`;
+    }
+
+    function updateTimers() {
+      document.querySelectorAll("[data-deadline]").forEach(el => {
+        const deadline = new Date(el.dataset.deadline);
+        const now = new Date();
+        const diff = deadline - now;
+        const row = el.closest("tr");
+
+        if (diff <= 0) {
+          el.textContent = "OVERDUE";
+          el.className = "text-red-500 font-bold";
+          row.classList.add("bg-red-900/40");
+        } else {
+          const m = Math.floor(diff / 60000);
+          const s = Math.floor((diff % 60000) / 1000);
+          el.textContent = `${m}m ${s}s left`;
+        }
+      });
+    }
+
+    function openModal(timestamp) {
+      if (isViewOnly) return; // block modal opening in view-only mode
+      document.getElementById("modalTimestamp").value = timestamp;
+      document.getElementById("submitModal").classList.remove("hidden");
+      document.getElementById("submitModal").classList.add("flex");
+    }
+
+    function closeModal() {
+      document.getElementById("submitForm").reset();
+      document.getElementById("submitModal").classList.add("hidden");
+      document.getElementById("submitModal").classList.remove("flex");
+    }
+
+    document.getElementById("submitForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const ts = document.getElementById("modalTimestamp").value;
+      const fileInput = document.getElementById("preparedFile");
+      const file = fileInput.files[0];
+      const owner = document.getElementById("ownerSelect").value;
+      const crm = document.getElementById("crmSelect").value;
+      const salesCoordinator = document.getElementById("scSelect").value;
+      const type = document.getElementById("typeSelect").value;
+
+      // handle file validation based on mode
+      if (!isPowerEA && !file) {
+        return alert("File required");
+      }
+
+      let base64 = null, fileName = null;
+      if (file) {
+        base64 = await toBase64(file);
+        fileName = file.name;
+      }
+
+      const payload = {
+        timestamp: ts,
+        concernedOwner: owner,
+        crmName: crm,
+        salesCoordinator: salesCoordinator,
+        type: type,
+        fileData: base64,
+        fileName: fileName,
+        action: "assignCRM"
+      };
+
+      fetch(apiUrl, {
+        method: "POST",
+        mode: "no-cors",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(payload)
+      });
+
+      closeModal();
+      alert("Submitted successfully!");
+      loadOrders();
+    });
+
+    function toBase64(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result.split(",")[1]);
+        reader.onerror = err => reject(err);
+      });
+    }
+
+    function loadOrders() {
+      fetch(apiUrl)
+        .then(res => res.json())
+        .then(data => {
+          const table = document.getElementById("ordersTable");
+          table.innerHTML = ""; // clear old rows
+          data.data.forEach(order => {
+            const received = formatDateTime(order.timestamp);
+
+            // 45 minute deadline as earlier (aap chaho to logic change kar sakte ho)
+            const deadline = new Date(new Date(order.timestamp).getTime() + 45*60000);
+
+            const row = document.createElement("tr");
+            row.innerHTML = `
+              <td class="px-4 py-2">${received}</td>
+              <td class="px-4 py-2">${order.dealerName}</td>
+              <td class="px-4 py-2">${order.location}</td>
+              <td class="px-4 py-2">${order.marketingPersonName}</td>
+              <td class="px-4 py-2">
+                <button
+                  type="button"
+                  class="text-blue-300 underline"
+                  onclick="openOrderFiles('${(order.fileUploadLink || '').replaceAll(`'`, `\\'`).replaceAll(`\n`, ' ').trim()}')"
+                  title="Opens one or multiple files"
+                >
+                  View File(s)
+                </button>
+              </td>
+              <td class="px-4 py-2" data-deadline="${deadline.toISOString()}"></td>
+              <td class="px-4 py-2">
+                <button onclick="openModal('${order.timestamp}')" class="bg-indigo-600 px-3 py-1 rounded ${isViewOnly ? 'opacity-50 cursor-not-allowed' : ''}" ${isViewOnly ? 'disabled' : ''}>Submit</button>
+              </td>
+            `;
+            table.appendChild(row);
+          });
+          updateTimers();
+          setInterval(updateTimers,1000);
+        });
+    }
+
+    // Adjust required attribute on load
+    window.addEventListener("DOMContentLoaded", () => {
+      if (isPowerEA) {
+        document.getElementById("preparedFile").removeAttribute("required");
+      }
+      loadOrders();
+    });
+  </script>
+
+  <!-- Aapka existing viewOnly.js yahi rahega -->
+  <script src="https://ntwoods.github.io/ordertodispatch/js/viewOnly.js"></script>
+</body>
+</html>
