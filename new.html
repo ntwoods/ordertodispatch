@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Orders Pending for Owner's Approval</title>
+    <style>
+        /* Reset & Base */
+        * { margin:0; padding:0; box-sizing:border-box; }
+        :root{
+            /* Blue palette */
+            --blue-50:#f5f8ff;
+            --blue-100:#e8f0ff;
+            --blue-200:#d6e4ff;
+            --blue-300:#b3ccff;
+            --blue-400:#80aaff;
+            --blue-500:#4d88ff;
+            --blue-600:#1f6fff;
+            --blue-700:#1757cc;
+            --blue-800:#114199;
+            --blue-900:#0b2b66;
+
+            --ink-900:#0f172a;  /* deep text */
+            --ink-700:#334155;  /* secondary text */
+            --ink-500:#64748b;  /* muted */
+            --card-border:#e6eeff;
+            --radius-lg:14px;
+            --shadow-md:0 6px 18px rgba(17,41,102,0.10);
+            --shadow-lg:0 10px 28px rgba(17,41,102,0.12);
+        }
+
+        body{
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background:#ffffff; /* Background color removed (no gradient) */
+            color:var(--ink-900);
+            min-height:100vh;
+            padding:24px;
+        }
+
+        /* Header */
+        .dashboard-header{
+            text-align:center;
+            margin:0 auto 20px;
+            max-width:1100px;
+        }
+        .dashboard-header h1{
+            font-size: clamp(1.4rem, 2.5vw, 2rem);
+            font-weight:700;
+            color:var(--blue-800);
+            letter-spacing:.2px;
+        }
+        .dashboard-sub{
+            margin-top:6px;
+            font-size: .95rem;
+            color:var(--ink-500);
+        }
+
+        /* Controls */
+        .toolbar{
+            display:flex;
+            justify-content:center;
+            gap:12px;
+            margin:16px 0 22px;
+        }
+        .refresh-btn{
+            background:linear-gradient(180deg, var(--blue-600), var(--blue-700));
+            color:#fff;
+            border:none;
+            padding:12px 18px;
+            border-radius:999px;
+            cursor:pointer;
+            font-size:14px;
+            font-weight:600;
+            box-shadow:var(--shadow-md);
+            transition:transform .18s ease, box-shadow .18s ease, opacity .18s ease;
+        }
+        .refresh-btn:hover{ transform:translateY(-1px); box-shadow:var(--shadow-lg); }
+        .refresh-btn:active{ transform:translateY(0); opacity:.9; }
+
+        /* States */
+        .loading,
+        .no-orders{
+            text-align:center;
+            font-size:1rem;
+            padding:42px 12px;
+            color:var(--ink-700);
+        }
+
+        /* Grid Layout (fixed card width so single item doesn’t stretch) */
+        .orders-container{
+            display:grid;
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            gap:18px;
+            max-width:1100px;
+            margin:0 auto;
+            align-items:start;
+            justify-items:stretch;
+        }
+
+        /* Card */
+        .order-card{
+            background:#fff;
+            border:1px solid var(--card-border);
+            border-radius:var(--radius-lg);
+            padding:18px;
+            box-shadow:var(--shadow-md);
+            transition:transform .18s ease, box-shadow .18s ease;
+        }
+        .order-card:hover{ transform:translateY(-3px); box-shadow:var(--shadow-lg); }
+
+        /* Card header */
+        .card-header{
+            display:flex; justify-content:space-between; align-items:center;
+            margin-bottom:12px; padding-bottom:10px;
+            border-bottom:1px solid var(--card-border);
+        }
+        .order-id{ font-weight:700; color:var(--blue-800); font-size:1rem; }
+        .timestamp{ color:var(--ink-500); font-size:.88rem; }
+
+        /* Countdown block (kept same classes used by JS) - Blue theme */
+        .countdown-container{
+            text-align:center;
+            margin:12px 0 14px;
+            padding:12px;
+            border-radius:10px;
+            font-weight:700;
+            font-size:1.02rem;
+            border:1px dashed var(--blue-200);
+        }
+        .countdown-active{
+            background: linear-gradient(180deg, var(--blue-100), var(--blue-50));
+            color:var(--blue-900);
+        }
+        .countdown-overdue{
+            background: linear-gradient(180deg, #e8efff, #dde7ff);
+            color:#0b1b56;
+            border-color: var(--blue-300);
+        }
+        .countdown-approved{
+            background: linear-gradient(180deg, var(--blue-200), var(--blue-100));
+            color:var(--blue-900);
+        }
+        .countdown-held{
+            background: linear-gradient(180deg, var(--blue-100), var(--blue-50));
+            color:var(--ink-700);
+        }
+        .countdown-cancelled{
+            background: linear-gradient(180deg, #e6ecff, #edf2ff);
+            color:#243a8f;
+        }
+
+        /* Details */
+        .order-details{ margin: 10px 0 2px; }
+        .detail-row{
+            display:flex; justify-content:space-between; gap:12px;
+            margin:8px 0; padding:4px 0;
+        }
+        .detail-label{ font-weight:600; color:var(--ink-700); }
+        .detail-value{ color:var(--ink-900); text-align:right; max-width: 60%; word-wrap: break-word; }
+
+        .file-link{
+            color:var(--blue-700); text-decoration:none; font-weight:600;
+            border-bottom:1px dotted var(--blue-300);
+        }
+        .file-link:hover{ text-decoration:underline; }
+
+        /* Buttons (kept class names & JS hooks; styled in blue family) */
+        .action-buttons{ display:flex; gap:10px; margin-top:16px; }
+        .btn{
+            flex:1; padding:12px 10px; border:none; border-radius:10px;
+            font-size:14px; font-weight:700; letter-spacing:.3px; cursor:pointer;
+            color:#fff; box-shadow:var(--shadow-md);
+            transition:transform .15s ease, box-shadow .15s ease, opacity .15s ease;
+            text-transform:uppercase;
+        }
+        .btn:hover{ transform:translateY(-2px); box-shadow:var(--shadow-lg); }
+        .btn:active{ transform:translateY(0); opacity:.9; }
+
+        .btn-approve{ background:linear-gradient(180deg, var(--blue-600), var(--blue-700)); }
+        .btn-hold{ background:linear-gradient(180deg, var(--blue-500), var(--blue-600)); }
+        .btn-cancel{ background:linear-gradient(180deg, var(--blue-800), var(--blue-900)); }
+
+        .btn:disabled{
+            opacity:.6; cursor:not-allowed; transform:none !important; box-shadow:none;
+        }
+
+        /* Badges (if used anywhere) */
+        .status-badge{
+            padding:4px 12px; border-radius:999px; font-size:.78rem; font-weight:800;
+            text-transform:uppercase; border:1px solid var(--card-border);
+        }
+        .status-pending{ background:var(--blue-100); color:var(--blue-900); }
+        .status-approved{ background:var(--blue-200); color:var(--blue-900); }
+        .status-held{ background:var(--blue-50); color:var(--ink-700); }
+        .status-overdue{ background:#dde7ff; color:#0b1b56; }
+
+        /* Responsive tweak */
+        @media (max-width: 480px){
+            .orders-container{ grid-template-columns: 1fr; }
+            .detail-value{ max-width: 55%; }
+        }
+          <span class="dealer-badge" 
+                style="background-color:${getDealerColor(order.dealertype)}20;
+                       color:${getDealerColor(order.dealertype)};
+                       padding:4px 10px;
+                       border-radius:6px;
+                       font-weight:600;">
+              ${order.dealertype || 'N/A'}
+          </span>  
+    </style>
+</head>
+<body>
+    <div class="dashboard-header">
+        <h1>Orders Pending for Owner's Approval</h1>
+        <p class="dashboard-sub">Track aur approve requests — clean blue theme with aligned card grid</p>
+        <div class="toolbar">
+            <button class="refresh-btn" onclick="loadOrders()">🔄 Refresh Orders</button>
+        </div>
+    </div>
+
+    <div id="loading" class="loading">Loading orders...</div>
+    <div id="ordersContainer" class="orders-container" style="display:none;"></div>
+
+    <script>
+        /* ⚠️ JS logic unchanged from your original — actions, functions, names are identical */
+        const API_URL = 'https://script.google.com/macros/s/AKfycbzg5k4acAaEEmWfIklLzd52NW4xPb1yK4JTp_7m3GegNkDE1fPnqXCYwrVwnA6UzoLg4g/exec';
+        let orders = [];
+        let countdownIntervals = [];
+
+        // Calculate deadline based on timestamp
+        function calculateDeadline(timestamp) {
+            const orderTime = new Date(timestamp);
+            const deadline = new Date(orderTime);
+            if (orderTime.getHours() >= 18) {
+                deadline.setDate(deadline.getDate() + 1);
+                while (deadline.getDay() === 0) { deadline.setDate(deadline.getDate() + 1); }
+                deadline.setHours(10, 0, 0, 0);
+            } else {
+                deadline.setMinutes(deadline.getMinutes() + 30);
+            }
+            return deadline;
+        }
+
+        function formatTimeRemaining(milliseconds) {
+            if (milliseconds <= 0) return 'OVERDUE';
+            const minutes = Math.floor(milliseconds / (1000 * 60));
+            const seconds = Math.floor((milliseconds % (1000 * 60)) / 1000);
+            return minutes > 0 ? `${minutes}m ${seconds}s` : `${seconds}s`;
+        }
+
+        function getOrderStatus(deadline) {
+            const now = new Date();
+            return (now > deadline) ? 'overdue' : 'pending';
+        }
+
+          function getDealerColor(type) {
+              if (!type) return '#777';  // default grey
+          
+              const t = type.toLowerCase();
+          
+              if (t === 'retailer') return '#1e90ff';     // Blue
+              if (t === 'distributor') return '#28a745';  // Green
+              if (t === 'wholesaler') return '#ff8c00';   // Orange
+              if (t === 'super stockist') return '#6f42c1'; // Purple
+          
+              return '#444';  // fallback color
+          }
+
+        function createOrderCard(order, index) {
+            const deadline = calculateDeadline(order.timestamp);
+            const status = getOrderStatus(deadline);
+            const orderTime = new Date(order.timestamp);
+
+            return `
+                <div class="order-card" data-index="${index}">
+                    <div class="card-header">
+                        <div class="order-id">Order #${index + 1}</div>
+                        <div class="timestamp">${orderTime.toLocaleString()}</div>
+                    </div>
+
+                    <div class="countdown-container countdown-${status}" id="countdown-${index}">
+                        <div>⏰ Deadline: ${deadline.toLocaleString()}</div>
+                        <div id="time-remaining-${index}">Calculating...</div>
+                    </div>
+
+                    <div class="order-details">
+                        <div class="detail-row">
+                            <span class="detail-label">Dealer:</span>
+                            <span class="detail-value">${order.dealerName || 'N/A'}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Marketing Person:</span>
+                            <span class="detail-value">${order.marketingPersonName || 'N/A'}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Location:</span>
+                            <span class="detail-value">${order.location || 'N/A'}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">CRM Name:</span>
+                            <span class="detail-value">${order.crmName || 'N/A'}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Con Owner:</span>
+                            <span class="detail-value">${order.concernedOwner || 'N/A'}</span>
+                        </div>  
+                        <div class="detail-row">
+                          <span class="detail-label">Dealer Type:</span>
+                          <span class="detail-value" 
+                            style="color: ${getDealerColor(order.dealertype)}; font-weight:600;">
+                              ${order.dealertype || 'N/A'}
+                            </span>
+                          </div>
+     
+                        <div class="detail-row">
+                            <span class="detail-label">File:</span>
+                            <span class="detail-value">
+                                ${order.fileUploadLink
+                                    ? `<a href="${order.fileUploadLink}" target="_blank" class="file-link">📎 View File</a>`
+                                    : 'No file uploaded'}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="action-buttons">
+                        <button class="btn btn-approve" onclick="performAction('Approved', ${index})">✅ Approve</button>
+                        <button class="btn btn-hold" onclick="performAction('Hold', ${index})">⏸️ Hold</button>
+                        <button class="btn btn-cancel" onclick="performAction('Cancelled', ${index})">❌ Cancel</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function updateCountdowns() {
+            orders.forEach((order, index) => {
+                const deadline = calculateDeadline(order.timestamp);
+                const now = new Date();
+                const timeRemaining = deadline.getTime() - now.getTime();
+
+                const countdownElement = document.getElementById(`countdown-${index}`);
+                const timeRemainingElement = document.getElementById(`time-remaining-${index}`);
+
+                if (timeRemainingElement) {
+                    const formattedTime = formatTimeRemaining(timeRemaining);
+                    timeRemainingElement.textContent = formattedTime;
+
+                    if (countdownElement) {
+                        countdownElement.className = (timeRemaining <= 0)
+                            ? 'countdown-container countdown-overdue'
+                            : 'countdown-container countdown-active';
+                    }
+                }
+            });
+        }
+
+        async function loadOrders() {
+            try {
+                document.getElementById('loading').style.display = 'block';
+                document.getElementById('ordersContainer').style.display = 'none';
+
+                const response = await fetch(API_URL);
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    orders = data.data;
+                    displayOrders();
+                } else {
+                    throw new Error('Failed to load orders');
+                }
+            } catch (error) {
+                console.error('Error loading orders:', error);
+                document.getElementById('loading').innerHTML = '❌ Error loading orders. Please try again.';
+            }
+        }
+
+        function displayOrders() {
+            const container = document.getElementById('ordersContainer');
+            const loading = document.getElementById('loading');
+
+            loading.style.display = 'none';
+
+            if (orders.length === 0) {
+                container.innerHTML = '<div class="no-orders">🎉 No pending orders to approve!</div>';
+            } else {
+                container.innerHTML = orders.map((order, index) => createOrderCard(order, index)).join('');
+                clearInterval(window.countdownInterval);
+                updateCountdowns();
+                window.countdownInterval = setInterval(updateCountdowns, 1000);
+            }
+            container.style.display = 'grid';
+        }
+
+        async function performAction(action, index) {
+            const order = orders[index];
+            let actionEmoji = '';
+            switch(action) {
+                case 'Approved': actionEmoji = '✅'; break;
+                case 'Hold': actionEmoji = '⏸️'; break;
+                case 'Cancelled': actionEmoji = '❌'; break;
+            }
+
+            if (confirm(`${actionEmoji} Are you sure you want to ${action} this order?\n\nDealer: ${order.dealerName}\nLocation: ${order.location}`)) {
+                try {
+                    const card = document.querySelector(`[data-index="${index}"]`);
+                    const buttons = card.querySelectorAll('.btn');
+                    buttons.forEach(btn => { btn.disabled = true; btn.textContent = 'Processing...'; });
+
+                    const formData = new FormData();
+                    formData.append('action', action);
+                    formData.append('timestamp', order.timestamp);
+
+                    const response = await fetch(API_URL, { method:'POST', body:formData, headers:{ 'Accept':'application/json' } });
+
+                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+                    let result;
+                    try { result = await response.json(); }
+                    catch { result = { status:'success', message:`Order ${action.toLowerCase()} sent successfully` }; }
+
+                    if (result.status === 'success' || response.ok) {
+                        const countdownContainer = card.querySelector('.countdown-container');
+                        countdownContainer.className = `countdown-container countdown-${action.toLowerCase()}`;
+                        countdownContainer.innerHTML = `<div>${actionEmoji} ORDER ${action.toUpperCase()}</div>`;
+                        orders.splice(index, 1);
+                        alert(`${actionEmoji} Order ${action.toLowerCase()} successfully!`);
+                        setTimeout(() => { displayOrders(); }, 1500);
+                    } else {
+                        throw new Error(result.message || 'Unknown error occurred');
+                    }
+                } catch (error) {
+                    console.error('Error performing action:', error);
+
+                    if (error.message.includes('Failed to fetch') || error.message.includes('CORS')) {
+                        const card = document.querySelector(`[data-index="${index}"]`);
+                        const countdownContainer = card.querySelector('.countdown-container');
+                        countdownContainer.className = `countdown-container countdown-${action.toLowerCase()}`;
+                        countdownContainer.innerHTML = `<div>${actionEmoji} ORDER ${action.toUpperCase()}</div>`;
+                        orders.splice(index, 1);
+                        alert(`${actionEmoji} Order ${action.toLowerCase()} sent! (Browser security may block confirmation, but request was sent)`);
+                        setTimeout(() => { displayOrders(); }, 2000);
+                        return;
+                    }
+
+                    const card = document.querySelector(`[data-index="${index}"]`);
+                    const buttons = card.querySelectorAll('.btn');
+                    buttons.forEach(btn => {
+                        btn.disabled = false;
+                        if (btn.classList.contains('btn-approve')) btn.innerHTML = '✅ Approve';
+                        else if (btn.classList.contains('btn-hold')) btn.innerHTML = '⏸️ Hold';
+                        else if (btn.classList.contains('btn-cancel')) btn.innerHTML = '❌ Cancel';
+                    });
+
+                    alert(`❌ Error: ${error.message}`);
+                }
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            loadOrders();
+            setInterval(loadOrders, 30000); // auto-refresh every 30s
+        });
+        window.addEventListener('beforeunload', function () {
+            clearInterval(window.countdownInterval);
+        });
+    </script>
+</body>
+</html>
