@@ -20,6 +20,7 @@
             --blue-800:#114199;
             --blue-900:#0b2b66;
 
+
             --ink-900:#0f172a;  /* deep text */
             --ink-700:#334155;  /* secondary text */
             --ink-500:#64748b;  /* muted */
@@ -29,6 +30,7 @@
             --shadow-lg:0 10px 28px rgba(17,41,102,0.12);
         }
 
+
         body{
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background:#ffffff; /* Background color removed (no gradient) */
@@ -36,6 +38,7 @@
             min-height:100vh;
             padding:24px;
         }
+
 
         /* Header */
         .dashboard-header{
@@ -54,6 +57,7 @@
             font-size: .95rem;
             color:var(--ink-500);
         }
+
 
         /* Controls */
         .toolbar{
@@ -77,6 +81,7 @@
         .refresh-btn:hover{ transform:translateY(-1px); box-shadow:var(--shadow-lg); }
         .refresh-btn:active{ transform:translateY(0); opacity:.9; }
 
+
         /* States */
         .loading,
         .no-orders{
@@ -85,6 +90,7 @@
             padding:42px 12px;
             color:var(--ink-700);
         }
+
 
         /* Grid Layout (fixed card width so single item doesn’t stretch) */
         .orders-container{
@@ -97,6 +103,7 @@
             justify-items:stretch;
         }
 
+
         /* Card */
         .order-card{
             background:#fff;
@@ -108,6 +115,7 @@
         }
         .order-card:hover{ transform:translateY(-3px); box-shadow:var(--shadow-lg); }
 
+
         /* Card header */
         .card-header{
             display:flex; justify-content:space-between; align-items:center;
@@ -116,6 +124,7 @@
         }
         .order-id{ font-weight:700; color:var(--blue-800); font-size:1rem; }
         .timestamp{ color:var(--ink-500); font-size:.88rem; }
+
 
         /* Countdown block (kept same classes used by JS) - Blue theme */
         .countdown-container{
@@ -149,6 +158,7 @@
             color:#243a8f;
         }
 
+
         /* Details */
         .order-details{ margin: 10px 0 2px; }
         .detail-row{
@@ -158,11 +168,13 @@
         .detail-label{ font-weight:600; color:var(--ink-700); }
         .detail-value{ color:var(--ink-900); text-align:right; max-width: 60%; word-wrap: break-word; }
 
+
         .file-link{
             color:var(--blue-700); text-decoration:none; font-weight:600;
             border-bottom:1px dotted var(--blue-300);
         }
         .file-link:hover{ text-decoration:underline; }
+
 
         /* Buttons (kept class names & JS hooks; styled in blue family) */
         .action-buttons{ display:flex; gap:10px; margin-top:16px; }
@@ -176,13 +188,16 @@
         .btn:hover{ transform:translateY(-2px); box-shadow:var(--shadow-lg); }
         .btn:active{ transform:translateY(0); opacity:.9; }
 
+
         .btn-approve{ background:linear-gradient(180deg, var(--blue-600), var(--blue-700)); }
         .btn-hold{ background:linear-gradient(180deg, var(--blue-500), var(--blue-600)); }
         .btn-cancel{ background:linear-gradient(180deg, var(--blue-800), var(--blue-900)); }
 
+
         .btn:disabled{
             opacity:.6; cursor:not-allowed; transform:none !important; box-shadow:none;
         }
+
 
         /* Badges (if used anywhere) */
         .status-badge{
@@ -193,6 +208,7 @@
         .status-approved{ background:var(--blue-200); color:var(--blue-900); }
         .status-held{ background:var(--blue-50); color:var(--ink-700); }
         .status-overdue{ background:#dde7ff; color:#0b1b56; }
+
 
         /* Responsive tweak */
         @media (max-width: 480px){
@@ -210,14 +226,17 @@
         </div>
     </div>
 
+
     <div id="loading" class="loading">Loading orders...</div>
     <div id="ordersContainer" class="orders-container" style="display:none;"></div>
+
 
     <script>
         /* ⚠️ JS logic unchanged from your original — actions, functions, names are identical */
         const API_URL = 'https://script.google.com/macros/s/AKfycbzg5k4acAaEEmWfIklLzd52NW4xPb1yK4JTp_7m3GegNkDE1fPnqXCYwrVwnA6UzoLg4g/exec';
         let orders = [];
         let countdownIntervals = [];
+
 
         // Calculate deadline based on timestamp
         function calculateDeadline(timestamp) {
@@ -233,6 +252,7 @@
             return deadline;
         }
 
+
         function formatTimeRemaining(milliseconds) {
             if (milliseconds <= 0) return 'OVERDUE';
             const minutes = Math.floor(milliseconds / (1000 * 60));
@@ -240,15 +260,18 @@
             return minutes > 0 ? `${minutes}m ${seconds}s` : `${seconds}s`;
         }
 
+
         function getOrderStatus(deadline) {
             const now = new Date();
             return (now > deadline) ? 'overdue' : 'pending';
         }
 
+
         function createOrderCard(order, index) {
             const deadline = calculateDeadline(order.timestamp);
             const status = getOrderStatus(deadline);
             const orderTime = new Date(order.timestamp);
+
 
             return `
                 <div class="order-card" data-index="${index}">
@@ -280,22 +303,21 @@
                             <span class="detail-value">${order.crmName || 'N/A'}</span>
                         </div>
                         <div class="detail-row">
-                        <span class="detail-label">Dealer Type:</span>
+                            <span class="detail-label">Con Owner:</span>
+                            <span class="detail-value">${order.concernedOwner || 'N/A'}</span>
+                         </div>  
                         <span class="detail-value">
-                            <span style="
-                                background-color:${getDealerColor(order.dealertype)}33;
-                                color:${getDealerColor(order.dealertype)};
-                                padding:4px 10px;
-                                border-radius:6px;
-                                font-weight:600;
-                                display:inline-block;
-                            </span>
-                        </span>
-                    </div>
-                        <div class="detail-row">
-                            <span class="detail-label">Dealer Type:</span>
-                            <span class="detail-value">${order.dealertype || 'N/A'}</span>
-                        </div>                        
+                          <span style="
+                              background-color:${getDealerColor(order.dealertype)}20;
+                              color:${getDealerColor(order.dealertype)};
+                              padding:4px 10px;
+                              border-radius:6px;
+                              font-weight:600;
+                              display:inline-block;
+                          ">
+                            ${order.dealertype || 'N/A'}
+                          </span>
+                        </span>         
                         <div class="detail-row">
                             <span class="detail-label">File:</span>
                             <span class="detail-value">
@@ -314,6 +336,7 @@
                 </div>
             `;
         }
+
         function getDealerColor(type) {
             if (!type) return '#777';  // default grey
         
@@ -325,19 +348,22 @@
         
             return '#777'; // fallback grey
         }
-        
+
         function updateCountdowns() {
             orders.forEach((order, index) => {
                 const deadline = calculateDeadline(order.timestamp);
                 const now = new Date();
                 const timeRemaining = deadline.getTime() - now.getTime();
 
+
                 const countdownElement = document.getElementById(`countdown-${index}`);
                 const timeRemainingElement = document.getElementById(`time-remaining-${index}`);
+
 
                 if (timeRemainingElement) {
                     const formattedTime = formatTimeRemaining(timeRemaining);
                     timeRemainingElement.textContent = formattedTime;
+
 
                     if (countdownElement) {
                         countdownElement.className = (timeRemaining <= 0)
@@ -348,13 +374,16 @@
             });
         }
 
+
         async function loadOrders() {
             try {
                 document.getElementById('loading').style.display = 'block';
                 document.getElementById('ordersContainer').style.display = 'none';
 
+
                 const response = await fetch(API_URL);
                 const data = await response.json();
+
 
                 if (data.status === 'success') {
                     orders = data.data;
@@ -368,11 +397,14 @@
             }
         }
 
+
         function displayOrders() {
             const container = document.getElementById('ordersContainer');
             const loading = document.getElementById('loading');
 
+
             loading.style.display = 'none';
+
 
             if (orders.length === 0) {
                 container.innerHTML = '<div class="no-orders">🎉 No pending orders to approve!</div>';
@@ -385,6 +417,7 @@
             container.style.display = 'grid';
         }
 
+
         async function performAction(action, index) {
             const order = orders[index];
             let actionEmoji = '';
@@ -394,23 +427,29 @@
                 case 'Cancelled': actionEmoji = '❌'; break;
             }
 
+
             if (confirm(`${actionEmoji} Are you sure you want to ${action} this order?\n\nDealer: ${order.dealerName}\nLocation: ${order.location}`)) {
                 try {
                     const card = document.querySelector(`[data-index="${index}"]`);
                     const buttons = card.querySelectorAll('.btn');
                     buttons.forEach(btn => { btn.disabled = true; btn.textContent = 'Processing...'; });
 
+
                     const formData = new FormData();
                     formData.append('action', action);
                     formData.append('timestamp', order.timestamp);
 
+
                     const response = await fetch(API_URL, { method:'POST', body:formData, headers:{ 'Accept':'application/json' } });
 
+
                     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
 
                     let result;
                     try { result = await response.json(); }
                     catch { result = { status:'success', message:`Order ${action.toLowerCase()} sent successfully` }; }
+
 
                     if (result.status === 'success' || response.ok) {
                         const countdownContainer = card.querySelector('.countdown-container');
@@ -425,6 +464,7 @@
                 } catch (error) {
                     console.error('Error performing action:', error);
 
+
                     if (error.message.includes('Failed to fetch') || error.message.includes('CORS')) {
                         const card = document.querySelector(`[data-index="${index}"]`);
                         const countdownContainer = card.querySelector('.countdown-container');
@@ -436,6 +476,7 @@
                         return;
                     }
 
+
                     const card = document.querySelector(`[data-index="${index}"]`);
                     const buttons = card.querySelectorAll('.btn');
                     buttons.forEach(btn => {
@@ -445,10 +486,12 @@
                         else if (btn.classList.contains('btn-cancel')) btn.innerHTML = '❌ Cancel';
                     });
 
+
                     alert(`❌ Error: ${error.message}`);
                 }
             }
         }
+
 
         document.addEventListener('DOMContentLoaded', function () {
             loadOrders();
