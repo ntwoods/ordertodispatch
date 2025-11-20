@@ -291,14 +291,21 @@
                             <span class="detail-label">Con Owner:</span>
                             <span class="detail-value">${order.concernedOwner || 'N/A'}</span>
                         </div>  
-                        <div class="detail-row">
-                          <span class="detail-label">Dealer Type:</span>
-                          <span class="detail-value" 
-                            style="color: ${getDealerColor(order.dealertype)}; font-weight:600;">
-                              ${order.dealertype || 'N/A'}
+                         <div class="detail-row">
+                        <span class="detail-label">Dealer Type:</span>
+                        <span class="detail-value">
+                            <span style="
+                                background-color:${getDealerColor(order.dealertype)}33;
+                                color:${getDealerColor(order.dealertype)};
+                                padding:4px 10px;
+                                border-radius:6px;
+                                font-weight:600;
+                                display:inline-block;
+                            ">
+                                ${order.dealertype || 'N/A'}
                             </span>
-                          </div>
-     
+                        </span>
+                    </div>
                         <div class="detail-row">
                             <span class="detail-label">File:</span>
                             <span class="detail-value">
@@ -318,18 +325,18 @@
             `;
         }
 
-         function getDealerColor(type) {
-                      if (!type) return '#777';  // default grey
-                  
-                      const t = type.toLowerCase();
-                  
-                      if (t === 'retailer') return '#1e90ff';     // Blue
-                      if (t === 'distributor') return '#28a745';  // Green
-                      if (t === 'wholesaler') return '#ff8c00';   // Orange
-                      if (t === 'super stockist') return '#6f42c1'; // Purple
-                  
-                      return '#444';  // fallback color
-                  }
+                 function getDealerColor(type) {
+            if (!type) return '#777';  // default grey
+        
+            const t = type.toLowerCase();
+        
+            if (t.includes('green')) return '#28a745';   // GREEN
+            if (t.includes('yellow')) return '#ffcc00';  // YELLOW
+            if (t.includes('red')) return '#ff3b30';     // RED
+        
+            return '#777'; // fallback grey
+        }
+`
 
         function updateCountdowns() {
             orders.forEach((order, index) => {
