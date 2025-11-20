@@ -1,290 +1,313 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Orders Pending for Owner's Approval</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Approval Dashboard</title>
     <style>
-        /* Reset & Base */
-        * { margin:0; padding:0; box-sizing:border-box; }
-        :root{
-            /* Blue palette */
-            --blue-50:#f5f8ff;
-            --blue-100:#e8f0ff;
-            --blue-200:#d6e4ff;
-            --blue-300:#b3ccff;
-            --blue-400:#80aaff;
-            --blue-500:#4d88ff;
-            --blue-600:#1f6fff;
-            --blue-700:#1757cc;
-            --blue-800:#114199;
-            --blue-900:#0b2b66;
-
-
-            --ink-900:#0f172a;  /* deep text */
-            --ink-700:#334155;  /* secondary text */
-            --ink-500:#64748b;  /* muted */
-            --card-border:#e6eeff;
-            --radius-lg:14px;
-            --shadow-md:0 6px 18px rgba(17,41,102,0.10);
-            --shadow-lg:0 10px 28px rgba(17,41,102,0.12);
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
 
-
-        body{
+        body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background:#ffffff; /* Background color removed (no gradient) */
-            color:var(--ink-900);
-            min-height:100vh;
-            padding:24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .dashboard-header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .dashboard-header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .dashboard-header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .refresh-btn {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+        }
+
+        .refresh-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        .loading {
+            text-align: center;
+            color: white;
+            font-size: 1.2rem;
+            padding: 40px;
+        }
+
+        .orders-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .order-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+
+        .order-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #eee;
+        }
+
+        .order-id {
+            font-weight: bold;
+            color: #333;
+            font-size: 1.1rem;
+        }
+
+        .timestamp {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .countdown-container {
+            text-align: center;
+            margin: 15px 0;
+            padding: 15px;
+            border-radius: 10px;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .countdown-active {
+            background: linear-gradient(45deg, #ff6b6b, #ffa500);
+            color: white;
+            animation: pulse 2s infinite;
+        }
+
+        .countdown-overdue {
+            background: linear-gradient(45deg, #dc3545, #c82333);
+            color: white;
+        }
+
+        .countdown-approved {
+            background: linear-gradient(45deg, #28a745, #20c997);
+            color: white;
+        }
+
+        .countdown-held {
+            background: linear-gradient(45deg, #6c757d, #5a6268);
+            color: white;
+        }
+
+        .countdown-cancelled {
+            background: linear-gradient(45deg, #dc3545, #bd2130);
+            color: white;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+            100% { transform: scale(1); }
+        }
+
+        .order-details {
+            margin: 15px 0;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 8px 0;
+            padding: 5px 0;
+        }
+
+        .detail-label {
+            font-weight: 600;
+            color: #555;
+        }
+
+        .detail-value {
+            color: #333;
+            text-align: right;
+            max-width: 200px;
+            word-wrap: break-word;
+        }
+
+        .file-link {
+            color: #007bff;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .file-link:hover {
+            text-decoration: underline;
         }
 
 
-        /* Header */
-        .dashboard-header{
-            text-align:center;
-            margin:0 auto 20px;
-            max-width:1100px;
-        }
-        .dashboard-header h1{
-            font-size: clamp(1.4rem, 2.5vw, 2rem);
-            font-weight:700;
-            color:var(--blue-800);
-            letter-spacing:.2px;
-        }
-        .dashboard-sub{
-            margin-top:6px;
-            font-size: .95rem;
-            color:var(--ink-500);
+        .no-orders {
+            text-align: center;
+            color: white;
+            font-size: 1.3rem;
+            padding: 60px 20px;
         }
 
-
-        /* Controls */
-        .toolbar{
-            display:flex;
-            justify-content:center;
-            gap:12px;
-            margin:16px 0 22px;
-        }
-        .refresh-btn{
-            background:linear-gradient(180deg, var(--blue-600), var(--blue-700));
-            color:#fff;
-            border:none;
-            padding:12px 18px;
-            border-radius:999px;
-            cursor:pointer;
-            font-size:14px;
-            font-weight:600;
-            box-shadow:var(--shadow-md);
-            transition:transform .18s ease, box-shadow .18s ease, opacity .18s ease;
-        }
-        .refresh-btn:hover{ transform:translateY(-1px); box-shadow:var(--shadow-lg); }
-        .refresh-btn:active{ transform:translateY(0); opacity:.9; }
-
-
-        /* States */
-        .loading,
-        .no-orders{
-            text-align:center;
-            font-size:1rem;
-            padding:42px 12px;
-            color:var(--ink-700);
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            text-transform: uppercase;
         }
 
-
-        /* Grid Layout (fixed card width so single item doesn’t stretch) */
-        .orders-container{
-            display:grid;
-            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-            gap:18px;
-            max-width:1100px;
-            margin:0 auto;
-            align-items:start;
-            justify-items:stretch;
+        .status-pending {
+            background: #ffeaa7;
+            color: #2d3436;
         }
 
-
-        /* Card */
-        .order-card{
-            background:#fff;
-            border:1px solid var(--card-border);
-            border-radius:var(--radius-lg);
-            padding:18px;
-            box-shadow:var(--shadow-md);
-            transition:transform .18s ease, box-shadow .18s ease;
-        }
-        .order-card:hover{ transform:translateY(-3px); box-shadow:var(--shadow-lg); }
-
-
-        /* Card header */
-        .card-header{
-            display:flex; justify-content:space-between; align-items:center;
-            margin-bottom:12px; padding-bottom:10px;
-            border-bottom:1px solid var(--card-border);
-        }
-        .order-id{ font-weight:700; color:var(--blue-800); font-size:1rem; }
-        .timestamp{ color:var(--ink-500); font-size:.88rem; }
-
-
-        /* Countdown block (kept same classes used by JS) - Blue theme */
-        .countdown-container{
-            text-align:center;
-            margin:12px 0 14px;
-            padding:12px;
-            border-radius:10px;
-            font-weight:700;
-            font-size:1.02rem;
-            border:1px dashed var(--blue-200);
-        }
-        .countdown-active{
-            background: linear-gradient(180deg, var(--blue-100), var(--blue-50));
-            color:var(--blue-900);
-        }
-        .countdown-overdue{
-            background: linear-gradient(180deg, #e8efff, #dde7ff);
-            color:#0b1b56;
-            border-color: var(--blue-300);
-        }
-        .countdown-approved{
-            background: linear-gradient(180deg, var(--blue-200), var(--blue-100));
-            color:var(--blue-900);
-        }
-        .countdown-held{
-            background: linear-gradient(180deg, var(--blue-100), var(--blue-50));
-            color:var(--ink-700);
-        }
-        .countdown-cancelled{
-            background: linear-gradient(180deg, #e6ecff, #edf2ff);
-            color:#243a8f;
+        .status-approved {
+            background: #00b894;
+            color: white;
         }
 
-
-        /* Details */
-        .order-details{ margin: 10px 0 2px; }
-        .detail-row{
-            display:flex; justify-content:space-between; gap:12px;
-            margin:8px 0; padding:4px 0;
-        }
-        .detail-label{ font-weight:600; color:var(--ink-700); }
-        .detail-value{ color:var(--ink-900); text-align:right; max-width: 60%; word-wrap: break-word; }
-
-
-        .file-link{
-            color:var(--blue-700); text-decoration:none; font-weight:600;
-            border-bottom:1px dotted var(--blue-300);
-        }
-        .file-link:hover{ text-decoration:underline; }
-
-
-        /* Buttons (kept class names & JS hooks; styled in blue family) */
-        .action-buttons{ display:flex; gap:10px; margin-top:16px; }
-        .btn{
-            flex:1; padding:12px 10px; border:none; border-radius:10px;
-            font-size:14px; font-weight:700; letter-spacing:.3px; cursor:pointer;
-            color:#fff; box-shadow:var(--shadow-md);
-            transition:transform .15s ease, box-shadow .15s ease, opacity .15s ease;
-            text-transform:uppercase;
-        }
-        .btn:hover{ transform:translateY(-2px); box-shadow:var(--shadow-lg); }
-        .btn:active{ transform:translateY(0); opacity:.9; }
-
-
-        .btn-approve{ background:linear-gradient(180deg, var(--blue-600), var(--blue-700)); }
-        .btn-hold{ background:linear-gradient(180deg, var(--blue-500), var(--blue-600)); }
-        .btn-cancel{ background:linear-gradient(180deg, var(--blue-800), var(--blue-900)); }
-
-
-        .btn:disabled{
-            opacity:.6; cursor:not-allowed; transform:none !important; box-shadow:none;
+        .status-held {
+            background: #636e72;
+            color: white;
         }
 
-
-        /* Badges (if used anywhere) */
-        .status-badge{
-            padding:4px 12px; border-radius:999px; font-size:.78rem; font-weight:800;
-            text-transform:uppercase; border:1px solid var(--card-border);
+        .status-overdue {
+            background: #e17055;
+            color: white;
         }
-        .status-pending{ background:var(--blue-100); color:var(--blue-900); }
-        .status-approved{ background:var(--blue-200); color:var(--blue-900); }
-        .status-held{ background:var(--blue-50); color:var(--ink-700); }
-        .status-overdue{ background:#dde7ff; color:#0b1b56; }
 
-
-        /* Responsive tweak */
-        @media (max-width: 480px){
-            .orders-container{ grid-template-columns: 1fr; }
-            .detail-value{ max-width: 55%; }
+        @media (max-width: 768px) {
+            .orders-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .dashboard-header h1 {
+                font-size: 2rem;
+            }
+            
+            .order-card {
+                margin: 0 10px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="dashboard-header">
-        <h1>Orders Pending for Owner's Approval</h1>
-        <p class="dashboard-sub">Track aur approve requests — clean blue theme with aligned card grid</p>
-        <div class="toolbar">
-            <button class="refresh-btn" onclick="loadOrders()">🔄 Refresh Orders</button>
-        </div>
+        <h1>🎯 Owner's Approval Pending</h1>
+        <p>You should remind them if deadline is too close.</p>
+        <button class="refresh-btn" onclick="loadOrders()">🔄 Refresh Orders</button>
     </div>
 
-
     <div id="loading" class="loading">Loading orders...</div>
-    <div id="ordersContainer" class="orders-container" style="display:none;"></div>
-
+    <div id="ordersContainer" class="orders-container" style="display: none;"></div>
 
     <script>
-        /* ⚠️ JS logic unchanged from your original — actions, functions, names are identical */
         const API_URL = 'https://script.google.com/macros/s/AKfycbzg5k4acAaEEmWfIklLzd52NW4xPb1yK4JTp_7m3GegNkDE1fPnqXCYwrVwnA6UzoLg4g/exec';
         let orders = [];
         let countdownIntervals = [];
-
 
         // Calculate deadline based on timestamp
         function calculateDeadline(timestamp) {
             const orderTime = new Date(timestamp);
             const deadline = new Date(orderTime);
+            
+            // Check if after 6 PM
             if (orderTime.getHours() >= 18) {
+                // Set to next working day at 10 AM
                 deadline.setDate(deadline.getDate() + 1);
-                while (deadline.getDay() === 0) { deadline.setDate(deadline.getDate() + 1); }
+                
+                // Skip Sunday (0 = Sunday)
+                while (deadline.getDay() === 0) {
+                    deadline.setDate(deadline.getDate() + 1);
+                }
+                
                 deadline.setHours(10, 0, 0, 0);
             } else {
+                // Add 30 minutes to original timestamp
                 deadline.setMinutes(deadline.getMinutes() + 30);
             }
+            
             return deadline;
         }
 
-
+        // Format time remaining
         function formatTimeRemaining(milliseconds) {
             if (milliseconds <= 0) return 'OVERDUE';
+            
             const minutes = Math.floor(milliseconds / (1000 * 60));
             const seconds = Math.floor((milliseconds % (1000 * 60)) / 1000);
-            return minutes > 0 ? `${minutes}m ${seconds}s` : `${seconds}s`;
+            
+            if (minutes > 0) {
+                return `${minutes}m ${seconds}s`;
+            } else {
+                return `${seconds}s`;
+            }
         }
 
-
+        // Get status based on deadline
         function getOrderStatus(deadline) {
             const now = new Date();
-            return (now > deadline) ? 'overdue' : 'pending';
+            if (now > deadline) {
+                return 'overdue';
+            }
+            return 'pending';
         }
 
-
+        // Create order card HTML
         function createOrderCard(order, index) {
             const deadline = calculateDeadline(order.timestamp);
             const status = getOrderStatus(deadline);
             const orderTime = new Date(order.timestamp);
-
-
+            
             return `
                 <div class="order-card" data-index="${index}">
                     <div class="card-header">
                         <div class="order-id">Order #${index + 1}</div>
                         <div class="timestamp">${orderTime.toLocaleString()}</div>
                     </div>
-
+                    
                     <div class="countdown-container countdown-${status}" id="countdown-${index}">
                         <div>⏰ Deadline: ${deadline.toLocaleString()}</div>
                         <div id="time-remaining-${index}">Calculating...</div>
                     </div>
-
+                    
                     <div class="order-details">
                         <div class="detail-row">
                             <span class="detail-label">Dealer:</span>
@@ -303,88 +326,52 @@
                             <span class="detail-value">${order.crmName || 'N/A'}</span>
                         </div>
                         <div class="detail-row">
-                            <span class="detail-label">Con Owner:</span>
-                            <span class="detail-value">${order.concernedOwner || 'N/A'}</span>
-                         </div>  
-                        <span class="detail-value">
-                          <span style="
-                              background-color:${getDealerColor(order.dealertype)}20;
-                              color:${getDealerColor(order.dealertype)};
-                              padding:4px 10px;
-                              border-radius:6px;
-                              font-weight:600;
-                              display:inline-block;
-                          ">
-                            ${order.dealertype || 'N/A'}
-                          </span>
-                        </span>         
-                        <div class="detail-row">
                             <span class="detail-label">File:</span>
                             <span class="detail-value">
-                                ${order.fileUploadLink
-                                    ? `<a href="${order.fileUploadLink}" target="_blank" class="file-link">📎 View File</a>`
-                                    : 'No file uploaded'}
+                                ${order.fileUploadLink ? 
+                                    `<a href="${order.fileUploadLink}" target="_blank" class="file-link">📎 View File</a>` : 
+                                    'No file uploaded'
+                                }
                             </span>
                         </div>
-                    </div>
-
-                    <div class="action-buttons">
-                        <button class="btn btn-approve" onclick="performAction('Approved', ${index})">✅ Approve</button>
-                        <button class="btn btn-hold" onclick="performAction('Hold', ${index})">⏸️ Hold</button>
-                        <button class="btn btn-cancel" onclick="performAction('Cancelled', ${index})">❌ Cancel</button>
                     </div>
                 </div>
             `;
         }
 
-        function getDealerColor(type) {
-            if (!type) return '#777';  // default grey
-        
-            const t = type.toLowerCase();
-        
-            if (t.includes('green')) return '#28a745';   // GREEN
-            if (t.includes('yellow')) return '#ffcc00';  // YELLOW
-            if (t.includes('red')) return '#ff3b30';     // RED
-        
-            return '#777'; // fallback grey
-        }
-
+        // Update countdown for all orders
         function updateCountdowns() {
             orders.forEach((order, index) => {
                 const deadline = calculateDeadline(order.timestamp);
                 const now = new Date();
                 const timeRemaining = deadline.getTime() - now.getTime();
-
-
+                
                 const countdownElement = document.getElementById(`countdown-${index}`);
                 const timeRemainingElement = document.getElementById(`time-remaining-${index}`);
-
-
+                
                 if (timeRemainingElement) {
                     const formattedTime = formatTimeRemaining(timeRemaining);
                     timeRemainingElement.textContent = formattedTime;
-
-
-                    if (countdownElement) {
-                        countdownElement.className = (timeRemaining <= 0)
-                            ? 'countdown-container countdown-overdue'
-                            : 'countdown-container countdown-active';
+                    
+                    // Update countdown container class
+                    if (timeRemaining <= 0) {
+                        countdownElement.className = 'countdown-container countdown-overdue';
+                    } else {
+                        countdownElement.className = 'countdown-container countdown-active';
                     }
                 }
             });
         }
 
-
+        // Load orders from API
         async function loadOrders() {
             try {
                 document.getElementById('loading').style.display = 'block';
                 document.getElementById('ordersContainer').style.display = 'none';
-
-
+                
                 const response = await fetch(API_URL);
                 const data = await response.json();
-
-
+                
                 if (data.status === 'success') {
                     orders = data.data;
                     displayOrders();
@@ -397,107 +384,37 @@
             }
         }
 
-
+        // Display orders
         function displayOrders() {
             const container = document.getElementById('ordersContainer');
             const loading = document.getElementById('loading');
-
-
+            
             loading.style.display = 'none';
-
-
+            
             if (orders.length === 0) {
                 container.innerHTML = '<div class="no-orders">🎉 No pending orders to approve!</div>';
             } else {
                 container.innerHTML = orders.map((order, index) => createOrderCard(order, index)).join('');
+                
+                // Start countdown updates
                 clearInterval(window.countdownInterval);
                 updateCountdowns();
                 window.countdownInterval = setInterval(updateCountdowns, 1000);
             }
+            
             container.style.display = 'grid';
         }
 
-
-        async function performAction(action, index) {
-            const order = orders[index];
-            let actionEmoji = '';
-            switch(action) {
-                case 'Approved': actionEmoji = '✅'; break;
-                case 'Hold': actionEmoji = '⏸️'; break;
-                case 'Cancelled': actionEmoji = '❌'; break;
-            }
-
-
-            if (confirm(`${actionEmoji} Are you sure you want to ${action} this order?\n\nDealer: ${order.dealerName}\nLocation: ${order.location}`)) {
-                try {
-                    const card = document.querySelector(`[data-index="${index}"]`);
-                    const buttons = card.querySelectorAll('.btn');
-                    buttons.forEach(btn => { btn.disabled = true; btn.textContent = 'Processing...'; });
-
-
-                    const formData = new FormData();
-                    formData.append('action', action);
-                    formData.append('timestamp', order.timestamp);
-
-
-                    const response = await fetch(API_URL, { method:'POST', body:formData, headers:{ 'Accept':'application/json' } });
-
-
-                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-
-
-                    let result;
-                    try { result = await response.json(); }
-                    catch { result = { status:'success', message:`Order ${action.toLowerCase()} sent successfully` }; }
-
-
-                    if (result.status === 'success' || response.ok) {
-                        const countdownContainer = card.querySelector('.countdown-container');
-                        countdownContainer.className = `countdown-container countdown-${action.toLowerCase()}`;
-                        countdownContainer.innerHTML = `<div>${actionEmoji} ORDER ${action.toUpperCase()}</div>`;
-                        orders.splice(index, 1);
-                        alert(`${actionEmoji} Order ${action.toLowerCase()} successfully!`);
-                        setTimeout(() => { displayOrders(); }, 1500);
-                    } else {
-                        throw new Error(result.message || 'Unknown error occurred');
-                    }
-                } catch (error) {
-                    console.error('Error performing action:', error);
-
-
-                    if (error.message.includes('Failed to fetch') || error.message.includes('CORS')) {
-                        const card = document.querySelector(`[data-index="${index}"]`);
-                        const countdownContainer = card.querySelector('.countdown-container');
-                        countdownContainer.className = `countdown-container countdown-${action.toLowerCase()}`;
-                        countdownContainer.innerHTML = `<div>${actionEmoji} ORDER ${action.toUpperCase()}</div>`;
-                        orders.splice(index, 1);
-                        alert(`${actionEmoji} Order ${action.toLowerCase()} sent! (Browser security may block confirmation, but request was sent)`);
-                        setTimeout(() => { displayOrders(); }, 2000);
-                        return;
-                    }
-
-
-                    const card = document.querySelector(`[data-index="${index}"]`);
-                    const buttons = card.querySelectorAll('.btn');
-                    buttons.forEach(btn => {
-                        btn.disabled = false;
-                        if (btn.classList.contains('btn-approve')) btn.innerHTML = '✅ Approve';
-                        else if (btn.classList.contains('btn-hold')) btn.innerHTML = '⏸️ Hold';
-                        else if (btn.classList.contains('btn-cancel')) btn.innerHTML = '❌ Cancel';
-                    });
-
-
-                    alert(`❌ Error: ${error.message}`);
-                }
-            }
-        }
-
-
-        document.addEventListener('DOMContentLoaded', function () {
+// Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
             loadOrders();
-            setInterval(loadOrders, 30000); // auto-refresh every 30s
+            
+            // Auto-refresh every 30 seconds
+            setInterval(loadOrders, 30000);
         });
-        window.addEventListener('beforeunload', function () {
+
+        // Cleanup intervals on page unload
+        window.addEventListener('beforeunload', function() {
             clearInterval(window.countdownInterval);
         });
     </script>
