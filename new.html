@@ -253,19 +253,6 @@
             return (now > deadline) ? 'overdue' : 'pending';
         }
 
-          function getDealerColor(type) {
-              if (!type) return '#777';  // default grey
-          
-              const t = type.toLowerCase();
-          
-              if (t === 'retailer') return '#1e90ff';     // Blue
-              if (t === 'distributor') return '#28a745';  // Green
-              if (t === 'wholesaler') return '#ff8c00';   // Orange
-              if (t === 'super stockist') return '#6f42c1'; // Purple
-          
-              return '#444';  // fallback color
-          }
-
         function createOrderCard(order, index) {
             const deadline = calculateDeadline(order.timestamp);
             const status = getOrderStatus(deadline);
@@ -330,6 +317,19 @@
                 </div>
             `;
         }
+
+         function getDealerColor(type) {
+                      if (!type) return '#777';  // default grey
+                  
+                      const t = type.toLowerCase();
+                  
+                      if (t === 'retailer') return '#1e90ff';     // Blue
+                      if (t === 'distributor') return '#28a745';  // Green
+                      if (t === 'wholesaler') return '#ff8c00';   // Orange
+                      if (t === 'super stockist') return '#6f42c1'; // Purple
+                  
+                      return '#444';  // fallback color
+                  }
 
         function updateCountdowns() {
             orders.forEach((order, index) => {
