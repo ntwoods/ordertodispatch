@@ -286,7 +286,7 @@
       const out = new Date(d);
       if ((h > 14 || (h === 14 && m >= 30)) && h < 24){
         do { out.setDate(out.getDate()+1); } while(isSunday(out));
-        out.setHours(10,0,0,0);
+        out.setHours(11,0,0,0);
       } else if (h < 9 || (h===9 && m<=30)){
         out.setHours(13,30,0,0);
       } else {
