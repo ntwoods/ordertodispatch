@@ -284,22 +284,18 @@
                             <span class="detail-value">${order.concernedOwner || 'N/A'}</span>
                         </div>  
 
-                        <div class="detail-row">
-                            <span class="detail-label">Dealer Type:</span>
-                            <span class="detail-value">
-                                <span style="
-                                    background-color:${getDealerColor(order.dealertype)}33;
-                                    color:${getDealerColor(order.dealertype)};
-                                    padding:4px 10px;
-                                    border-radius:6px;
-                                    font-weight:600;
-                                    display:inline-block;
-                                ">
-                                    ${order.dealertype || 'N/A'}
-                                </span>
-                            </span>
-                        </div>
-                                               
+                        <span class="detail-value">
+                          <span style="
+                              background-color:${getDealerColor(order.dealertype)}20;
+                              color:${getDealerColor(order.dealertype)};
+                              padding:4px 10px;
+                              border-radius:6px;
+                              font-weight:600;
+                              display:inline-block;
+                          ">
+                            ${order.dealertype || 'N/A'}
+                          </span>
+                        </span>                        
                         <div class="detail-row">
                             <span class="detail-label">File:</span>
                             <span class="detail-value">
