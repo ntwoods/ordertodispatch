@@ -260,7 +260,7 @@ function getDeadline(originalTimestampStr) {
           <p><strong>CRM:</strong> ${order.crmName}</p>
           <p><strong>Con. Owner:</strong> ${order.concernedOwner}</p>
           <p><strong>Expected Delivery:</strong> ${formatDateToDDMMMYYYY(order.expectedDeliveryDate)}</p>
-          <p><strong>Dispatch Date & Time:</strong> ${formatDateToDDMMMYYYY(order.timestamp)}</p>
+          <p><strong>Dispatch Date & Time:</strong> ${formatDateToDDMMMYYYY(order.dispatchDate)}</p>
           <p><strong>Deadline:</strong> ${formatDateToDDMMMYYYY(deadline)}</p>
           <p><strong>Time Left:</strong> <span id="countdown-${index}" class="font-mono text-blue-700"></span></p>
           <p><strong>Vehicle No:</strong> ${order.vehicleNo || 'N/A'}</p>
@@ -368,5 +368,6 @@ Invoice URL: ${order.invoiceUrl || 'N/A'}`;
   <script src="js/viewOnly.js"></script>
 </body>
 </html>
+
 
 
