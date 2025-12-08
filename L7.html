@@ -205,6 +205,53 @@
             transform: none;
         }
 
+        /* FILE BUTTONS */
+        .file-actions {
+            margin-top: 15px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .file-btn {
+            border-radius: 6px;
+            padding: 7px 14px;
+            font-size: 0.85em;
+            cursor: pointer;
+            background-color: #ffffff;
+            border: 1px solid var(--accent-color);
+            color: var(--accent-color);
+            transition: background-color 0.2s ease, color 0.2s ease, transform 0.1s ease;
+        }
+        .file-btn:hover {
+            background-color: var(--accent-color);
+            color: #ffffff;
+            transform: translateY(-1px);
+        }
+        .file-btn-raw {
+            border-color: #6c757d;
+            color: #6c757d;
+        }
+        .file-btn-raw:hover {
+            background-color: #6c757d;
+            color: #ffffff;
+        }
+        .file-btn-final {
+            border-color: #28a745;
+            color: #28a745;
+        }
+        .file-btn-final:hover {
+            background-color: #28a745;
+            color: #ffffff;
+        }
+        .file-btn-additional {
+            border-color: #17a2b8;
+            color: #17a2b8;
+        }
+        .file-btn-additional:hover {
+            background-color: #17a2b8;
+            color: #ffffff;
+        }
+
         /* Responsive adjustments */
         @media (max-width: 768px) {
             .container { padding: 20px; }
@@ -462,6 +509,11 @@
                 const holdUntil = order.holdUntil;
                 const formattedHoldUntil = formatDate(holdUntil);
 
+                // File URLs from backend
+                const rawFile = order.rawFile || '';
+                const finalFile = order.finalFile || '';
+                const additionalFile = order.additionalFile || '';
+
                 // Dealer Type Badge
                 let badgeClass = 'bg-gray';
                 if (order.dealerType) {
@@ -487,6 +539,12 @@
                         <p><strong>Hold Until:</strong> ${formattedHoldUntil}</p>
                     </div>
 
+                    <div class="file-actions">
+                        ${rawFile ? `<button type="button" class="file-btn file-btn-raw">Raw</button>` : ''}
+                        ${finalFile ? `<button type="button" class="file-btn file-btn-final">Final</button>` : ''}
+                        ${additionalFile ? `<button type="button" class="file-btn file-btn-additional">Additional</button>` : ''}
+                    </div>
+
                     <div class="countdown-timer" id="${safeId}">Calculating...</div>
 
                     <div class="editable">
@@ -503,11 +561,34 @@
                 const countdownElement = document.getElementById(safeId);
                 if (holdUntil) startCountdown(holdUntil, countdownElement);
 
-                // Buttons
+                // Buttons: Approve & Hold
                 const approveBtn = orderCard.querySelector('.approve-btn');
                 const holdBtn = orderCard.querySelector('.set-hold-btn');
 
-                // If view-only → disable buttons
+                // File buttons
+                const rawBtn = orderCard.querySelector('.file-btn-raw');
+                const finalBtn = orderCard.querySelector('.file-btn-final');
+                const additionalBtn = orderCard.querySelector('.file-btn-additional');
+
+                if (rawBtn && rawFile) {
+                    rawBtn.addEventListener('click', () => {
+                        window.open(rawFile, '_blank');
+                    });
+                }
+
+                if (finalBtn && finalFile) {
+                    finalBtn.addEventListener('click', () => {
+                        window.open(finalFile, '_blank');
+                    });
+                }
+
+                if (additionalBtn && additionalFile) {
+                    additionalBtn.addEventListener('click', () => {
+                        openMultipleDocuments(additionalFile);
+                    });
+                }
+
+                // If view-only → disable action buttons (but file buttons remain clickable)
                 if (isViewOnly) {
                     approveBtn.disabled = true;
                     holdBtn.disabled = true;
