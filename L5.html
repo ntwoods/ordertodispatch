@@ -106,14 +106,16 @@
     }
 
 function getDeadline(originalTimestampStr) {
+  // Agar timestamp blank ya null hai to direct null
+  if (!originalTimestampStr) return null;
+
   const original = new Date(originalTimestampStr);
   if (isNaN(original)) {
-    // agar invalid date aa gaya to null / ya jo tum chaho return kar sakte ho
+    // Agar invalid date aa gaya to bhi null
     return null;
   }
 
   const deadline = new Date(original);
-
   const hour = original.getHours();
   const minute = original.getMinutes();
 
@@ -136,6 +138,7 @@ function getDeadline(originalTimestampStr) {
 
   return deadline;
 }
+
 
 
     function renderOrders(orders) {
@@ -368,6 +371,7 @@ Invoice URL: ${order.invoiceUrl || 'N/A'}`;
   <script src="js/viewOnly.js"></script>
 </body>
 </html>
+
 
 
 
