@@ -26,7 +26,6 @@
 
   <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbwUr0UhENK6RGtdvYMC6-V0Khwb3kibKP4SLXC4nzL6Hm4idr6P-Olx4XTWvgZ_e2xk-Q/exec";
-
     // --------- URL mode detection ----------
     const urlParams = new URLSearchParams(window.location.search);
     const modeParam = (urlParams.get('mode') || '').trim().toLowerCase();
@@ -40,106 +39,117 @@
     // Banner text + style
     function showModeBanner() {
       const banner = document.getElementById('modeBanner');
-      let text = '', classes = '';
+      if (!banner) return;
+
+      let text = '';
+      let classes = '';
       if (IS_VIEW_ONLY) {
-        text = 'Mode: View Only • Showing orders for ALL CRMs';
+        text = 'View Only Mode: You can only view all CRMs; no submission allowed.';
         classes = 'bg-yellow-100 text-yellow-800 border border-yellow-300';
-      } else if (!FETCH_ALL) {
-        text = `Mode: Normal • CRM Filter: ${crmParam}`;
+      } else if (!crmParam) {
+        text = 'All CRMs Mode: Showing pending orders for ALL CRMs.';
         classes = 'bg-blue-100 text-blue-800 border border-blue-300';
       } else {
-        text = 'Mode: Normal • Showing orders for ALL CRMs';
+        text = `CRM Mode: Showing pending orders for CRM – ${crmParam}`;
         classes = 'bg-green-100 text-green-800 border border-green-300';
       }
-      banner.textContent = text;
-      banner.className = `mb-3 rounded-lg px-4 py-2 text-sm font-semibold ${classes}`;
-      banner.classList.remove('hidden');
-    }
-    showModeBanner();
 
+      banner.textContent = text;
+      banner.className = `mb-4 p-3 rounded-lg text-sm font-medium ${classes}`;
+    }
+
+    // Global store for orders
     let globalOrders = [];
 
-    function formatDateToDDMMMYYYY(dateStr) {
-      if (!dateStr) return 'N/A';
-      const date = new Date(dateStr);
-      if (isNaN(date)) return 'N/A';
-      const options = { day: '2-digit', month: 'short', year: 'numeric' };
-      return date.toLocaleDateString('en-GB', options).replace(/ /g, '-');
-    }
-
-    function openMultipleDocuments(urlString, index) {
-      const urls = (urlString || '').split(',').map(u => u.trim()).filter(Boolean);
-      if (urls.length === 0) {
-        alert('No valid URLs found');
-        return;
-      }
-      if (urls.length > 1) {
-        const confirmed = confirm(`This will open ${urls.length} documents in separate tabs. Continue?`);
-        if (!confirmed) return;
-      }
-      urls.forEach((url, urlIndex) => {
-        setTimeout(() => window.open(url, '_blank'), urlIndex * 100);
-      });
-    }
-
+    /**
+     * Fetch burger, show spinner, etc.
+     */
     async function fetchOrders() {
-      try {
-        const response = await fetch(apiFetchUrl);
-        const result = await response.json();
-        if (result.status === "success") {
-          document.getElementById("loader").classList.add("hidden");
-          document.getElementById("ordersContainer").classList.remove("hidden");
-          globalOrders = result.data || [];
-          renderOrders(globalOrders);
+      showModeBanner();
+      const container = document.getElementById("ordersContainer");
+      const loading = document.getElementById("loadingState");
+      const errorBox = document.getElementById("errorState");
 
-          // If external viewOnly.js provides setReadOnlyMode, still honor it
-          if (IS_VIEW_ONLY && typeof setReadOnlyMode === "function") {
-            setReadOnlyMode();
-          }
-        } else {
-          throw new Error("Invalid response");
+      if (loading) loading.classList.remove("hidden");
+      if (errorBox) errorBox.classList.add("hidden");
+      if (container) container.innerHTML = "";
+
+      try {
+        const res = await fetch(apiFetchUrl);
+        const json = await res.json();
+
+        if (!json || !json.success) {
+          throw new Error(json && json.message ? json.message : "Unknown error from API");
         }
+
+        const dataArr = json.data || [];
+        globalOrders = dataArr; // store globally
+
+        renderOrders(dataArr);
       } catch (err) {
-        document.getElementById("loader").innerText = "Failed to load orders.";
-        console.error(err);
+        console.error("Error fetching orders:", err);
+        if (errorBox) {
+          errorBox.textContent = `Error: ${err.message || err}`;
+          errorBox.classList.remove("hidden");
+        }
+      } finally {
+        if (loading) loading.classList.add("hidden");
       }
     }
 
-function getDeadline(originalTimestampStr) {
-  // Agar timestamp blank ya null hai to direct null
-  if (!originalTimestampStr) return null;
+    // --- Utility to format date in DD-MMM-YYYY HH:MM:SS if needed ---
+    function formatDateToDDMMMYYYY(dateStrOrDate) {
+      if (!dateStrOrDate) return "";
+      const d = (dateStrOrDate instanceof Date) ? dateStrOrDate : new Date(dateStrOrDate);
+      if (isNaN(d)) return "";
 
-  const original = new Date(originalTimestampStr);
-  if (isNaN(original)) {
-    // Agar invalid date aa gaya to bhi null
-    return null;
-  }
+      const day = String(d.getDate()).padStart(2, "0");
+      const monthNames = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+      const month = monthNames[d.getMonth()];
+      const year = d.getFullYear();
 
-  const deadline = new Date(original);
-  const hour = original.getHours();
-  const minute = original.getMinutes();
+      const hh = String(d.getHours()).padStart(2, "0");
+      const mm = String(d.getMinutes()).padStart(2, "0");
+      const ss = String(d.getSeconds()).padStart(2, "0");
 
-  // Agar time 5:00 pm se baad ka hai (strictly after 17:00)
-  if (hour > 17 || (hour === 17 && minute > 0)) {
-    // Next day le lo
-    deadline.setDate(deadline.getDate() + 1);
-
-    // Agar next day Sunday hai (getDay() === 0) to Monday kar do
-    if (deadline.getDay() === 0) {
-      deadline.setDate(deadline.getDate() + 1);
+      return `${day}-${month}-${year} ${hh}:${mm}:${ss}`;
     }
 
-    // Deadline time = 10:30 am
-    deadline.setHours(10, 30, 0, 0);
-  } else {
-    // Normal case: sirf 2 ghanta add
-    deadline.setTime(deadline.getTime() + 2 * 60 * 60 * 1000);
-  }
+    // ------------------- Deadline Logic (updated) -------------------
+    function getDeadline(originalTimestampStr) {
+      // Agar timestamp blank ya null hai to direct null
+      if (!originalTimestampStr) return null;
 
-  return deadline;
-}
+      const original = new Date(originalTimestampStr);
+      if (isNaN(original)) {
+        // agar invalid date aa gaya to null
+        return null;
+      }
 
+      const deadline = new Date(original);
 
+      const hour = original.getHours();
+      const minute = original.getMinutes();
+
+      // Agar time 5:00 pm se baad ka hai (strictly after 17:00)
+      if (hour > 17 || (hour === 17 && minute > 0)) {
+        // Next day le lo
+        deadline.setDate(deadline.getDate() + 1);
+
+        // Agar next day Sunday hai (getDay() === 0) to Monday kar do
+        if (deadline.getDay() === 0) {
+          deadline.setDate(deadline.getDate() + 1);
+        }
+
+        // Deadline time = 10:30 am
+        deadline.setHours(10, 30, 0, 0);
+      } else {
+        // Normal case: sirf 2 ghanta add
+        deadline.setTime(deadline.getTime() + 2 * 60 * 60 * 1000);
+      }
+
+      return deadline;
+    }
 
     function renderOrders(orders) {
       const container = document.getElementById("ordersContainer");
@@ -156,6 +166,7 @@ function getDeadline(originalTimestampStr) {
 
       orders.forEach((order, index) => {
         const deadline = getDeadline(order.timestamp);
+        const hasDeadline = !!deadline;
 
         const hasInvoice = order.invoiceUrl && order.invoiceUrl.trim() !== "";
         const bgColor = hasInvoice ? "bg-green-100 border border-green-300" : "bg-red-100 border border-red-300";
@@ -163,8 +174,13 @@ function getDeadline(originalTimestampStr) {
         const card = document.createElement("div");
         card.className = `${bgColor} p-6 rounded-2xl shadow-md relative transition hover:scale-[1.02]`;
 
-        const overdue = new Date() > deadline;
-        const deadlineLabel = overdue ? "Overdue" : "Active";
+        const overdue = hasDeadline && (new Date() > deadline);
+        const deadlineLabel = hasDeadline ? (overdue ? "Overdue" : "Active") : "Pending";
+        const statusClass = overdue
+          ? "bg-red-200 text-red-800"
+          : hasDeadline
+            ? "bg-green-200 text-green-800"
+            : "bg-gray-200 text-gray-800";
 
         // Dealer Type Badge
         let dealerTypeBadge = '';
@@ -248,7 +264,7 @@ function getDeadline(originalTimestampStr) {
         `;
 
         card.innerHTML = `
-          <div class="absolute top-2 right-2 text-sm font-semibold px-3 py-1 rounded-full ${overdue ? 'bg-red-200 text-red-800' : 'bg-green-200 text-green-800'}">
+          <div class="absolute top-2 right-2 text-sm font-semibold px-3 py-1 rounded-full ${statusClass}">
             ${deadlineLabel}
           </div>
 
@@ -264,7 +280,7 @@ function getDeadline(originalTimestampStr) {
           <p><strong>Con. Owner:</strong> ${order.concernedOwner}</p>
           <p><strong>Expected Delivery:</strong> ${formatDateToDDMMMYYYY(order.expectedDeliveryDate)}</p>
           <p><strong>Dispatch Date & Time:</strong> ${formatDateToDDMMMYYYY(order.dispatchDate)}</p>
-          <p><strong>Deadline:</strong> ${formatDateToDDMMMYYYY(deadline)}</p>
+          <p><strong>Deadline:</strong> ${hasDeadline ? formatDateToDDMMMYYYY(deadline) : ''}</p>
           <p><strong>Time Left:</strong> <span id="countdown-${index}" class="font-mono text-blue-700"></span></p>
           <p><strong>Vehicle No:</strong> ${order.vehicleNo || 'N/A'}</p>
           <p><strong>Freight:</strong> ${order.freight || 'N/A'}</p>
@@ -276,8 +292,10 @@ function getDeadline(originalTimestampStr) {
 
         container.appendChild(card);
 
-        // Countdown timer should still run in both modes
-        startCountdown(deadline, index);
+        // Sirf jab valid deadline ho tabhi countdown chalao
+        if (hasDeadline) {
+          startCountdown(deadline, index);
+        }
       });
     }
 
@@ -287,19 +305,37 @@ function getDeadline(originalTimestampStr) {
         const now = new Date();
         const diff = deadline - now;
         if (diff <= 0) {
-          el.innerText = "00:00:00";
-          el.classList.add("text-red-500");
+          el.innerText = "Expired";
           return;
         }
-        const h = String(Math.floor(diff / (1000 * 60 * 60))).padStart(2, "0");
-        const m = String(Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))).padStart(2, "0");
-        const s = String(Math.floor((diff % (1000 * 60)) / 1000)).padStart(2, "0");
-        el.innerText = `${h}:${m}:${s}`;
+        const hours = Math.floor(diff / (1000 * 60 * 60));
+        const minutes = Math.floor((diff / (1000 * 60)) % 60);
+        const seconds = Math.floor((diff / 1000) % 60);
+        el.innerText = `${hours}h ${minutes}m ${seconds}s`;
       }
       update();
       setInterval(update, 1000);
     }
 
+    // ---------------- Opening multiple documents ----------------
+    function openMultipleDocuments(urlString, index) {
+      if (!urlString) {
+        alert("No document URLs available.");
+        return;
+      }
+      const urls = urlString.split(",").map(u => u.trim()).filter(u => u);
+      if (urls.length === 0) {
+        alert("No valid document URLs found.");
+        return;
+      }
+
+      urls.forEach((url, i) => {
+        // first url in new tab, others also new tabs
+        window.open(url, "_blank");
+      });
+    }
+
+    // ---------------- Submission Logic ----------------
     async function submitConfirmation(index) {
       if (IS_VIEW_ONLY) {
         alert("View Only mode mein submission allowed nahi hai.");
@@ -334,25 +370,33 @@ function getDeadline(originalTimestampStr) {
         setTimeout(() => {
           alert("Submitted successfully!");
           button.textContent = "Submitted ✓";
-          button.style.backgroundColor = "#10B981";
-          fetchOrders();
-        }, 1000);
-
+          button.disabled = true;
+        }, 500);
       } catch (err) {
-        console.error('Submit error:', err);
+        console.error("Submission error:", err);
+        alert("Error submitting data. Please try again.");
         button.textContent = originalText;
         button.disabled = false;
-        alert("Submission failed. Please try again.");
-        fetchOrders();
       }
     }
 
+    // ---------------- Copy Dispatch Details ----------------
     function copyDispatchDetails(index) {
       const order = globalOrders[index];
-      const details = `Expected Delivery Date: ${formatDateToDDMMMYYYY(order.expectedDeliveryDate)}
-Dispatch Date & Time: ${formatDateToDDMMMYYYY(order.timestamp)}
+      if (!order) {
+        alert("Order not found.");
+        return;
+      }
+
+      const details = `Dealer: ${order.dealerName}
+Marketing Person: ${order.marketingPersonName}
+Location: ${order.location}
+CRM: ${order.crmName}
+Concerned Owner: ${order.concernedOwner}
+Expected Delivery: ${formatDateToDDMMMYYYY(order.expectedDeliveryDate)}
+Dispatch Date & Time: ${formatDateToDDMMMYYYY(order.dispatchDate)}
 Vehicle No: ${order.vehicleNo || 'N/A'}
-Freight Amt: ${order.freight || 'N/A'}
+Freight: ${order.freight || 'N/A'}
 Driver Name: ${order.driverName || 'N/A'}
 Driver Mobile: ${order.driverMob || 'N/A'}
 Invoice URL: ${order.invoiceUrl || 'N/A'}`;
@@ -367,10 +411,11 @@ Invoice URL: ${order.invoiceUrl || 'N/A'}`;
 
     // Kickoff
     fetchOrders();
-  </script>
+</script>
   <script src="js/viewOnly.js"></script>
 </body>
 </html>
+
 
 
 
