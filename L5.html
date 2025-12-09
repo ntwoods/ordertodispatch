@@ -305,24 +305,29 @@ function renderOrders(orders) {
 }
 
 
-    function startCountdown(deadline, index) {
-      const el = document.getElementById(`countdown-${index}`);
-      function update() {
-        const now = new Date();
-        const diff = deadline - now;
-        if (diff <= 0) {
-          el.innerText = "00:00:00";
-          el.classList.add("text-red-500");
-          return;
-        }
-        const h = String(Math.floor(diff / (1000 * 60 * 60))).padStart(2, "0");
-        const m = String(Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))).padStart(2, "0");
-        const s = String(Math.floor((diff % (1000 * 60)) / 1000)).padStart(2, "0");
-        el.innerText = `${h}:${m}:${s}`;
-      }
-      update();
-      setInterval(update, 1000);
+function startCountdown(deadline, index) {
+  if (!deadline || !(deadline instanceof Date) || isNaN(deadline)) {
+    return; // invalid deadline ke liye kuch mat karo
+  }
+
+  const el = document.getElementById(`countdown-${index}`);
+  function update() {
+    const now = new Date();
+    const diff = deadline - now;
+    if (diff <= 0) {
+      el.innerText = "00:00:00";
+      el.classList.add("text-red-500");
+      return;
     }
+    const h = String(Math.floor(diff / (1000 * 60 * 60))).padStart(2, "0");
+    const m = String(Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))).padStart(2, "0");
+    const s = String(Math.floor((diff % (1000 * 60)) / 1000)).padStart(2, "0");
+    el.innerText = `${h}:${m}:${s}`;
+  }
+  update();
+  setInterval(update, 1000);
+}
+
 
     async function submitConfirmation(index) {
       if (IS_VIEW_ONLY) {
@@ -395,6 +400,7 @@ Invoice URL: ${order.invoiceUrl || 'N/A'}`;
   <script src="js/viewOnly.js"></script>
 </body>
 </html>
+
 
 
 
