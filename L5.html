@@ -143,145 +143,167 @@ function getDeadline(originalTimestampStr) {
 }
 
 
-    function renderOrders(orders) {
-      const container = document.getElementById("ordersContainer");
-      container.innerHTML = "";
+function renderOrders(orders) {
+  const container = document.getElementById("ordersContainer");
+  container.innerHTML = "";
 
-      if (!orders || orders.length === 0) {
-        container.innerHTML = `
-          <div class="col-span-full text-center text-xl text-gray-600 font-semibold">
-            📦 No Pending Orders
-          </div>
-        `;
-        return;
+  if (!orders || orders.length === 0) {
+    container.innerHTML = `
+      <div class="col-span-full text-center text-xl text-gray-600 font-semibold">
+        📦 No Pending Orders
+      </div>
+    `;
+    return;
+  }
+
+  orders.forEach((order, index) => {
+    const deadline = getDeadline(order.timestamp);
+    const hasDeadline = deadline instanceof Date && !isNaN(deadline);
+
+    const hasInvoice = order.invoiceUrl && order.invoiceUrl.trim() !== "";
+    const bgColor = hasInvoice ? "bg-green-100 border border-green-300" : "bg-red-100 border border-red-300";
+
+    const card = document.createElement("div");
+    card.className = `${bgColor} p-6 rounded-2xl shadow-md relative transition hover:scale-[1.02]`;
+
+    // sirf tab hi overdue calculate karo jab deadline valid ho
+    const overdue = hasDeadline && (new Date() > deadline);
+    const deadlineLabel = overdue ? "Overdue" : "Active";
+
+    // Dealer Type Badge
+    let dealerTypeBadge = '';
+    if (order.dealerType) {
+      let badgeColorClass = '';
+      switch ((order.dealerType || '').toLowerCase()) {
+        case 'red': badgeColorClass = 'bg-red-500'; break;
+        case 'yellow': badgeColorClass = 'bg-yellow-500'; break;
+        case 'green': badgeColorClass = 'bg-green-500'; break;
+        default: badgeColorClass = 'bg-gray-500';
+      }
+      dealerTypeBadge = `
+        <div class="dealer-type-badge ${badgeColorClass}">
+          ${order.dealerType}
+        </div>
+      `;
+    }
+
+    // Editable section (hidden/omitted in view-only)
+    const editableBlock = IS_VIEW_ONLY ? `
+      <div class="mt-4 text-sm text-gray-600 italic">
+        View Only Mode: Editing controls are disabled.
+      </div>
+    ` : `
+      <div class="editable">
+        <span class="text-m text-black-600">Dispatch Receipt:</span>
+        <button onclick="openMultipleDocuments('${(order.dispatchDetailUrl || '').replace(/'/g, "\\'")}', ${index})"
+          class="text-sm text-blue-600 hover:text-blue-800 underline bg-transparent border-none cursor-pointer">
+          View Dispatch Receipts
+        </button>
+
+        <span class="text-m text-black-600">Raw File:</span>
+        <button onclick="openMultipleDocuments('${(order.fileUploadLink || '').replace(/'/g, "\\'")}', ${index})"
+          class="text-sm text-blue-600 hover:text-blue-800 underline bg-transparent border-none cursor-pointer">
+          Raw File
+        </button>
+
+        <span class="text-m text-black-600">Final Order:</span>
+        <button onclick="openMultipleDocuments('${(order.finalOrder || '').replace(/'/g, "\\'")}', ${index})"
+          class="text-sm text-blue-600 hover:text-blue-800 underline bg-transparent border-none cursor-pointer">
+          Final File
+        </button>
+
+        ${order.additionalOrder ? `
+          <span class="text-m text-red-600">Additional Order:</span>
+          <button onclick="openMultipleDocuments('${(order.additionalOrder || '').replace(/'/g, "\\'")}', ${index})"
+            class="text-sm text-blue-600 hover:text-blue-800 underline bg-transparent border-none cursor-pointer">
+            Additional Order File
+          </button>
+        ` : ''}
+
+        <span class="text-m text-black-600">Invoices:</span>
+        <button onclick="openMultipleDocuments('${(order.invoiceUrl || '').replace(/'/g, "\\'")}', ${index})"
+          class="text-sm text-blue-600 hover:text-blue-800 underline bg-transparent border-none cursor-pointer">
+          View Invoices
+        </button>
+
+        <div class="mt-4">
+          <label class="inline-flex items-center">
+            <input type="radio" name="confirm-${index}" id="radio-${index}" class="form-radio h-4 w-4 text-blue-600">
+            <span class="ml-2 text-sm">Dispatch Details Sent To Dealer</span>
+          </label>
+        </div>
+
+        <div class="mt-2">
+          <label for="remark-${index}" class="block text-sm font-medium text-gray-700">Remark:</label>
+          <input type="text" id="remark-${index}"
+            class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+        </div>
+
+        <button id="submit-${index}" onclick="submitConfirmation(${index})"
+          class="mt-4 w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
+          Submit
+        </button>
+
+        <button onclick="copyDispatchDetails(${index})"
+          class="mt-2 w-full bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition">
+          Copy Dispatch Details
+        </button>
+      </div>
+    `;
+
+    // ⬇️ yahan HTML build ho raha hai
+    card.innerHTML = `
+      ${
+        hasDeadline
+          ? `<div class="absolute top-2 right-2 text-sm font-semibold px-3 py-1 rounded-full ${
+              overdue ? 'bg-red-200 text-red-800' : 'bg-green-200 text-green-800'
+            }">
+              ${deadlineLabel}
+            </div>`
+          : ''
       }
 
-      orders.forEach((order, index) => {
-        const deadline = getDeadline(order.timestamp);
+      ${!hasInvoice ? `<div class="absolute top-2 left-2 text-xs font-semibold px-2 py-1 rounded-full bg-red-200 text-red-800">Missing Invoice</div>` : ""}
 
-        const hasInvoice = order.invoiceUrl && order.invoiceUrl.trim() !== "";
-        const bgColor = hasInvoice ? "bg-green-100 border border-green-300" : "bg-red-100 border border-red-300";
+      <div class="flex items-center">
+        <div class="text-xl font-bold mb-2">${order.dealerName}</div>
+        ${dealerTypeBadge}
+      </div>
+      <p><strong>Marketing:</strong> ${order.marketingPersonName}</p>
+      <p><strong>Location:</strong> ${order.location}</p>
+      <p><strong>CRM:</strong> ${order.crmName}</p>
+      <p><strong>Con. Owner:</strong> ${order.concernedOwner}</p>
+      <p><strong>Expected Delivery:</strong> ${formatDateToDDMMMYYYY(order.expectedDeliveryDate)}</p>
+      <p><strong>Dispatch Date & Time:</strong> ${formatDateToDDMMMYYYY(order.dispatchDate)}</p>
 
-        const card = document.createElement("div");
-        card.className = `${bgColor} p-6 rounded-2xl shadow-md relative transition hover:scale-[1.02]`;
+      ${
+        hasDeadline
+          ? `
+            <p><strong>Deadline:</strong> ${formatDateToDDMMMYYYY(deadline)}</p>
+            <p><strong>Time Left:</strong> <span id="countdown-${index}" class="font-mono text-blue-700"></span></p>
+          `
+          : `
+            <p><strong>Deadline:</strong> </p>
+          `
+      }
 
-        const overdue = new Date() > deadline;
-        const deadlineLabel = overdue ? "Overdue" : "Active";
+      <p><strong>Vehicle No:</strong> ${order.vehicleNo || 'N/A'}</p>
+      <p><strong>Freight:</strong> ${order.freight || 'N/A'}</p>
+      <p><strong>Driver Name:</strong> ${order.driverName || 'N/A'}</p>
+      <p><strong>Driver Mobile:</strong> ${order.driverMob || 'N/A'}</p>
 
-        // Dealer Type Badge
-        let dealerTypeBadge = '';
-        if (order.dealerType) {
-          let badgeColorClass = '';
-          switch ((order.dealerType || '').toLowerCase()) {
-            case 'red': badgeColorClass = 'bg-red-500'; break;
-            case 'yellow': badgeColorClass = 'bg-yellow-500'; break;
-            case 'green': badgeColorClass = 'bg-green-500'; break;
-            default: badgeColorClass = 'bg-gray-500';
-          }
-          dealerTypeBadge = `
-            <div class="dealer-type-badge ${badgeColorClass}">
-              ${order.dealerType}
-            </div>
-          `;
-        }
+      ${editableBlock}
+    `;
 
-        // Editable section (hidden/omitted in view-only)
-        const editableBlock = IS_VIEW_ONLY ? `
-          <div class="mt-4 text-sm text-gray-600 italic">
-            View Only Mode: Editing controls are disabled.
-          </div>
-        ` : `
-          <div class="editable">
-            <span class="text-m text-black-600">Dispatch Receipt:</span>
-            <button onclick="openMultipleDocuments('${(order.dispatchDetailUrl || '').replace(/'/g, "\\'")}', ${index})"
-              class="text-sm text-blue-600 hover:text-blue-800 underline bg-transparent border-none cursor-pointer">
-              View Dispatch Receipts
-            </button>
+    container.appendChild(card);
 
-            <span class="text-m text-black-600">Raw File:</span>
-            <button onclick="openMultipleDocuments('${(order.fileUploadLink || '').replace(/'/g, "\\'")}', ${index})"
-              class="text-sm text-blue-600 hover:text-blue-800 underline bg-transparent border-none cursor-pointer">
-              Raw File
-            </button>
-
-            <span class="text-m text-black-600">Final Order:</span>
-            <button onclick="openMultipleDocuments('${(order.finalOrder || '').replace(/'/g, "\\'")}', ${index})"
-              class="text-sm text-blue-600 hover:text-blue-800 underline bg-transparent border-none cursor-pointer">
-              Final File
-            </button>
-
-            ${order.additionalOrder ? `
-              <span class="text-m text-red-600">Additional Order:</span>
-              <button onclick="openMultipleDocuments('${(order.additionalOrder || '').replace(/'/g, "\\'")}', ${index})"
-                class="text-sm text-blue-600 hover:text-blue-800 underline bg-transparent border-none cursor-pointer">
-                Additional Order File
-              </button>
-            ` : ''}
-
-            <span class="text-m text-black-600">Invoices:</span>
-            <button onclick="openMultipleDocuments('${(order.invoiceUrl || '').replace(/'/g, "\\'")}', ${index})"
-              class="text-sm text-blue-600 hover:text-blue-800 underline bg-transparent border-none cursor-pointer">
-              View Invoices
-            </button>
-
-            <div class="mt-4">
-              <label class="inline-flex items-center">
-                <input type="radio" name="confirm-${index}" id="radio-${index}" class="form-radio h-4 w-4 text-blue-600">
-                <span class="ml-2 text-sm">Dispatch Details Sent To Dealer</span>
-              </label>
-            </div>
-
-            <div class="mt-2">
-              <label for="remark-${index}" class="block text-sm font-medium text-gray-700">Remark:</label>
-              <input type="text" id="remark-${index}"
-                class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-            </div>
-
-            <button id="submit-${index}" onclick="submitConfirmation(${index})"
-              class="mt-4 w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
-              Submit
-            </button>
-
-            <button onclick="copyDispatchDetails(${index})"
-              class="mt-2 w-full bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition">
-              Copy Dispatch Details
-            </button>
-          </div>
-        `;
-
-        card.innerHTML = `
-          <div class="absolute top-2 right-2 text-sm font-semibold px-3 py-1 rounded-full ${overdue ? 'bg-red-200 text-red-800' : 'bg-green-200 text-green-800'}">
-            ${deadlineLabel}
-          </div>
-
-          ${!hasInvoice ? `<div class="absolute top-2 left-2 text-xs font-semibold px-2 py-1 rounded-full bg-red-200 text-red-800">Missing Invoice</div>` : ""}
-
-          <div class="flex items-center">
-            <div class="text-xl font-bold mb-2">${order.dealerName}</div>
-            ${dealerTypeBadge}
-          </div>
-          <p><strong>Marketing:</strong> ${order.marketingPersonName}</p>
-          <p><strong>Location:</strong> ${order.location}</p>
-          <p><strong>CRM:</strong> ${order.crmName}</p>
-          <p><strong>Con. Owner:</strong> ${order.concernedOwner}</p>
-          <p><strong>Expected Delivery:</strong> ${formatDateToDDMMMYYYY(order.expectedDeliveryDate)}</p>
-          <p><strong>Dispatch Date & Time:</strong> ${formatDateToDDMMMYYYY(order.dispatchDate)}</p>
-          <p><strong>Deadline:</strong> ${formatDateToDDMMMYYYY(deadline)}</p>
-          <p><strong>Time Left:</strong> <span id="countdown-${index}" class="font-mono text-blue-700"></span></p>
-          <p><strong>Vehicle No:</strong> ${order.vehicleNo || 'N/A'}</p>
-          <p><strong>Freight:</strong> ${order.freight || 'N/A'}</p>
-          <p><strong>Driver Name:</strong> ${order.driverName || 'N/A'}</p>
-          <p><strong>Driver Mobile:</strong> ${order.driverMob || 'N/A'}</p>
-
-          ${editableBlock}
-        `;
-
-        container.appendChild(card);
-
-        // Countdown timer should still run in both modes
-        startCountdown(deadline, index);
-      });
+    // ⏱️ Countdown sirf tab chalayega jab deadline hai
+    if (hasDeadline) {
+      startCountdown(deadline, index);
     }
+  });
+}
+
 
     function startCountdown(deadline, index) {
       const el = document.getElementById(`countdown-${index}`);
@@ -373,6 +395,7 @@ Invoice URL: ${order.invoiceUrl || 'N/A'}`;
   <script src="js/viewOnly.js"></script>
 </body>
 </html>
+
 
 
 
