@@ -106,9 +106,14 @@
     }
 
 function getDeadline(originalTimestampStr) {
+  // 🛑 agar timestamp blank / null / undefined hai → koi deadline nahi
+  if (!originalTimestampStr) {
+    return null;
+  }
+
   const original = new Date(originalTimestampStr);
   if (isNaN(original)) {
-    // agar invalid date aa gaya to null / ya jo tum chaho return kar sakte ho
+    // agar invalid date aa gaya to null
     return null;
   }
 
@@ -368,5 +373,6 @@ Invoice URL: ${order.invoiceUrl || 'N/A'}`;
   <script src="js/viewOnly.js"></script>
 </body>
 </html>
+
 
 
