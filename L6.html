@@ -202,12 +202,35 @@
             return `Order-${orderCounter}`;
         }
 
+        // Helper: Add working hours, skipping Sundays
+        function addWorkingHoursSkippingSundays(startDate, hoursToAdd) {
+            const result = new Date(startDate);
+            let remaining = hoursToAdd;
+        
+            while (remaining > 0) {
+                // ek-ek ghanta badhao
+                result.setHours(result.getHours() + 1);
+        
+                const day = result.getDay(); // 0 = Sunday, 1 = Monday, ... 6 = Saturday
+        
+                // Agar Sunday nahi hai to is ghante ko working hour count karo
+                if (day !== 0) {
+                    remaining--;
+                }
+            }
+        
+            return result;
+        }
+        
         function calculateDeadline(expectedDeliveryDate) {
             const deliveryDate = new Date(expectedDeliveryDate);
-            const deadline = new Date(deliveryDate);
-            deadline.setHours(18, 0, 0, 0); // 6 PM
+        
+            // Yahan 36 working hours add kar rahe hain, Sunday ko skip karke
+            const deadline = addWorkingHoursSkippingSundays(deliveryDate, 36);
+        
             return deadline;
         }
+
 
         function formatCountdown(timeDiff) {
             if (timeDiff <= 0) return "OVERDUE";
