@@ -284,45 +284,44 @@
                 }
             };
 
-            // Function to fetch data from the Google Sheet (D and E columns)
-            const getSupplierData = async () => {
-                const sheetId = '1UeohB4IPgEzGwybOJaIKpCIa38A4UvBstM8waqYv9V0';
-                const sheetName = 'Paste Here';
-                const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&sheet=${sheetName}`;
-                
-                try {
-                    const response = await fetch(url);
-                    const csvText = await response.text();
-                    
-                    const rows = csvText.split('\n').slice(1); // Remove header row
-                    const suppliers = rows.map(row => {
-                        const columns = row.split(',').map(col => col.trim().replace(/^"|"$/g, ''));
-                        // Return an object with both name and email.
-                        // We are strictly using column D for name (columns[3]) and E for email (columns[4])
-                        return { name: columns[8], email: columns[9] }; 
-                    }).filter(s => s.name); // Filter out any empty names
-                    
-                    // Use a Set to store unique names to handle duplicates
-                    const uniqueNames = new Set();
-                    const uniqueSuppliers = [];
-                    for (const supplier of suppliers) {
-                        if (supplier.name && !uniqueNames.has(supplier.name)) {
-                            uniqueNames.add(supplier.name);
-                            uniqueSuppliers.push(supplier);
-                        }
-                    }
+const getSupplierData = async () => {
+  const sheetId = '1UeohB4IPgEzGwybOJaIKpCIa38A4UvBstM8waqYv9V0';
+  const sheetName = 'Paste Here';
 
-                    return uniqueSuppliers;
-                } catch (error) {
-                    console.error('Error fetching data from Google Sheet:', error);
-                    // Fallback options with emails
-                    return [
-                        { name: 'Supplier A', email: 'supplierA@example.com' },
-                        { name: 'Supplier B', email: 'supplierB@example.com' },
-                        { name: 'Supplier C', email: 'supplierC@example.com' }
-                    ];
-                }
-            };
+  const tq = 'select I, J where I is not null';
+  const url =
+    `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?` +
+    `sheet=${encodeURIComponent(sheetName)}&tqx=out:json&tq=${encodeURIComponent(tq)}`;
+
+  try {
+    const res = await fetch(url);
+    const txt = await res.text();
+
+    // gviz response: google.visualization.Query.setResponse({...});
+    const jsonStr = txt.substring(txt.indexOf('{'), txt.lastIndexOf('}') + 1);
+    const data = JSON.parse(jsonStr);
+
+    const suppliers = (data?.table?.rows || [])
+      .map(r => ({
+        name: (r.c?.[0]?.v ?? '').toString().trim(),
+        email: (r.c?.[1]?.v ?? '').toString().trim(),
+      }))
+      .filter(s => s.name);
+
+    // unique by name (case-insensitive)
+    const map = new Map();
+    for (const s of suppliers) {
+      const key = s.name.toLowerCase();
+      if (!map.has(key) || (!map.get(key).email && s.email)) map.set(key, s);
+    }
+
+    return Array.from(map.values());
+  } catch (err) {
+    console.error('Error fetching supplier data:', err);
+    return [];
+  }
+};
+
             
 // Function to render a single claim request card
 const createClaimCard = (request) => {
