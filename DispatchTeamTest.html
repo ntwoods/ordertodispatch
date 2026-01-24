@@ -147,9 +147,9 @@
             if (needed <= 0) return false;
 
             const bfYes = countYesPipes(order?.eaBF);
-            const bgYes = countYesPipes(order?.eaBG);
+            //const bgYes = countYesPipes(order?.eaBG);
 
-            return (bfYes >= needed) && (bgYes >= needed);
+            return (bfYes >= needed); //&& (bgYes >= needed);
         }
 
         /* ===================== Existing Helpers ===================== */
