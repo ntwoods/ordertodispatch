@@ -123,7 +123,7 @@ function getDeadline(originalTimestampStr) {
   const minute = original.getMinutes();
 
   // Agar time 5:00 pm se baad ka hai (strictly after 17:00)
-  if (hour > 17 || (hour === 17 && minute > 0)) {
+  if (hour > 15 || (hour === 15 && minute > 0)) {
     // Next day le lo
     deadline.setDate(deadline.getDate() + 1);
 
@@ -133,7 +133,7 @@ function getDeadline(originalTimestampStr) {
     }
 
     // Deadline time = 10:30 am
-    deadline.setHours(10, 30, 0, 0);
+    deadline.setHours(13, 30, 0, 0);
   } else {
     // Normal case: sirf 2 ghanta add
     deadline.setTime(deadline.getTime() + 2 * 60 * 60 * 1000);
@@ -400,6 +400,7 @@ Invoice URL: ${order.invoiceUrl || 'N/A'}`;
   <script src="js/viewOnly.js"></script>
 </body>
 </html>
+
 
 
 
