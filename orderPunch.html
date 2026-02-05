@@ -435,16 +435,8 @@
         headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // ✅ SIMPLE REQUEST
         body: JSON.stringify(formData),
       });
-      const json = await res.json();
-
-        if(!json || !json.ok) throw new Error((json && (json.error || json.message)) || 'Submission failed');
-        orderId = String(json.orderId || '');
-
-        toast('✅ Submission successful!', true);
         form.reset();
       } catch (error) {
-        console.error('Order POST Error:', error);
-        toast('❌ ' + (error && error.message ? error.message : 'An error occurred while submitting order.'), false);
         submitButton.disabled = false; submitButton.style.opacity = 1;
         loadingMessage.classList.add('hidden');
         return;
