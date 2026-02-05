@@ -427,14 +427,16 @@
       // 1) Post order (CORS JSON response required for SCOT auto-mark flow)
       let orderId = '';
       try {
-        const postUrl = ORDER_POST_URL + '?origin=' + encodeURIComponent(location.origin);
-        const res = await fetch(postUrl, {
-          method: 'POST',
-          mode: 'cors',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(formData),
-        });
-        const json = await res.json();
+      const postUrl = ORDER_POST_URL + '?origin=' + encodeURIComponent(location.origin);
+      
+      const res = await fetch(postUrl, {
+        method: 'POST',
+        // mode default "cors" hota hai; optional
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // ✅ SIMPLE REQUEST
+        body: JSON.stringify(formData),
+      });
+      const json = await res.json();
+
         if(!json || !json.ok) throw new Error((json && (json.error || json.message)) || 'Submission failed');
         orderId = String(json.orderId || '');
 
