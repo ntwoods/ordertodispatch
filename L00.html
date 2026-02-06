@@ -22,6 +22,7 @@
             <th class="px-4 py-2 text-left">Order File</th>
             <th class="px-4 py-2 text-left">Deadline</th>
             <th class="px-4 py-2 text-left">Action</th>
+            <th class="px-4 py-2 text-left">Punched By</th>                       
           </tr>
         </thead>
         <tbody id="ordersTable" class="divide-y divide-gray-700"></tbody>
@@ -262,6 +263,7 @@
               <td class="px-4 py-2">
                 <button onclick="openModal('${order.timestamp}')" class="bg-indigo-600 px-3 py-1 rounded ${isViewOnly ? 'opacity-50 cursor-not-allowed' : ''}" ${isViewOnly ? 'disabled' : ''}>Submit</button>
               </td>
+              <td class="px-4 py-2">${order.punchedBy}</td>
             `;
             table.appendChild(row);
           });
