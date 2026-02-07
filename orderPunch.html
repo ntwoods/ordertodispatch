@@ -122,7 +122,21 @@
     const SCOT_API_BASE  = 'https://script.google.com/macros/s/AKfycbxTTcYPCooLzIcOjnV7A-8rB6kghnX_M_FmjeGeHzNyp6j0RZhqDflR3n6ujkhWH38/exec';      // GET ?mode=scotDealers&email=...
     const NEW_DEALER_API = 'https://script.google.com/macros/s/AKfycbxTTcYPCooLzIcOjnV7A-8rB6kghnX_M_FmjeGeHzNyp6j0RZhqDflR3n6ujkhWH38/exec';    // POST {email,dealerName,color}
     const GSI_CLIENT_ID  = '360849757137-agopfs0m8rgmcj541ucpg22btep5olt3.apps.googleusercontent.com';
-    const PARENT_ORIGIN  = 'https://ntwoods.github.io';
+    // When embedded, prefer a parentOrigin passed from the iframe URL; otherwise infer from document.referrer.
+    // Falls back to the historical hard-coded origin.
+    let PARENT_ORIGIN = (function(){
+      try{
+        const qp = new URLSearchParams(location.search);
+        const po = String(qp.get('parentOrigin') || '').trim();
+        if(po) return po;
+      }catch(e){}
+      try{
+        if(document.referrer){
+          return new URL(document.referrer).origin;
+        }
+      }catch(e){}
+      return 'https://ntwoods.github.io';
+    })();
 
     // ---------------- Helpers ----------------
     const qs = (s)=>document.querySelector(s);
@@ -260,7 +274,9 @@
 
     // Accept dealers / user context from parent (SCOT embed)
     window.addEventListener('message', (ev) => {
-      if (ev.origin !== PARENT_ORIGIN) return;
+      // If parent origin wasn't provided, lock it on first message.
+      if (!PARENT_ORIGIN) PARENT_ORIGIN = ev.origin;
+      if (PARENT_ORIGIN && ev.origin !== PARENT_ORIGIN) return;
       const msg = ev.data || {};
 
       if (msg.type === 'USER_CONTEXT') {
@@ -485,7 +501,7 @@
               isNew: !DEALERS.some(x => normalize(x) === normalize(dealerName)),
               meta
             },
-            PARENT_ORIGIN
+            PARENT_ORIGIN || '*'
           );
         }
       }catch(e){}
