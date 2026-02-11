@@ -93,8 +93,61 @@
 
     .kv { display:flex; align-items:flex-start; justify-content:space-between; gap:14px; font-size:13px; }
     .kv .k { color:#64748b; }
-    .kv .v { color:#0b1220; font-weight:600; text-align:right; word-break: break-word; }
+    .kv .v { color:#111827; font-weight:500; text-align:right; word-break: break-word; }
     .mono { font-variant-numeric: tabular-nums; font-feature-settings: "tnum" 1; }
+    .dealer-hero{
+      background: linear-gradient(180deg, rgba(239,246,255,.95), rgba(255,255,255,.92));
+      border: 1px solid rgba(59,130,246,.22);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.75);
+    }
+    .dealer-hero .label{ color:#64748b; font-weight:700; font-size:12px; }
+    .dealer-hero .name{
+      color:#0b1220;
+      font-weight:900;
+      letter-spacing:-0.01em;
+      font-size:18px;
+      line-height:1.15;
+    }
+    .mini-grid .box{
+      background: rgba(255,255,255,.85);
+      border: 1px solid rgba(148, 163, 184, .28);
+      border-radius: 12px;
+      padding: 10px 12px;
+    }
+    .mini-grid .k{ color:#64748b; font-weight:700; font-size:12px; }
+    .mini-grid .v{ color:#111827; font-weight:500; font-size:13px; margin-top:2px; word-break:break-word; }
+
+    /* Compact inline rows (no big boxes) */
+    .kv-row{
+      display:flex;
+      align-items:baseline;
+      justify-content:space-between;
+      gap:10px;
+      padding: 6px 0;
+      border-bottom: 1px dashed rgba(148,163,184,.35);
+    }
+    .kv-row:last-child{ border-bottom: 0; }
+    .kv-row .k{
+      color:#64748b;
+      font-weight:700;
+      font-size:12px;
+      white-space:nowrap;
+    }
+    .kv-row .v{
+      color:#111827;
+      font-weight:500;
+      font-size:13px;
+      text-align:right;
+      word-break: break-word;
+    }
+    .kv-pair{
+      display:flex;
+      align-items:baseline;
+      gap:6px;
+      min-width:0;
+    }
+    .kv-pair .v{ min-width:0; }
+
   </style>
 </head>
 
@@ -314,25 +367,48 @@
             </div>
           </div>
 
-          <!-- Info -->
-          <div class="mt-4 space-y-2">
-            <div class="kv"><div class="k">Dealer Name</div><div class="v">${escapeHtml_(order.dealerName || '')}</div></div>
-            <div class="kv"><div class="k">Marketing Person</div><div class="v">${escapeHtml_(order.marketingPersonName || '')}</div></div>
-            <div class="kv"><div class="k">CRM</div><div class="v">${escapeHtml_(order.crmName || '')}</div></div>
-            <div class="kv"><div class="k">Concerned Owner</div><div class="v">${escapeHtml_(order.concernedOwner || '')}</div></div>
-            <div class="kv"><div class="k">Location</div><div class="v">${escapeHtml_(order.location || '')}</div></div>
-            <div class="kv">
-              <div class="k">Dealer Type</div>
-              <div class="v">
-                <span class="dealer-pill ${typeClass}">${escapeHtml_(order.dealerType || 'NA')}</span>
+          <!-- Dealer hero (only highlight) -->
+          <div class="mt-4 p-3 rounded-xl dealer-hero">
+            <div class="label">Dealer Name</div>
+            <div class="name">${escapeHtml_(order.dealerName || '')}</div>
+          </div>
+
+          <!-- Compact inline details (2 pairs per row) -->
+          <div class="mt-4">
+            <div class="kv-row">
+              <div class="kv-pair">
+                <span class="k">CRM:</span>
+                <span class="v">${escapeHtml_(order.crmName || '')}</span>
+              </div>
+              <div class="kv-pair">
+                <span class="k">Owner:</span>
+                <span class="v">${escapeHtml_(order.concernedOwner || '')}</span>
               </div>
             </div>
-            <div class="kv">
-              <div class="k">Raw Order</div>
-              <div class="v">
-                <button onclick="openMultipleDocuments('${escapeAttr_(order.rawOrderUrl || '')}')" class="text-blue-700 hover:text-blue-900 underline font-semibold">
-                  View Document
-                </button>
+
+            <div class="kv-row">
+              <div class="kv-pair">
+                <span class="k">Location:</span>
+                <span class="v">${escapeHtml_(order.location || '')}</span>
+              </div>
+              <div class="kv-pair">
+                <span class="k">Color:</span>
+                <span class="v"><span class="dealer-pill ${typeClass}">${escapeHtml_(order.dealerType || 'NA')}</span></span>
+              </div>
+            </div>
+
+            <div class="kv-row">
+              <div class="kv-pair">
+                <span class="k">Mkt Person:</span>
+                <span class="v">${escapeHtml_(order.marketingPersonName || '')}</span>
+              </div>
+              <div class="kv-pair">
+                <span class="k">Raw Order:</span>
+                <span class="v">
+                  <button onclick="openMultipleDocuments('${escapeAttr_(order.rawOrderUrl || '')}')" class="text-blue-700 hover:text-blue-900 underline font-semibold">
+                    View
+                  </button>
+                </span>
               </div>
             </div>
           </div>
