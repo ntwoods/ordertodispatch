@@ -8,64 +8,104 @@
   <!-- Tailwind -->
   <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
 
-  <!-- Premium-ish fonts -->
+  <!-- Premium fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Poppins:wght@700;800;900&display=swap" rel="stylesheet">
 
   <style>
     * { box-sizing: border-box; }
-    body { font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial; background:#f5f9ff; }
+    body { 
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial; 
+      background: #f8fafc;
+    }
 
-    /* Blue-white premium vibes */
+    /* Enhanced gradient background */
     .app-shell {
       background:
-        radial-gradient(1100px 500px at 10% -10%, rgba(37,99,235,.18), transparent 60%),
-        radial-gradient(900px 500px at 90% -20%, rgba(59,130,246,.14), transparent 55%),
-        linear-gradient(180deg, #f7fbff 0%, #f5f9ff 60%, #f7fbff 100%);
+        radial-gradient(circle at 20% 10%, rgba(59,130,246,.12), transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(99,102,241,.08), transparent 50%),
+        radial-gradient(circle at 40% 90%, rgba(147,197,253,.10), transparent 50%),
+        linear-gradient(180deg, #f8fafc 0%, #f1f5f9 50%, #f8fafc 100%);
       min-height: 100vh;
     }
+
+    /* Glass morphism header */
     .glass-bar {
-      background: rgba(255,255,255,.72);
-      border: 1px solid rgba(147,197,253,.45);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      box-shadow: 0 10px 30px rgba(2, 32, 71, .06);
+      background: rgba(255,255,255,.85);
+      border: 1px solid rgba(226,232,240,.8);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      box-shadow: 
+        0 4px 20px rgba(15, 23, 42, .04),
+        0 1px 3px rgba(15, 23, 42, .06);
     }
+
+    /* Enhanced card design */
     .card {
-      background: rgba(255,255,255,.9);
-      border: 1px solid rgba(148, 163, 184, .35);
-      box-shadow: 0 18px 40px rgba(2, 32, 71, .07);
-      transition: transform .18s ease, box-shadow .18s ease;
-      border-radius: 16px;
+      background: #ffffff;
+      border: 1px solid rgba(226, 232, 240, .8);
+      box-shadow: 
+        0 10px 30px -10px rgba(15, 23, 42, .08),
+        0 4px 12px -2px rgba(15, 23, 42, .05);
+      transition: all .25s cubic-bezier(0.4, 0, 0.2, 1);
+      border-radius: 20px;
       overflow: hidden;
+      position: relative;
     }
-    .card:hover { transform: translateY(-3px); box-shadow: 0 24px 50px rgba(2, 32, 71, .10); }
+    
+    .card:hover { 
+      transform: translateY(-4px) scale(1.01); 
+      box-shadow: 
+        0 20px 40px -10px rgba(15, 23, 42, .12),
+        0 8px 20px -4px rgba(15, 23, 42, .08);
+      border-color: rgba(59,130,246,.3);
+    }
 
-    /* Attention highlight when overdue */
+    /* Attention highlight when overdue - more dramatic */
     .overdue-card {
-      border: 3px solid rgba(239, 68, 68, .85) !important;
+      border: 2px solid rgba(239, 68, 68, .9) !important;
       box-shadow:
-        0 26px 70px rgba(239, 68, 68, .22),
-        0 18px 40px rgba(2, 32, 71, .07) !important;
-      outline: 3px solid rgba(254, 202, 202, .65);
-      outline-offset: 2px;
+        0 0 0 4px rgba(254, 226, 226, .6),
+        0 20px 50px rgba(239, 68, 68, .25),
+        0 10px 30px rgba(15, 23, 42, .08) !important;
+      animation: pulse-overdue 2s ease-in-out infinite;
     }
+    
+    @keyframes pulse-overdue {
+      0%, 100% { box-shadow: 0 0 0 4px rgba(254, 226, 226, .6), 0 20px 50px rgba(239, 68, 68, .25), 0 10px 30px rgba(15, 23, 42, .08); }
+      50% { box-shadow: 0 0 0 6px rgba(254, 226, 226, .4), 0 25px 60px rgba(239, 68, 68, .3), 0 12px 35px rgba(15, 23, 42, .1); }
+    }
+
     .overdue-card:hover {
-      transform: translateY(-3px);
-      box-shadow:
-        0 32px 85px rgba(239, 68, 68, .26),
-        0 24px 50px rgba(2, 32, 71, .10) !important;
+      transform: translateY(-4px) scale(1.01);
     }
 
-
+    /* Enhanced top line with gradient shimmer */
     .card-topline {
-      height: 4px;
-      background: linear-gradient(90deg, rgba(59,130,246,.9), rgba(147,197,253,.9));
+      height: 5px;
+      background: linear-gradient(90deg, rgba(59,130,246,.95), rgba(99,102,241,.95), rgba(147,197,253,.9));
+      background-size: 200% 100%;
+      animation: shimmer 3s ease-in-out infinite;
     }
-    .card-topline.red { background: linear-gradient(90deg, rgba(239,68,68,.95), rgba(248,113,113,.9)); }
-    .card-topline.yellow { background: linear-gradient(90deg, rgba(245,158,11,.95), rgba(251,191,36,.9)); }
-    .card-topline.green { background: linear-gradient(90deg, rgba(16,185,129,.95), rgba(52,211,153,.9)); }
+    
+    @keyframes shimmer {
+      0%, 100% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+    }
+    
+    .card-topline.red { 
+      background: linear-gradient(90deg, rgba(239,68,68,.95), rgba(220,38,38,.95), rgba(248,113,113,.9)); 
+      background-size: 200% 100%;
+    }
+    .card-topline.yellow { 
+      background: linear-gradient(90deg, rgba(245,158,11,.95), rgba(217,119,6,.95), rgba(251,191,36,.9)); 
+      background-size: 200% 100%;
+    }
+    .card-topline.green { 
+      background: linear-gradient(90deg, rgba(16,185,129,.95), rgba(5,150,105,.95), rgba(52,211,153,.9)); 
+      background-size: 200% 100%;
+    }
 
     .loading-spinner { animation: spin 1s linear infinite; }
     @keyframes spin { from{transform:rotate(0)} to{transform:rotate(360deg)} }
@@ -75,78 +115,278 @@
     .status-loading { position:relative; pointer-events:none; }
     .status-loading::after { content:""; position:absolute; width:12px;height:12px; top:50%;left:50%; margin:-6px; border:1px solid #64748b; border-top-color:transparent; border-radius:50%; animation: spin 1s linear infinite; }
 
-    .modal-overlay { background: rgba(2, 18, 44, .50); backdrop-filter: blur(2px); }
-    .success-notification { position:fixed; top:18px; right:18px; background:#10b981; color:#fff; padding:12px 16px; border-radius:10px;
-      box-shadow:0 10px 26px rgba(2, 32, 71, .22); transform:translateX(120%); transition: transform .28s; z-index:1000; }
+    .modal-overlay { background: rgba(15, 23, 42, .65); backdrop-filter: blur(4px); }
+    .success-notification { 
+      position:fixed; top:24px; right:24px; 
+      background: linear-gradient(135deg, #10b981, #059669);
+      color:#fff; padding:14px 20px; border-radius:12px;
+      box-shadow: 0 10px 30px rgba(16, 185, 129, .3), 0 4px 12px rgba(15, 23, 42, .15);
+      transform:translateX(120%); 
+      transition: transform .3s cubic-bezier(0.4, 0, 0.2, 1); 
+      z-index:1000;
+    }
     .success-notification.show { transform:translateX(0); }
     .success-notification.hide { transform:translateX(120%); }
 
-    .dealer-pill { display:inline-flex; align-items:center; gap:6px; padding:.25rem .65rem; border-radius:999px; font-size:.75rem; font-weight:700; color:#0b1220; border:1px solid rgba(148,163,184,.55); background: rgba(241,245,249,.8); }
-    .dealer-pill.red { color:#7f1d1d; border-color: rgba(239,68,68,.35); background: rgba(254,226,226,.85); }
-    .dealer-pill.yellow { color:#7c2d12; border-color: rgba(245,158,11,.35); background: rgba(254,243,199,.90); }
-    .dealer-pill.green { color:#064e3b; border-color: rgba(16,185,129,.35); background: rgba(209,250,229,.90); }
+    /* ENHANCED DEALER PILL - Main Focus */
+    .dealer-pill { 
+      display:inline-flex; 
+      align-items:center; 
+      gap:8px; 
+      padding:.4rem .9rem; 
+      border-radius:999px; 
+      font-size:.82rem; 
+      font-weight:800; 
+      color:#1e293b; 
+      border:1.5px solid rgba(148,163,184,.6); 
+      background: linear-gradient(135deg, rgba(241,245,249,.95), rgba(248,250,252,.95));
+      box-shadow: 0 2px 8px rgba(15, 23, 42, .08);
+      transition: all .2s ease;
+    }
+    .dealer-pill:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(15, 23, 42, .12);
+    }
+    
+    .dealer-pill.red { 
+      color:#991b1b; 
+      border-color: rgba(239,68,68,.5); 
+      background: linear-gradient(135deg, rgba(254,226,226,.95), rgba(254,242,242,.95));
+      box-shadow: 0 2px 10px rgba(239, 68, 68, .15);
+    }
+    .dealer-pill.yellow { 
+      color:#92400e; 
+      border-color: rgba(245,158,11,.5); 
+      background: linear-gradient(135deg, rgba(254,243,199,.95), rgba(254,249,195,.95));
+      box-shadow: 0 2px 10px rgba(245, 158, 11, .15);
+    }
+    .dealer-pill.green { 
+      color:#064e3b; 
+      border-color: rgba(16,185,129,.5); 
+      background: linear-gradient(135deg, rgba(209,250,229,.95), rgba(236,253,245,.95));
+      box-shadow: 0 2px 10px rgba(16, 185, 129, .15);
+    }
 
-    .mode-pill{display:inline-flex; align-items:center; gap:8px; padding:7px 12px; border-radius:999px; font-size:12px; font-weight:700}
-    .mode-view{background:#e8f3ff;color:#0b63b6;border:1px solid #bcdcff}
-    .mode-crm{background:#eafff0;color:#0b7a2b;border:1px solid #bff0cf}
-    .mode-ea{background:#fff6e8;color:#a05a00;border:1px solid #f2ddb9}
+    /* Mode pills */
+    .mode-pill{
+      display:inline-flex; 
+      align-items:center; 
+      gap:8px; 
+      padding:8px 14px; 
+      border-radius:999px; 
+      font-size:13px; 
+      font-weight:700;
+      box-shadow: 0 2px 8px rgba(15, 23, 42, .06);
+    }
+    .mode-view{background:#e0f2fe;color:#075985;border:1px solid #7dd3fc}
+    .mode-crm{background:#d1fae5;color:#065f46;border:1px solid #6ee7b7}
+    .mode-ea{background:#fef3c7;color:#92400e;border:1px solid #fcd34d}
 
-    .kv { display:flex; align-items:flex-start; justify-content:space-between; gap:14px; font-size:13px; }
-    .kv .k { color:#64748b; }
-    .kv .v { color:#111827; font-weight:500; text-align:right; word-break: break-word; }
-    .mono { font-variant-numeric: tabular-nums; font-feature-settings: "tnum" 1; }
+    /* Enhanced key-value pairs */
+    .kv { 
+      display:flex; 
+      align-items:flex-start; 
+      justify-content:space-between; 
+      gap:16px; 
+      font-size:13.5px;
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(226,232,240,.6);
+      transition: background .2s ease;
+    }
+    .kv:hover {
+      background: rgba(241,245,249,.4);
+    }
+    .kv:last-child {
+      border-bottom: none;
+    }
+    .kv .k { 
+      color:#64748b; 
+      font-weight:600;
+      min-width: 90px;
+    }
+    .kv .v { 
+      color:#0f172a; 
+      font-weight:600; 
+      text-align:right; 
+      word-break: break-word;
+      flex: 1;
+    }
+    
+    .mono { 
+      font-variant-numeric: tabular-nums; 
+      font-feature-settings: "tnum" 1; 
+    }
+
+    /* SUPER ENHANCED DEALER HERO SECTION */
     .dealer-hero{
-      background: linear-gradient(180deg, rgba(239,246,255,.95), rgba(255,255,255,.92));
-      border: 1px solid rgba(59,130,246,.22);
-      box-shadow: inset 0 1px 0 rgba(255,255,255,.75);
+      background: linear-gradient(135deg, 
+        rgba(59,130,246,.12) 0%, 
+        rgba(147,197,253,.08) 50%, 
+        rgba(255,255,255,.95) 100%);
+      border: 2px solid rgba(59,130,246,.25);
+      box-shadow: 
+        inset 0 2px 0 rgba(255,255,255,.9),
+        0 4px 12px rgba(59, 130, 246, .08);
+      border-radius: 16px;
+      padding: 16px 18px;
+      margin-bottom: 16px;
+      position: relative;
+      overflow: hidden;
     }
-    .dealer-hero .label{ color:#64748b; font-weight:700; font-size:12px; }
+    
+    .dealer-hero::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(59,130,246,.08) 0%, transparent 70%);
+      animation: rotate 20s linear infinite;
+    }
+    
+    @keyframes rotate {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    
+    .dealer-hero .label{ 
+      color:#64748b; 
+      font-weight:700; 
+      font-size:11px; 
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 6px;
+      position: relative;
+      z-index: 1;
+    }
+    
     .dealer-hero .name{
-      color:#0b1220;
+      color:#0f172a;
+      font-family: 'Poppins', 'Inter', sans-serif;
       font-weight:900;
-      letter-spacing:-0.01em;
-      font-size:18px;
-      line-height:1.15;
+      letter-spacing:-0.02em;
+      font-size:22px;
+      line-height:1.2;
+      text-shadow: 0 2px 4px rgba(15, 23, 42, .05);
+      position: relative;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      gap: 10px;
     }
-    .mini-grid .box{
-      background: rgba(255,255,255,.85);
-      border: 1px solid rgba(148, 163, 184, .28);
-      border-radius: 12px;
-      padding: 10px 12px;
+    
+    .dealer-hero .name::before {
+      content: '👤';
+      font-size: 20px;
+      filter: drop-shadow(0 2px 4px rgba(59, 130, 246, .2));
     }
-    .mini-grid .k{ color:#64748b; font-weight:700; font-size:12px; }
-    .mini-grid .v{ color:#111827; font-weight:500; font-size:13px; margin-top:2px; word-break:break-word; }
 
-    /* Compact inline rows (no big boxes) */
+    /* Enhanced mini-grid boxes */
+    .mini-grid .box{
+      background: linear-gradient(135deg, rgba(255,255,255,.95), rgba(248,250,252,.9));
+      border: 1px solid rgba(226, 232, 240, .7);
+      border-radius: 14px;
+      padding: 12px 14px;
+      transition: all .2s ease;
+      box-shadow: 0 2px 6px rgba(15, 23, 42, .04);
+    }
+    .mini-grid .box:hover {
+      border-color: rgba(59,130,246,.3);
+      box-shadow: 0 4px 12px rgba(15, 23, 42, .08);
+      transform: translateY(-2px);
+    }
+    .mini-grid .k{ 
+      color:#64748b; 
+      font-weight:700; 
+      font-size:12px;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+    .mini-grid .v{ 
+      color:#0f172a; 
+      font-weight:600; 
+      font-size:14px; 
+      margin-top:4px; 
+      word-break:break-word;
+    }
+
+    /* Compact inline rows */
     .kv-row{
       display:flex;
       align-items:baseline;
       justify-content:space-between;
-      gap:10px;
-      padding: 6px 0;
-      border-bottom: 1px dashed rgba(148,163,184,.35);
+      gap:12px;
+      padding: 9px 0;
+      border-bottom: 1px dashed rgba(226,232,240,.7);
+      transition: all .2s ease;
+    }
+    .kv-row:hover {
+      background: rgba(241,245,249,.3);
+      padding-left: 8px;
+      padding-right: 8px;
+      margin-left: -8px;
+      margin-right: -8px;
+      border-radius: 8px;
     }
     .kv-row:last-child{ border-bottom: 0; }
     .kv-row .k{
       color:#64748b;
       font-weight:700;
-      font-size:12px;
+      font-size:12.5px;
       white-space:nowrap;
     }
     .kv-row .v{
-      color:#111827;
-      font-weight:500;
-      font-size:13px;
+      color:#0f172a;
+      font-weight:600;
+      font-size:13.5px;
       text-align:right;
       word-break: break-word;
     }
     .kv-pair{
       display:flex;
       align-items:baseline;
-      gap:6px;
+      gap:8px;
       min-width:0;
     }
     .kv-pair .v{ min-width:0; }
+
+    /* Enhanced button styles */
+    button {
+      transition: all .2s ease;
+    }
+    button:hover:not(:disabled) {
+      transform: translateY(-1px);
+    }
+    button:active:not(:disabled) {
+      transform: translateY(0);
+    }
+
+    /* Smooth fade-in animation for cards */
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    .card {
+      animation: fadeInUp 0.4s ease-out;
+    }
+
+    /* Enhanced input fields */
+    input[type="text"], textarea {
+      transition: all .2s ease;
+    }
+    input[type="text"]:focus, textarea:focus {
+      outline: none;
+      border-color: rgba(59,130,246,.5);
+      box-shadow: 0 0 0 3px rgba(59,130,246,.1);
+    }
 
   </style>
 </head>
@@ -154,12 +394,12 @@
 <body class="app-shell">
 
   <header class="max-w-6xl mx-auto px-4 pt-6">
-    <div class="glass-bar rounded-2xl px-4 py-4 md:px-6 md:py-5 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+    <div class="glass-bar rounded-2xl px-5 py-5 md:px-7 md:py-6 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
       <div>
         <h1 class="text-xl md:text-2xl font-extrabold text-gray-900 tracking-tight">
           Level-1 CRM Checks
         </h1>
-        <p class="text-sm text-gray-600">Credit + Stock validation with deadline tracking (L1)</p>
+        <p class="text-sm text-gray-600 mt-1">Credit + Stock validation with deadline tracking (L1)</p>
       </div>
       <div class="flex items-center gap-2">
         <div id="modePill" class="mode-pill mode-ea" style="display:none;">EA Mode</div>
@@ -201,306 +441,281 @@
         <div class="text-xs text-gray-500 mt-1">Max 50 characters</div>
         <div class="flex justify-end space-x-3 mt-5">
           <button onclick="closeStockModal()" class="px-4 py-2 text-gray-600 hover:text-gray-800">Cancel</button>
-          <button id="stockSubmitBtn" onclick="submitStockStatus()" class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold">Submit</button>
+          <button id="stockSubmitBtn" onclick="submitStockStatus()"
+                  class="px-5 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-semibold">
+            Submit
+          </button>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Proceed: Bill To Ship To? Modal -->
+  <!-- Proceed Modal (Bill To Ship To?) -->
   <div id="proceedModal" class="fixed inset-0 modal-overlay z-50 hidden">
     <div class="flex items-center justify-center min-h-screen px-4">
       <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 border border-blue-100">
-        <h3 class="text-lg font-extrabold text-gray-900 mb-2">Bill To Ship To Order?</h3>
-        <p class="text-gray-600 mb-4">Confirm karo — yahi selection approval payload me jayega.</p>
-        <div class="flex items-center justify-end space-x-3">
-          <button onclick="closeProceedModal()" class="px-4 py-2 text-gray-600 hover:text-gray-800">Cancel</button>
-          <button onclick="approveOrderPending('No')" class="px-5 py-2 bg-gray-800 hover:bg-gray-900 text-white rounded-xl font-semibold">No</button>
-          <button onclick="approveOrderPending('Yes')" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold">Yes</button>
+        <h3 class="text-lg font-extrabold text-gray-900 mb-2">Approve Pending Order</h3>
+        <p class="text-gray-600 mb-4">Bill To Ship To flag set karo:</p>
+        <div class="flex gap-3">
+          <button onclick="approveOrderPending('NO')"
+                  class="flex-1 px-5 py-3 bg-red-50 text-red-700 rounded-xl border-2 border-red-200 hover:bg-red-100 font-semibold">
+            NO
+          </button>
+          <button onclick="approveOrderPending('YES')"
+                  class="flex-1 px-5 py-3 bg-green-50 text-green-700 rounded-xl border-2 border-green-200 hover:bg-green-100 font-semibold">
+            YES
+          </button>
+        </div>
+        <div class="mt-4 text-center">
+          <button onclick="closeProceedModal()" class="text-gray-500 hover:text-gray-700 text-sm">Cancel</button>
         </div>
       </div>
     </div>
   </div>
 
   <script>
-    /* ===== Mode resolution from URL ===== */
-    const urlParams = new URLSearchParams(location.search);
-    const rawMode = (urlParams.get('mode') || '').toLowerCase();
-    const crmParam = urlParams.get('crm');
-
-    // Always give "view" top priority
-    const MODE = (rawMode === 'view') ? 'view' : (crmParam ? 'crm' : 'ea');
-    const isViewOnly = (rawMode === 'view');
-
-    // Export flag so viewOnly.js can reuse
-    window.__FORCE_VIEW__ = isViewOnly;
-
-    /* ===== Config ===== */
-    const API_URL = 'https://script.google.com/macros/s/AKfycbyPrWZUhQSxWMNUeNU8q_QC5G-gRn_lZLdl0mN71uniF5fsJBLa9yfU2Tp454QLhMQ3wA/exec';
-
-    /* ===== State ===== */
+    const API_URL = 'https://script.google.com/macros/s/AKfycbzY0A7F5oWDUYpZEqrCxwKEJWPvtBf9Gu9dF8hCPZITHlsPfXIUMLCxTz1eGP8x2cYr/exec';
     let ordersData = [];
     let countdownIntervals = [];
-    let currentStockOrderId = null, currentStockStatus = null, currentStockIndex = null;
+    let currentStockOrderId = null;
+    let currentStockStatus = null;
+    let currentStockIndex = null;
     let pendingProceed = { orderId: null, index: null };
 
-    document.addEventListener('DOMContentLoaded', () => fetchOrders());
+    window.addEventListener('DOMContentLoaded', () => {
+      fetchOrders();
+    });
 
-    /* ===== UI helpers ===== */
-    function paintModePill(){
-      const pill = document.getElementById('modePill');
-      pill.style.display = 'inline-flex';
-      if (MODE === 'crm') {
-        pill.textContent = `CRM Mode — ${crmParam}`;
-        pill.className = 'mode-pill mode-crm';
-      } else if (MODE === 'view') {
-        pill.textContent = 'View Mode — Read Only';
-        pill.className = 'mode-pill mode-view';
-      } else {
-        pill.textContent = 'EA Mode — All CRMs, Editable';
-        pill.className = 'mode-pill mode-ea';
-      }
-    }
-
-    function showSuccessNotification(message) {
-      const n = document.getElementById('successNotification');
-      document.getElementById('successMessage').textContent = message || 'Done';
-      n.classList.remove('hide'); n.classList.add('show');
-      setTimeout(() => { n.classList.remove('show'); n.classList.add('hide'); }, 2800);
-    }
-
-    function showLoading(show){
-      document.getElementById('loadingContainer').classList.toggle('hidden', !show);
-      document.getElementById('ordersContainer').classList.toggle('hidden', show);
-      document.getElementById('noDataContainer').classList.add('hidden');
-    }
-
-    function showNoData(){
-      document.getElementById('loadingContainer').classList.add('hidden');
-      document.getElementById('ordersContainer').classList.add('hidden');
-      document.getElementById('noDataContainer').classList.remove('hidden');
-    }
-
-    /* ===== Data fetch ===== */
     async function fetchOrders(){
-      try{
-        paintModePill();
-        showLoading(true);
+      try {
+        const resp = await fetch(`${API_URL}?cacheBuster=${Date.now()}`, { method:'GET' });
+        const json = await resp.json();
 
-        let requestUrl = API_URL;
-        if (MODE === 'crm') {
-          requestUrl += `?crm=${encodeURIComponent(crmParam)}`;
-        } else if (MODE === 'view') {
-          requestUrl += `?mode=view`;
-        } // EA: no params
+        ordersData = json?.orders || [];
 
-        const res = await fetch(requestUrl);
-        const json = await res.json();
-        ordersData = (json.status==='success' && Array.isArray(json.data)) ? json.data : [];
-        renderOrders();
+        document.getElementById('loadingContainer').classList.add('hidden');
 
-        // Apply read-only only in view mode if helper exists
-        if (isViewOnly && typeof setReadOnlyMode === "function") setReadOnlyMode();
+        if(!ordersData.length){
+          document.getElementById('noDataContainer').classList.remove('hidden');
+          return;
+        }
+
+        const isEA = json?.currentUserRole === 'EA';
+        if(isEA){
+          const pill = document.getElementById('modePill');
+          pill.classList.remove('mode-view','mode-crm');
+          pill.classList.add('mode-ea');
+          pill.textContent = 'EA Mode';
+          pill.style.display = 'inline-flex';
+        }
+
+        renderOrders(isEA);
+        document.getElementById('ordersContainer').classList.remove('hidden');
 
       } catch(e){
         console.error(e);
-        showNoData();
-      } finally{
-        showLoading(false);
+        document.getElementById('loadingContainer').classList.add('hidden');
+        document.getElementById('noDataContainer').classList.remove('hidden');
       }
     }
 
-    /* ===== Render ===== */
-    function renderOrders(){
+    function renderOrders(isEA){
       const container = document.getElementById('ordersContainer');
       container.innerHTML = '';
-      if(!ordersData.length){ showNoData(); return; }
 
-      countdownIntervals.forEach(clearInterval);
-      countdownIntervals = [];
+      ordersData.forEach((ord, i) => {
+        const cardDiv = document.createElement('div');
+        cardDiv.id = `card-${i}`;
+        cardDiv.className = 'card';
 
-      ordersData.forEach((order, i) => container.appendChild(createOrderCard(order, i)));
-      container.classList.remove('hidden');
+        const cStat = (ord.creditStatus||'').toLowerCase();
+        const sStat = (ord.stockStatus||'').toLowerCase();
 
-      // Apply read-only if mode=view and script loaded
-      if (window.__FORCE_VIEW__ && typeof setReadOnlyMode === "function") setReadOnlyMode();
-    }
+        const statusParts = [];
+        if(cStat==='yes') statusParts.push('green');
+        else if(cStat==='no') statusParts.push('red');
+        if(sStat==='yes') statusParts.push('green');
+        else if(sStat==='no') statusParts.push('red');
 
-    function createOrderCard(order, index){
-      const card = document.createElement('div');
-      card.id = `card-${index}`;
+        let toplineClass = 'card-topline';
+        if(statusParts.every(s=>s==='green')) toplineClass += ' green';
+        else if(statusParts.includes('red')) toplineClass += ' red';
+        else if(cStat==='yes'||sStat==='yes') toplineClass += ' yellow';
 
-      const type = (order.dealerType || '').toLowerCase();
-      const typeClass = (type === 'red' || type === 'yellow' || type === 'green') ? type : '';
-      const topLineClass = typeClass ? typeClass : '';
+        const now = new Date();
+        const dead = toDateSafe_(ord.deadline);
+        const isOverdue = dead && dead < now;
 
-      const deadline = calculateDeadline(toDateSafe_(order.crmAssignedOnISO || order.crmAssignedOn));
-      const countdownId = `countdown-${index}`;
+        if(isOverdue) cardDiv.classList.add('overdue-card');
 
-      card.className = 'card';
-      card.innerHTML = `
-        <div class="card-topline ${topLineClass}"></div>
+        const statusClass = (s) => {
+          if(!s) return 'dealer-pill';
+          const l = s.toLowerCase();
+          if(l==='yes') return 'dealer-pill green';
+          if(l==='no') return 'dealer-pill red';
+          return 'dealer-pill';
+        };
 
-        <div class="p-5">
-          <!-- Header -->
-          <div class="flex items-start justify-between gap-3">
-            <div class="min-w-0">
-              <div class="text-xs text-gray-500 font-semibold">Order ID</div>
-              <div class="text-lg font-extrabold text-gray-900 tracking-tight break-words">${escapeHtml_(order.orderId || '-')}</div>
+        const remarkVal = (r) => {
+          if(!r) return '<em style="color:#94a3b8;">—</em>';
+          return escapeHtml_(r);
+        };
+
+        const docBtnDisabled = !ord.documentLink;
+
+        cardDiv.innerHTML = `
+          <div class="${toplineClass}"></div>
+          <div class="p-5">
+            <!-- Dealer hero -->
+            <div class="dealer-hero">
+              <div class="label">Dealer Name</div>
+              <div class="name">${escapeHtml_(ord.dealerName || '—')}</div>
             </div>
 
-            <div class="text-right">
-              <div class="text-xs text-gray-500 font-semibold">Deadline</div>
-              <div id="${countdownId}" class="mono text-sm font-extrabold px-2 py-1 rounded-lg bg-blue-50 text-blue-700 border border-blue-100"></div>
+            <!-- Order ID + Date -->
+            <div class="mb-4">
+              <div class="kv">
+                <span class="k">Order ID</span>
+                <span class="v mono">${escapeHtml_(ord.orderId)}</span>
+              </div>
+              <div class="kv">
+                <span class="k">Order Date</span>
+                <span class="v">${escapeHtml_(ord.orderDate||'—')}</span>
+              </div>
+              ${dead ? `
+              <div class="kv">
+                <span class="k">Countdown</span>
+                <span class="v" id="countdown-${i}">—</span>
+              </div>
+              ` : ''}
             </div>
-          </div>
 
-          <!-- Timings -->
-          <div class="mt-3 grid grid-cols-1 gap-2">
-            <div class="flex items-center justify-between text-sm">
-              <span class="text-gray-600 font-semibold">Order Received</span>
-              <span class="mono font-bold text-gray-900">${escapeHtml_(order.orderReceivedOn || '')}</span>
+            <!-- Mini Grid: User + Doc -->
+            <div class="mini-grid grid grid-cols-2 gap-3 mb-4">
+              <div class="box">
+                <div class="k">User</div>
+                <div class="v">${escapeHtml_(ord.userName||'—')}</div>
+              </div>
+              <div class="box">
+                <button
+                  onclick="openMultipleDocuments('${escapeAttr_(ord.documentLink||'')}')"
+                  ${docBtnDisabled?'disabled':''}
+                  class="w-full px-3 py-2 rounded-lg font-semibold text-sm transition-all ${docBtnDisabled?'bg-gray-100 text-gray-400 cursor-not-allowed':'bg-blue-50 text-blue-700 hover:bg-blue-100'}"
+                >
+                  📄 ${docBtnDisabled?'No Doc':'View Doc'}
+                </button>
+              </div>
             </div>
-            <div class="flex items-center justify-between text-sm">
-              <span class="text-gray-600 font-semibold">CRM Assigned</span>
-              <span class="mono font-bold text-gray-900">${escapeHtml_(order.crmAssignedOn || '')}</span>
-            </div>
-          </div>
 
-          <!-- Dealer hero (only highlight) -->
-          <div class="mt-4 p-3 rounded-xl dealer-hero">
-            <div class="label">Dealer Name</div>
-            <div class="name">${escapeHtml_(order.dealerName || '')}</div>
-          </div>
-
-          <!-- Compact inline details (2 pairs per row) -->
-          <div class="mt-4">
-            <div class="kv-row">
+            <!-- Credit + Stock status pills -->
+            <div class="mb-4 space-y-2">
               <div class="kv-pair">
-                <span class="k">CRM:</span>
-                <span class="v">${escapeHtml_(order.crmName || '')}</span>
+                <span class="k text-xs font-bold text-gray-500 uppercase">Credit:</span>
+                <span class="${statusClass(ord.creditStatus)}">
+                  ${ord.creditStatus?escapeHtml_(ord.creditStatus):'Pending'}
+                </span>
               </div>
               <div class="kv-pair">
-                <span class="k">Owner:</span>
-                <span class="v">${escapeHtml_(order.concernedOwner || '')}</span>
-              </div>
-            </div>
-
-            <div class="kv-row">
-              <div class="kv-pair">
-                <span class="k">Location:</span>
-                <span class="v">${escapeHtml_(order.location || '')}</span>
-              </div>
-              <div class="kv-pair">
-                <span class="k">Color:</span>
-                <span class="v"><span class="dealer-pill ${typeClass}">${escapeHtml_(order.dealerType || 'NA')}</span></span>
-              </div>
-            </div>
-
-            <div class="kv-row">
-              <div class="kv-pair">
-                <span class="k">Mkt Person:</span>
-                <span class="v">${escapeHtml_(order.marketingPersonName || '')}</span>
-              </div>
-              <div class="kv-pair">
-                <span class="k">Raw Order:</span>
-                <span class="v">
-                  <button onclick="openMultipleDocuments('${escapeAttr_(order.rawOrderUrl || '')}')" class="text-blue-700 hover:text-blue-900 underline font-semibold">
-                    View
-                  </button>
+                <span class="k text-xs font-bold text-gray-500 uppercase">Stock:</span>
+                <span class="${statusClass(ord.stockStatus)}">
+                  ${ord.stockStatus?escapeHtml_(ord.stockStatus):'Pending'}
                 </span>
               </div>
             </div>
-          </div>
 
-          <!-- Editable controls -->
-          <div class="editable mt-5">
-            <div class="grid grid-cols-2 gap-3">
-              <!-- Credit -->
-              <div class="bg-white rounded-xl p-3 border border-blue-100">
-                <div class="flex items-center justify-between mb-2">
-                  <span class="text-sm font-bold text-gray-800">Credit Status</span>
-                </div>
-                <div class="flex space-x-2">
-                  <button onclick="toggleCreditStatus(${index}, 'approved')" class="p-1 rounded-full credit-approved-${index} bg-gray-200 hover:bg-green-100">
-                    <svg class="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
-                  </button>
-                  <button onclick="toggleCreditStatus(${index}, 'rejected')" class="p-1 rounded-full credit-rejected-${index} bg-gray-200 hover:bg-red-100">
-                    <svg class="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
-                  </button>
-                </div>
-              </div>
-
-              <!-- Stock -->
-              <div class="bg-white rounded-xl p-3 border border-blue-100">
-                <div class="flex items-center justify-between mb-2">
-                  <span class="text-sm font-bold text-gray-800">Stock Status</span>
-                </div>
-                <div class="flex space-x-2">
-                  <button onclick="promptStockStatus('${escapeAttr_(order.orderId || '')}', ${index}, 'approved')" class="p-1 rounded-full stock-approved-${index} bg-gray-200 hover:bg-green-100">
-                    <svg class="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
-                  </button>
-                  <button onclick="promptStockStatus('${escapeAttr_(order.orderId || '')}', ${index}, 'rejected')" class="p-1 rounded-full stock-rejected-${index} bg-gray-200 hover:bg-red-100">
-                    <svg class="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 0 010-1.414z" clip-rule="evenodd"/></svg>
-                  </button>
-                </div>
+            <!-- Remarks -->
+            <div class="mb-4 space-y-2">
+              <div class="kv-row">
+                <span class="k">Stock Remark</span>
+                <span class="v">${remarkVal(ord.stockRemark)}</span>
               </div>
             </div>
 
-            <div class="mt-4">
-              <label for="proceedRemark-${index}" class="block text-sm font-bold text-gray-800 mb-2">Remark for Proceed</label>
-              <input id="proceedRemark-${index}" maxlength="100" placeholder="Enter remark to proceed..."
-                    class="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500">
-              <div class="text-xs text-gray-500 mt-1">Max 100 characters</div>
-            </div>
+            ${isEA ? `
+            <!-- EA Controls -->
+            <div class="pt-4 border-t border-gray-200 space-y-3">
+              <!-- Credit toggles -->
+              <div class="flex items-center justify-between gap-2">
+                <span class="text-xs font-bold text-gray-600 uppercase">Credit</span>
+                <div class="flex gap-2">
+                  <button
+                    class="credit-approved-${i} w-10 h-10 rounded-full flex items-center justify-center text-white font-bold transition-all ${cStat==='yes'?'bg-green-500':'bg-gray-200 hover:bg-green-400'}"
+                    onclick="toggleCreditStatus(${i},'approved')"
+                  >✓</button>
+                  <button
+                    class="credit-rejected-${i} w-10 h-10 rounded-full flex items-center justify-center text-white font-bold transition-all ${cStat==='no'?'bg-red-500':'bg-gray-200 hover:bg-red-400'}"
+                    onclick="toggleCreditStatus(${i},'rejected')"
+                  >✕</button>
+                </div>
+              </div>
 
-            <div class="mt-4">
-              <button id="approve-btn-${index}" onclick="openProceedDialog('${escapeAttr_(order.orderId || '')}', ${index})"
-                      class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2.5 px-4 rounded-xl font-extrabold tracking-wide">
-                Proceed
-              </button>
+              <!-- Stock toggles -->
+              <div class="flex items-center justify-between gap-2">
+                <span class="text-xs font-bold text-gray-600 uppercase">Stock</span>
+                <div class="flex gap-2">
+                  <button
+                    class="stock-approved-${i} w-10 h-10 rounded-full flex items-center justify-center text-white font-bold transition-all ${sStat==='yes'?'bg-green-500':'bg-gray-200 hover:bg-green-400'}"
+                    onclick="promptStockStatus('${escapeAttr_(ord.orderId)}',${i},'approved')"
+                  >✓</button>
+                  <button
+                    class="stock-rejected-${i} w-10 h-10 rounded-full flex items-center justify-center text-white font-bold transition-all ${sStat==='no'?'bg-red-500':'bg-gray-200 hover:bg-red-400'}"
+                    onclick="promptStockStatus('${escapeAttr_(ord.orderId)}',${i},'rejected')"
+                  >✕</button>
+                </div>
+              </div>
+
+              <!-- Proceed remark + button -->
+              <div class="pt-2">
+                <input
+                  id="proceedRemark-${i}"
+                  type="text"
+                  maxlength="100"
+                  placeholder="Proceed remark..."
+                  class="w-full p-2.5 mb-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                />
+                <button
+                  id="approve-btn-${i}"
+                  onclick="openProceedDialog('${escapeAttr_(ord.orderId)}',${i})"
+                  class="w-full px-4 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 font-semibold transition-all shadow-md hover:shadow-lg"
+                >
+                  Approve & Proceed
+                </button>
+              </div>
             </div>
+            ` : ''}
           </div>
-        </div>
-      `;
+        `;
 
-      startCountdown(countdownId, deadline);
-      return card;
+        container.appendChild(cardDiv);
+
+        if(dead) startCountdown(`countdown-${i}`, dead);
+      });
     }
 
-    /* ===== Deadline/Countdown (same logic as your existing HTML) ===== */
-    const isSunday = d => d.getDay() === 0;
-
-    function calculateDeadline(ts){
-      const d = toDateSafe_(ts);
-      if (!d) return new Date(0);
-
-      const h = d.getHours(), m = d.getMinutes();
-      const out = new Date(d);
-
-      if ((h > 14 || (h === 14 && m >= 30)) && h < 24){
-        do { out.setDate(out.getDate()+1); } while(isSunday(out));
-        out.setHours(11,0,0,0);
-      } else if (h < 9 || (h===9 && m<=30)){
-        out.setHours(13,30,0,0);
-      } else {
-        out.setHours(out.getHours()+4);
-      }
-      return out;
+    function showSuccessNotification(msg){
+      const notif = document.getElementById('successNotification');
+      document.getElementById('successMessage').textContent = msg;
+      notif.classList.remove('hide');
+      notif.classList.add('show');
+      setTimeout(() => {
+        notif.classList.remove('show');
+        notif.classList.add('hide');
+      }, 2800);
     }
 
     function startCountdown(elId, deadline){
-      const it = setInterval(() => {
-        const el = document.getElementById(elId);
-        if(!el){ clearInterval(it); return; }
+      const el = document.getElementById(elId);
+      if(!el) return;
 
-        const diff = new Date(deadline) - new Date();
-        if (diff <= 0){
-          // Highlight whole card when overdue
+      const it = setInterval(() => {
+        const now = new Date();
+        const diff = deadline - now;
+
+        if(diff<=0){
+          clearInterval(it);
+          el.innerHTML = '<span style="color:#dc2626;font-weight:900;">OVERDUE</span>';
           const card = document.getElementById(`card-${elId.split('-')[1]}`);
-          if (card) card.classList.add('overdue-card');
-          el.innerHTML = '<span class="text-red-600 font-extrabold">OVERDUE</span>';
-          el.className = 'mono text-sm font-extrabold px-2 py-1 rounded-lg bg-red-50 text-red-700 border border-red-100';
+          if(card) card.classList.add('overdue-card');
           return;
         }
 
@@ -699,7 +914,6 @@
       return String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
     }
     function escapeAttr_(s){
-      // keep simple: escape quotes + backslashes
       return String(s ?? '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
     }
   </script>
