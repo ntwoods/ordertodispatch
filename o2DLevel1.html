@@ -42,6 +42,17 @@
     }
     .card:hover { transform: translateY(-3px); box-shadow: 0 24px 50px rgba(2, 32, 71, .10); }
 
+    /* Attention highlight when overdue */
+    .overdue-card {
+      border-color: rgba(239, 68, 68, .70) !important;
+      box-shadow: 0 22px 60px rgba(239, 68, 68, .18), 0 18px 40px rgba(2, 32, 71, .07) !important;
+    }
+    .overdue-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 26px 70px rgba(239, 68, 68, .24), 0 24px 50px rgba(2, 32, 71, .10) !important;
+    }
+
+
     .card-topline {
       height: 4px;
       background: linear-gradient(90deg, rgba(59,130,246,.9), rgba(147,197,253,.9));
@@ -166,7 +177,7 @@
     window.__FORCE_VIEW__ = isViewOnly;
 
     /* ===== Config ===== */
-    const API_URL = 'https://script.google.com/macros/s/AKfycbyPrWZUhQSxWMNUeNU8q_QC5G-gRn_lZLdl0mN71uniF5fsJBLa9yfU2Tp454QLhMQ3wA/exec';
+    const API_URL = 'https://script.google.com/macros/s/AKfycby7o8IwfJ1vgI-_2Ad-epHZHmOdVqTbNVWnncuv4BnDIiIcWNmuzrEspA9jIvgy9G84eQ/exec';
 
     /* ===== State ===== */
     let ordersData = [];
@@ -258,6 +269,7 @@
 
     function createOrderCard(order, index){
       const card = document.createElement('div');
+      card.id = `card-${index}`;
 
       const type = (order.dealerType || '').toLowerCase();
       const typeClass = (type === 'red' || type === 'yellow' || type === 'green') ? type : '';
@@ -402,6 +414,9 @@
 
         const diff = new Date(deadline) - new Date();
         if (diff <= 0){
+          // Highlight whole card when overdue
+          const card = document.getElementById(`card-${elId.split('-')[1]}`);
+          if (card) card.classList.add('overdue-card');
           el.innerHTML = '<span class="text-red-600 font-extrabold">OVERDUE</span>';
           el.className = 'mono text-sm font-extrabold px-2 py-1 rounded-lg bg-red-50 text-red-700 border border-red-100';
           return;
@@ -410,6 +425,9 @@
         const hh = Math.floor(diff/36e5);
         const mm = Math.floor((diff%36e5)/6e4);
         const ss = Math.floor((diff%6e4)/1000);
+
+        const card = document.getElementById(`card-${elId.split('-')[1]}`);
+        if (card) card.classList.remove('overdue-card');
 
         const urgent = diff <= 30*60*1000;
         el.className = urgent
