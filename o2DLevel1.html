@@ -44,12 +44,18 @@
 
     /* Attention highlight when overdue */
     .overdue-card {
-      border-color: rgba(239, 68, 68, .70) !important;
-      box-shadow: 0 22px 60px rgba(239, 68, 68, .18), 0 18px 40px rgba(2, 32, 71, .07) !important;
+      border: 3px solid rgba(239, 68, 68, .85) !important;
+      box-shadow:
+        0 26px 70px rgba(239, 68, 68, .22),
+        0 18px 40px rgba(2, 32, 71, .07) !important;
+      outline: 3px solid rgba(254, 202, 202, .65);
+      outline-offset: 2px;
     }
     .overdue-card:hover {
       transform: translateY(-3px);
-      box-shadow: 0 26px 70px rgba(239, 68, 68, .24), 0 24px 50px rgba(2, 32, 71, .10) !important;
+      box-shadow:
+        0 32px 85px rgba(239, 68, 68, .26),
+        0 24px 50px rgba(2, 32, 71, .10) !important;
     }
 
 
