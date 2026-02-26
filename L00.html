@@ -10,21 +10,6 @@
   <div class="p-6">
     <h1 class="text-4xl font-bold mb-6 text-center">Sales Orders (Tabular)</h1>
 
-    <!-- Refresh Controls -->
-    <div class="flex items-center justify-center gap-3 mb-4">
-      <button
-        id="refreshBtn"
-        class="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg border border-white/20"
-        type="button"
-      >
-        Refresh Now
-      </button>
-      <div class="text-sm text-white/80">
-        Last refresh: <span id="lastRefresh">—</span>
-      </div>
-    </div>
-
-
     <!-- Orders Table -->
     <div class="overflow-x-auto bg-white/10 rounded-lg shadow-lg">
       <table class="min-w-full divide-y divide-gray-600">
@@ -121,13 +106,6 @@
     const isPowerEA = params.get("power") === "ea";
     const isViewOnly = params.get("mode") === "view";
 
-    // Auto Refresh + Timer interval guards
-    let timerIntervalId = null;
-    let autoRefreshId = null;
-    const AUTO_REFRESH_MS = 30000; // 30 sec
-
-
-
     function parseUrlCsv(csv) {
       if (!csv) return [];
       return csv
@@ -144,23 +122,6 @@
         alert("No file URL(s) available.");
         return;
       }
-
-
-    function setupManualRefresh() {
-      const btn = document.getElementById("refreshBtn");
-      if (!btn) return;
-      btn.addEventListener("click", () => loadOrders());
-    }
-
-    function startAutoRefresh() {
-      if (autoRefreshId) clearInterval(autoRefreshId);
-
-      autoRefreshId = setInterval(() => {
-        const modalOpen = document.getElementById("submitModal")?.classList.contains("flex");
-        if (!modalOpen) loadOrders();
-      }, AUTO_REFRESH_MS);
-    }
-
       if (urls.length === 1) {
         window.open(urls[0], "_blank", "noopener");
         return;
@@ -307,15 +268,7 @@
             table.appendChild(row);
           });
           updateTimers();
-
-          // ✅ ensure timer interval runs only once
-          if (!timerIntervalId) {
-            timerIntervalId = setInterval(updateTimers, 1000);
-          }
-
-          // ✅ update last refresh time UI
-          const lr = document.getElementById("lastRefresh");
-          if (lr) lr.textContent = new Date().toLocaleString();
+          setInterval(updateTimers,1000);
         });
     }
 
@@ -324,10 +277,7 @@
       if (isPowerEA) {
         document.getElementById("preparedFile").removeAttribute("required");
       }
-
-      setupManualRefresh();
       loadOrders();
-      startAutoRefresh();
     });
   </script>
 
