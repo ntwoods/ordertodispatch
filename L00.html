@@ -1,180 +1,38 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sales Order Dashboard - Tabular</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sales Order Dashboard - React Single File</title>
+
+  <!-- Tailwind (same as original) -->
   <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet" />
+
+  <style>
+    /* Optional: small UX tweaks without changing layout */
+    .modal-backdrop { backdrop-filter: blur(2px); }
+  </style>
 </head>
+
 <body class="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-800 text-white">
-  <div class="p-6">
-    <h1 class="text-4xl font-bold mb-6 text-center">Sales Orders (Tabular)</h1>
+  <div id="root"></div>
 
-    <!-- Refresh Controls -->
-    <div class="flex items-center justify-center gap-3 mb-4">
-      <button
-        id="refreshBtn"
-        class="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg border border-white/20"
-        type="button"
-      >
-        Refresh Now
-      </button>
-      <div class="text-sm text-white/80">
-        Last refresh: <span id="lastRefresh">—</span>
-      </div>
-    </div>
+  <!-- React 18 UMD -->
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
 
+  <!-- Babel to allow JSX in this single HTML file -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-    <!-- Orders Table -->
-    <div class="overflow-x-auto bg-white/10 rounded-lg shadow-lg">
-      <table class="min-w-full divide-y divide-gray-600">
-        <thead class="bg-indigo-700">
-          <tr>
-            <th class="px-4 py-2 text-left">Received On</th>
-            <th class="px-4 py-2 text-left">Dealer Name</th>
-            <th class="px-4 py-2 text-left">Location</th>
-            <th class="px-4 py-2 text-left">Marketing Person</th>
-            <th class="px-4 py-2 text-left">Order File</th>
-            <th class="px-4 py-2 text-left">Deadline</th>
-            <th class="px-4 py-2 text-left">Action</th>
-            <th class="px-4 py-2 text-left">Punched By</th>                       
-          </tr>
-        </thead>
-        <tbody id="ordersTable" class="divide-y divide-gray-700"></tbody>
-      </table>
-    </div>
-  </div>
+  <script type="text/babel">
+    const { useEffect, useMemo, useRef, useState } = React;
 
-  <!-- Modal -->
-  <div id="submitModal" class="fixed inset-0 bg-black/70 hidden items-center justify-center z-50">
-    <div class="bg-white text-gray-900 rounded-lg p-6 w-full max-w-lg">
-      <h2 class="text-2xl font-bold mb-4">Submit Order</h2>
-      <form id="submitForm" class="space-y-4">
-        <input type="hidden" id="modalTimestamp">
-
-        <!-- Prepared Excel -->
-        <div>
-          <label class="block font-semibold">Prepared Excel File</label>
-          <input type="file" id="preparedFile" class="w-full border rounded px-2 py-1" required />
-        </div>
-
-        <!-- Concerned Owner -->
-        <div>
-          <label class="block font-semibold">Concerned Owner</label>
-          <select id="ownerSelect" class="w-full border rounded px-2 py-1" required>
-            <option value="">Select...</option>
-            <option value="Parakh Sir">Parakh Sir</option>
-            <option value="Pawan Sir">Pawan Sir</option>
-            <option value="Nitish Sir">Nitish Sir</option>
-          </select>
-        </div>
-
-        <!-- Select CRM -->
-        <div>
-          <label class="block font-semibold">Select CRM</label>
-          <select id="crmSelect" class="w-full border rounded px-2 py-1" required>
-            <option value="">Select...</option>
-            <option value="Kirti Gurung">Kirti Gurung</option>
-            <option value="Priyam Dixit">Priyam Dixit</option>
-            <option value="Akansha Jain">Akansha Jain</option>
-            <option value="Aaradhya Bhandari">Aaradhya Bhandari</option>
-          </select>
-        </div>
-
-        <!-- Select Sales Coordinator (NEW) -->
-        <div>
-          <label class="block font-semibold">Select Sales Coordinator</label>
-          <select id="scSelect" class="w-full border rounded px-2 py-1" required>
-            <option value="">Select...</option>
-            <option value="Km Kalpana">Km Kalpana</option>
-            <option value="Priyam Dixit">Priyam Dixit</option>
-            <option value="Akansha Jain">Akansha Jain</option>
-            <option value="Mahima Agarwal">Mahima Agarwal</option>
-          </select>
-        </div>
-
-        <!-- Dealer Type -->
-        <div>
-          <label class="block font-semibold">Dealer Type</label>
-          <select id="typeSelect" class="w-full border rounded px-2 py-1" required>
-            <option value="">Select...</option>
-            <option value="Red">Red</option>
-            <option value="Yellow">Yellow</option>
-            <option value="Green">Green</option>
-          </select>
-        </div>
-
-        <!-- Buttons -->
-        <div class="flex justify-end space-x-3 pt-4">
-          <button type="button" onclick="closeModal()" class="px-4 py-2 bg-gray-400 rounded">Cancel</button>
-          <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded">Submit</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <script>
-    const apiUrl = "https://script.google.com/macros/s/AKfycbwWKHlGOSpQ5Jcof9bqCDQp-Tnl8J4lCZZT7DnGIEg75DjXYjVrvRbbjefyjdKDDPpi/exec";
-
-    // detect URL params
-    const params = new URLSearchParams(window.location.search);
-    const isPowerEA = params.get("power") === "ea";
-    const isViewOnly = params.get("mode") === "view";
-
-    // Auto Refresh + Timer interval guards
-    let timerIntervalId = null;
-    let autoRefreshId = null;
+    // ===== Config (same as original) =====
+    const API_URL = "https://script.google.com/macros/s/AKfycbwWKHlGOSpQ5Jcof9bqCDQp-Tnl8J4lCZZT7DnGIEg75DjXYjVrvRbbjefyjdKDDPpi/exec";
     const AUTO_REFRESH_MS = 30000; // 30 sec
+    const DEADLINE_MINUTES = 45;
 
-
-
-    function parseUrlCsv(csv) {
-      if (!csv) return [];
-      return csv
-        .split(",")
-        .map(s => s.trim())
-        .filter(Boolean)
-        .filter(u => /^(https?:)?\/\//i.test(u) || /^https?:\/\//i.test(u));
-    }
-
-    // Open 1 or many links in new tabs (asks for confirmation if many)
-    function openOrderFiles(csv) {
-      const urls = parseUrlCsv(csv);
-      if (urls.length === 0) {
-        alert("No file URL(s) available.");
-        return;
-      }
-
-      if (urls.length === 1) {
-        window.open(urls[0], "_blank", "noopener");
-        return;
-      }
-      const ok = confirm(`Open ${urls.length} files in new tabs?`);
-      if (!ok) return;
-
-      // Stagger opens slightly to reduce popup-blocker likelihood
-      urls.forEach((u, i) =>
-        setTimeout(() => window.open(u, "_blank", "noopener"), i * 150)
-      );
-    }
-
-
-
-    function setupManualRefresh() {
-      const btn = document.getElementById("refreshBtn");
-      if (!btn) return;
-      btn.addEventListener("click", () => loadOrders());
-    }
-
-    function startAutoRefresh() {
-      if (autoRefreshId) clearInterval(autoRefreshId);
-
-      autoRefreshId = setInterval(() => {
-        const modalOpen = document.getElementById("submitModal")?.classList.contains("flex");
-        if (!modalOpen) loadOrders();
-      }, AUTO_REFRESH_MS);
-    }
-
+    // ===== Utils =====
     function formatDateTime(ts) {
       const d = new Date(ts);
       const dd = String(d.getDate()).padStart(2,'0');
@@ -186,81 +44,33 @@
       return `${dd}-${mm}-${yyyy} ${hh}:${mi}:${ss}`;
     }
 
-    function updateTimers() {
-      document.querySelectorAll("[data-deadline]").forEach(el => {
-        const deadline = new Date(el.dataset.deadline);
-        const now = new Date();
-        const diff = deadline - now;
-        const row = el.closest("tr");
-
-        if (diff <= 0) {
-          el.textContent = "OVERDUE";
-          el.className = "text-red-500 font-bold";
-          row.classList.add("bg-red-900/40");
-        } else {
-          const m = Math.floor(diff / 60000);
-          const s = Math.floor((diff % 60000) / 1000);
-          el.textContent = `${m}m ${s}s left`;
-        }
-      });
+    function parseUrlCsv(csv) {
+      if (!csv) return [];
+      return String(csv)
+        .split(",")
+        .map(s => s.trim())
+        .filter(Boolean)
+        // Accept: https://..., http://..., or scheme-relative //...
+        .filter(u => /^(https?:\/\/|\/\/)/i.test(u));
     }
 
-    function openModal(timestamp) {
-      if (isViewOnly) return; // block modal opening in view-only mode
-      document.getElementById("modalTimestamp").value = timestamp;
-      document.getElementById("submitModal").classList.remove("hidden");
-      document.getElementById("submitModal").classList.add("flex");
-    }
-
-    function closeModal() {
-      document.getElementById("submitForm").reset();
-      document.getElementById("submitModal").classList.add("hidden");
-      document.getElementById("submitModal").classList.remove("flex");
-    }
-
-    document.getElementById("submitForm").addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const ts = document.getElementById("modalTimestamp").value;
-      const fileInput = document.getElementById("preparedFile");
-      const file = fileInput.files[0];
-      const owner = document.getElementById("ownerSelect").value;
-      const crm = document.getElementById("crmSelect").value;
-      const salesCoordinator = document.getElementById("scSelect").value;
-      const type = document.getElementById("typeSelect").value;
-
-      // handle file validation based on mode
-      if (!isPowerEA && !file) {
-        return alert("File required");
+    function openOrderFiles(csv) {
+      const urls = parseUrlCsv(csv);
+      if (urls.length === 0) {
+        alert("No file URL(s) available.");
+        return;
       }
-
-      let base64 = null, fileName = null;
-      if (file) {
-        base64 = await toBase64(file);
-        fileName = file.name;
+      if (urls.length === 1) {
+        window.open(urls[0], "_blank", "noopener");
+        return;
       }
+      const ok = confirm(`Open ${urls.length} files in new tabs?`);
+      if (!ok) return;
 
-      const payload = {
-        timestamp: ts,
-        concernedOwner: owner,
-        crmName: crm,
-        salesCoordinator: salesCoordinator,
-        type: type,
-        fileData: base64,
-        fileName: fileName,
-        action: "assignCRM"
-      };
-
-      fetch(apiUrl, {
-        method: "POST",
-        mode: "no-cors",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify(payload)
-      });
-
-      closeModal();
-      alert("Submitted successfully!");
-      loadOrders();
-    });
+      urls.forEach((u, i) =>
+        setTimeout(() => window.open(u, "_blank", "noopener"), i * 150)
+      );
+    }
 
     function toBase64(file) {
       return new Promise((resolve, reject) => {
@@ -271,68 +81,398 @@
       });
     }
 
-    function loadOrders() {
-      fetch(apiUrl)
-        .then(res => res.json())
-        .then(data => {
-          const table = document.getElementById("ordersTable");
-          table.innerHTML = ""; // clear old rows
-          data.data.forEach(order => {
-            const received = formatDateTime(order.timestamp);
-
-            // 45 minute deadline as earlier (aap chaho to logic change kar sakte ho)
-            const deadline = new Date(new Date(order.timestamp).getTime() + 45*60000);
-
-            const row = document.createElement("tr");
-            row.innerHTML = `
-              <td class="px-4 py-2">${received}</td>
-              <td class="px-4 py-2">${order.dealerName}</td>
-              <td class="px-4 py-2">${order.location}</td>
-              <td class="px-4 py-2">${order.marketingPersonName}</td>
-              <td class="px-4 py-2">
-                <button
-                  type="button"
-                  class="text-blue-300 underline"
-                  onclick="openOrderFiles('${(order.fileUploadLink || '').replaceAll(`'`, `\\'`).replaceAll(`\n`, ' ').trim()}')"
-                  title="Opens one or multiple files"
-                >
-                  View File(s)
-                </button>
-              </td>
-              <td class="px-4 py-2" data-deadline="${deadline.toISOString()}"></td>
-              <td class="px-4 py-2">
-                <button onclick="openModal('${order.timestamp}')" class="bg-indigo-600 px-3 py-1 rounded ${isViewOnly ? 'opacity-50 cursor-not-allowed' : ''}" ${isViewOnly ? 'disabled' : ''}>Submit</button>
-              </td>
-              <td class="px-4 py-2">${order.punchedBy}</td>
-            `;
-            table.appendChild(row);
-          });
-          updateTimers();
-
-          // ✅ ensure timer interval runs only once
-          if (!timerIntervalId) {
-            timerIntervalId = setInterval(updateTimers, 1000);
-          }
-
-          // ✅ update last refresh time UI
-          const lr = document.getElementById("lastRefresh");
-          if (lr) lr.textContent = new Date().toLocaleString();
-        });
+    function calcDeadlineIso(orderTs) {
+      const base = new Date(orderTs).getTime();
+      const deadline = new Date(base + DEADLINE_MINUTES * 60 * 1000);
+      return deadline.toISOString();
     }
 
-    // Adjust required attribute on load
-    window.addEventListener("DOMContentLoaded", () => {
-      if (isPowerEA) {
-        document.getElementById("preparedFile").removeAttribute("required");
-      }
+    function getCountdown(deadlineIso, nowMs) {
+      const deadline = new Date(deadlineIso).getTime();
+      const diff = deadline - nowMs;
+      if (Number.isNaN(deadline)) return { text: "—", overdue: false };
 
-      setupManualRefresh();
-      loadOrders();
-      startAutoRefresh();
-    });
+      if (diff <= 0) return { text: "OVERDUE", overdue: true };
+
+      const m = Math.floor(diff / 60000);
+      const s = Math.floor((diff % 60000) / 1000);
+      return { text: `${m}m ${s}s left`, overdue: false };
+    }
+
+    // ===== API =====
+    async function fetchOrders() {
+      const res = await fetch(API_URL);
+      const data = await res.json();
+      return data?.data || [];
+    }
+
+    function postAssignCRM(payload) {
+      // Keep same behavior as original (fire-and-forget, no-cors)
+      // NOTE: no-cors response is opaque, so we don't await success.
+      fetch(API_URL, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+    }
+
+    // ===== UI Components =====
+    function Modal({ open, onClose, isPowerEA, isViewOnly, timestamp, onSubmitted }) {
+      const fileRef = useRef(null);
+      const [owner, setOwner] = useState("");
+      const [crm, setCrm] = useState("");
+      const [sc, setSc] = useState("");
+      const [type, setType] = useState("");
+      const [submitting, setSubmitting] = useState(false);
+
+      useEffect(() => {
+        // Reset fields when opening/closing
+        if (!open) {
+          setOwner(""); setCrm(""); setSc(""); setType("");
+          if (fileRef.current) fileRef.current.value = "";
+          setSubmitting(false);
+        }
+      }, [open]);
+
+      if (!open) return null;
+
+      const canSubmit = owner && crm && sc && type && (isPowerEA || (fileRef.current && fileRef.current.files && fileRef.current.files[0]));
+
+      const handleSubmit = async (e) => {
+        e.preventDefault();
+        if (isViewOnly) return;
+
+        const file = fileRef.current?.files?.[0] || null;
+
+        if (!isPowerEA && !file) {
+          alert("File required");
+          return;
+        }
+
+        setSubmitting(true);
+        try {
+          let base64 = null, fileName = null;
+          if (file) {
+            base64 = await toBase64(file);
+            fileName = file.name;
+          }
+
+          const payload = {
+            timestamp,
+            concernedOwner: owner,
+            crmName: crm,
+            salesCoordinator: sc,
+            type,
+            fileData: base64,
+            fileName,
+            action: "assignCRM",
+          };
+
+          postAssignCRM(payload);
+
+          alert("Submitted successfully!");
+          onClose();
+          onSubmitted?.();
+        } catch (err) {
+          console.error(err);
+          alert("Submit failed. Please try again.");
+        } finally {
+          setSubmitting(false);
+        }
+      };
+
+      return (
+        <div className="fixed inset-0 bg-black/70 modal-backdrop flex items-center justify-center z-50">
+          <div className="bg-white text-gray-900 rounded-lg p-6 w-full max-w-lg">
+            <h2 className="text-2xl font-bold mb-4">Submit Order</h2>
+
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Prepared Excel */}
+              <div>
+                <label className="block font-semibold">Prepared Excel File</label>
+                <input
+                  ref={fileRef}
+                  type="file"
+                  className="w-full border rounded px-2 py-1"
+                  required={!isPowerEA}
+                  disabled={isViewOnly || submitting}
+                />
+                {isPowerEA ? (
+                  <p className="text-xs text-gray-600 mt-1">Power EA mode: file optional</p>
+                ) : null}
+              </div>
+
+              {/* Concerned Owner */}
+              <div>
+                <label className="block font-semibold">Concerned Owner</label>
+                <select
+                  className="w-full border rounded px-2 py-1"
+                  value={owner}
+                  onChange={(e) => setOwner(e.target.value)}
+                  required
+                  disabled={isViewOnly || submitting}
+                >
+                  <option value="">Select...</option>
+                  <option value="Parakh Sir">Parakh Sir</option>
+                  <option value="Pawan Sir">Pawan Sir</option>
+                  <option value="Nitish Sir">Nitish Sir</option>
+                </select>
+              </div>
+
+              {/* Select CRM */}
+              <div>
+                <label className="block font-semibold">Select CRM</label>
+                <select
+                  className="w-full border rounded px-2 py-1"
+                  value={crm}
+                  onChange={(e) => setCrm(e.target.value)}
+                  required
+                  disabled={isViewOnly || submitting}
+                >
+                  <option value="">Select...</option>
+                  <option value="Kirti Gurung">Kirti Gurung</option>
+                  <option value="Priyam Dixit">Priyam Dixit</option>
+                  <option value="Akansha Jain">Akansha Jain</option>
+                  <option value="Aaradhya Bhandari">Aaradhya Bhandari</option>
+                </select>
+              </div>
+
+              {/* Select Sales Coordinator */}
+              <div>
+                <label className="block font-semibold">Select Sales Coordinator</label>
+                <select
+                  className="w-full border rounded px-2 py-1"
+                  value={sc}
+                  onChange={(e) => setSc(e.target.value)}
+                  required
+                  disabled={isViewOnly || submitting}
+                >
+                  <option value="">Select...</option>
+                  <option value="Km Kalpana">Km Kalpana</option>
+                  <option value="Priyam Dixit">Priyam Dixit</option>
+                  <option value="Akansha Jain">Akansha Jain</option>
+                  <option value="Mahima Agarwal">Mahima Agarwal</option>
+                </select>
+              </div>
+
+              {/* Dealer Type */}
+              <div>
+                <label className="block font-semibold">Dealer Type</label>
+                <select
+                  className="w-full border rounded px-2 py-1"
+                  value={type}
+                  onChange={(e) => setType(e.target.value)}
+                  required
+                  disabled={isViewOnly || submitting}
+                >
+                  <option value="">Select...</option>
+                  <option value="Red">Red</option>
+                  <option value="Yellow">Yellow</option>
+                  <option value="Green">Green</option>
+                </select>
+              </div>
+
+              <div className="flex justify-end space-x-3 pt-4">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="px-4 py-2 bg-gray-400 rounded"
+                  disabled={submitting}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className={"px-4 py-2 bg-indigo-600 text-white rounded " + (!canSubmit ? "opacity-50 cursor-not-allowed" : "")}
+                  disabled={!canSubmit || submitting || isViewOnly}
+                  title={isViewOnly ? "View-only mode" : ""}
+                >
+                  {submitting ? "Submitting..." : "Submit"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      );
+    }
+
+    function App() {
+      // URL params (same behavior as original)
+      const { isPowerEA, isViewOnly } = useMemo(() => {
+        const params = new URLSearchParams(window.location.search);
+        return {
+          isPowerEA: params.get("power") === "ea",
+          isViewOnly: params.get("mode") === "view",
+        };
+      }, []);
+
+      const [orders, setOrders] = useState([]);
+      const [loading, setLoading] = useState(false);
+      const [error, setError] = useState("");
+      const [lastRefresh, setLastRefresh] = useState("—");
+      const [nowMs, setNowMs] = useState(Date.now());
+
+      const [modalOpen, setModalOpen] = useState(false);
+      const [modalTs, setModalTs] = useState("");
+
+      const load = async () => {
+        setLoading(true);
+        setError("");
+        try {
+          const rows = await fetchOrders();
+
+          // Normalize with computed deadline for UI
+          const normalized = rows.map((o) => ({
+            ...o,
+            _deadlineIso: calcDeadlineIso(o.timestamp),
+          }));
+
+          setOrders(normalized);
+          setLastRefresh(new Date().toLocaleString());
+        } catch (e) {
+          console.error(e);
+          setError("Orders load nahi ho paayi. Please refresh.");
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      const openModal = (ts) => {
+        if (isViewOnly) return;
+        setModalTs(ts);
+        setModalOpen(true);
+      };
+
+      // Initial load + manual refresh setup
+      useEffect(() => {
+        load();
+      }, []);
+
+      // Tick every second for countdown
+      useEffect(() => {
+        const id = setInterval(() => setNowMs(Date.now()), 1000);
+        return () => clearInterval(id);
+      }, []);
+
+      // Auto-refresh every 30 sec (skip when modal is open)
+      useEffect(() => {
+        const id = setInterval(() => {
+          if (!modalOpen) load();
+        }, AUTO_REFRESH_MS);
+        return () => clearInterval(id);
+      }, [modalOpen]);
+
+      return (
+        <div className="p-6">
+          <h1 className="text-4xl font-bold mb-6 text-center">Sales Orders (Tabular)</h1>
+
+          {/* Refresh Controls */}
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <button
+              className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg border border-white/20"
+              type="button"
+              onClick={load}
+              disabled={loading}
+            >
+              {loading ? "Refreshing..." : "Refresh Now"}
+            </button>
+            <div className="text-sm text-white/80">
+              Last refresh: <span>{lastRefresh}</span>
+            </div>
+          </div>
+
+          {/* Error banner */}
+          {error ? (
+            <div className="max-w-4xl mx-auto mb-4 bg-red-500/20 border border-red-300/30 text-red-100 px-4 py-2 rounded">
+              {error}
+            </div>
+          ) : null}
+
+          {/* Orders Table */}
+          <div className="overflow-x-auto bg-white/10 rounded-lg shadow-lg">
+            <table className="min-w-full divide-y divide-gray-600">
+              <thead className="bg-indigo-700">
+                <tr>
+                  <th className="px-4 py-2 text-left">Received On</th>
+                  <th className="px-4 py-2 text-left">Dealer Name</th>
+                  <th className="px-4 py-2 text-left">Location</th>
+                  <th className="px-4 py-2 text-left">Marketing Person</th>
+                  <th className="px-4 py-2 text-left">Order File</th>
+                  <th className="px-4 py-2 text-left">Deadline</th>
+                  <th className="px-4 py-2 text-left">Action</th>
+                  <th className="px-4 py-2 text-left">Punched By</th>
+                </tr>
+              </thead>
+
+              <tbody className="divide-y divide-gray-700">
+                {orders.length === 0 && !loading ? (
+                  <tr>
+                    <td className="px-4 py-4 text-white/80" colSpan="8">
+                      No orders found.
+                    </td>
+                  </tr>
+                ) : null}
+
+                {orders.map((order, idx) => {
+                  const received = formatDateTime(order.timestamp);
+                  const { text, overdue } = getCountdown(order._deadlineIso, nowMs);
+                  const rowClass = overdue ? "bg-red-900/40" : "";
+
+                  return (
+                    <tr key={(order.timestamp || "") + "-" + idx} className={rowClass}>
+                      <td className="px-4 py-2">{received}</td>
+                      <td className="px-4 py-2">{order.dealerName || "—"}</td>
+                      <td className="px-4 py-2">{order.location || "—"}</td>
+                      <td className="px-4 py-2">{order.marketingPersonName || "—"}</td>
+                      <td className="px-4 py-2">
+                        <button
+                          type="button"
+                          className="text-blue-300 underline"
+                          onClick={() => openOrderFiles(order.fileUploadLink || "")}
+                          title="Opens one or multiple files"
+                        >
+                          View File(s)
+                        </button>
+                      </td>
+                      <td className={"px-4 py-2 " + (overdue ? "text-red-300 font-bold" : "")}>
+                        {text}
+                      </td>
+                      <td className="px-4 py-2">
+                        <button
+                          onClick={() => openModal(order.timestamp)}
+                          className={"bg-indigo-600 px-3 py-1 rounded " + (isViewOnly ? "opacity-50 cursor-not-allowed" : "")}
+                          disabled={isViewOnly}
+                        >
+                          Submit
+                        </button>
+                      </td>
+                      <td className="px-4 py-2">{order.punchedBy || "—"}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          <Modal
+            open={modalOpen}
+            onClose={() => setModalOpen(false)}
+            isPowerEA={isPowerEA}
+            isViewOnly={isViewOnly}
+            timestamp={modalTs}
+            onSubmitted={load}
+          />
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById("root"));
+    root.render(<App />);
   </script>
 
-  <!-- Aapka existing viewOnly.js yahi rahega -->
+  <!-- Optional legacy helper (kept outside React render) -->
   <script src="https://ntwoods.github.io/ordertodispatch/js/viewOnly.js"></script>
+
 </body>
 </html>
