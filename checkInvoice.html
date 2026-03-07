@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EA Portal - Invoice Rate Review</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .order-card { transition: all .25s ease; }
+    .order-card:hover { transform: translateY(-2px); }
+    .animate-spin-fast { animation: spin 1s linear infinite; }
+    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col bg-gray-50">
+  <header class="bg-gradient-to-r from-indigo-700 to-blue-700 text-white p-4 shadow-lg">
+    <div class="container mx-auto flex justify-between items-center">
+      <h1 class="text-3xl font-bold">EA Invoice Rate Review</h1>
+      <span id="last-updated" class="text-sm opacity-80"></span>
+    </div>
+  </header>
+
+  <main class="container mx-auto p-6 flex-grow">
+    <h2 class="text-2xl font-semibold text-gray-800 mb-6">Pending EA Decisions</h2>
+
+    <div id="loading-spinner" class="flex justify-center items-center py-10" style="display:none;">
+      <div class="animate-spin-fast rounded-full h-16 w-16 border-t-4 border-b-4 border-indigo-500"></div>
+      <p class="ml-4 text-xl text-gray-600">Fetching eligible orders...</p>
+    </div>
+
+    <div id="error-message" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-6" style="display:none;">
+      <strong class="font-bold">Error:</strong>
+      <span id="error-text" class="ml-2"></span>
+    </div>
+
+    <div id="no-orders-message" class="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded relative mb-6" style="display:none;">
+      No orders are pending EA review.
+    </div>
+
+    <div id="orders-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+  </main>
+
+  <footer class="bg-gray-800 text-white p-4 text-center text-sm">
+    <div class="container mx-auto">&copy; <span id="current-year"></span> EA Portal</div>
+  </footer>
+
+  <script>
+    const API_URL = "https://script.google.com/macros/s/AKfycbxWWIgGY1hug5uU4PZcTbmuzzJyuaaUiW_IZ-3wvLWeItlG3JR-BZ1pLPQJIjXcsUJH/exec";
+    const ordersGrid = document.getElementById("orders-grid");
+    const loadingSpinner = document.getElementById("loading-spinner");
+    const errorMessage = document.getElementById("error-message");
+    const errorText = document.getElementById("error-text");
+    const noOrdersMessage = document.getElementById("no-orders-message");
+    const lastUpdatedSpan = document.getElementById("last-updated");
+
+    let allOrders = [];
+    const inFlight = new Set();
+
+    function escapeHtml(value) {
+      return String(value || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/\"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function showMessage(message, type = "info") {
+      const box = document.createElement("div");
+      box.className = "fixed top-4 right-4 p-4 rounded-md shadow-lg text-white z-50";
+      const color = type === "success" ? "bg-green-500" : type === "error" ? "bg-red-500" : type === "warning" ? "bg-yellow-500" : "bg-blue-500";
+      box.classList.add(color);
+      box.innerHTML = `<div class="flex items-center justify-between"><span>${message}</span><button class="ml-4 text-white font-bold" onclick="this.parentElement.parentElement.remove()">&times;</button></div>`;
+      document.body.appendChild(box);
+      setTimeout(() => box.remove(), 3000);
+    }
+
+    function getCardActionKey(order) {
+      return `${order.orderId || ""}__${order.timestamp || ""}`;
+    }
+
+    function removeOrder(index) {
+      allOrders.splice(index, 1);
+      renderOrders(allOrders);
+    }
+
+    function renderOrders(orders) {
+      ordersGrid.innerHTML = "";
+      if (!orders.length) {
+        noOrdersMessage.style.display = "block";
+        return;
+      }
+      noOrdersMessage.style.display = "none";
+
+      orders.forEach((order, index) => {
+        const key = getCardActionKey(order);
+        const busy = inFlight.has(key);
+
+        const card = document.createElement("div");
+        card.className = "order-card bg-white rounded-lg shadow-md p-6 flex flex-col justify-between hover:shadow-xl";
+        card.innerHTML = `
+          <div class="mb-4">
+            <h3 class="text-xl font-semibold text-indigo-700 mb-2">${escapeHtml(order.dealerName || "N/A")}</h3>
+            <p class="text-gray-700"><strong>Order ID:</strong> ${escapeHtml(order.orderId || "N/A")}</p>
+            <p class="text-gray-700"><strong>Location:</strong> ${escapeHtml(order.location || "N/A")}</p>
+            <p class="text-gray-700"><strong>CRM:</strong> ${escapeHtml(order.crmName || "N/A")}</p>
+            <p class="text-gray-700"><strong>Concerned Owner:</strong> ${escapeHtml(order.concernedOwner || "N/A")}</p>
+            <p class="text-gray-700"><strong>Party Color (RYG):</strong> ${escapeHtml(order.partyColor || "N/A")}</p>
+            <p class="text-gray-700"><strong>Invoice Number(s):</strong> ${escapeHtml(order.invoiceNumbers || "N/A")}</p>
+            <p class="text-gray-500 text-sm mt-1"><strong>Dispatch Date:</strong> ${escapeHtml(order.dispatchDate || "N/A")}</p>
+          </div>
+          <div class="grid grid-cols-1 gap-2">
+            <button data-btn="ok" class="w-full bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition font-medium ${busy ? "opacity-60 cursor-not-allowed" : ""}" ${busy ? "disabled" : ""}>${busy ? "Processing..." : "Rates Okay"}</button>
+            <button data-btn="bad" class="w-full bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition font-medium ${busy ? "opacity-60 cursor-not-allowed" : ""}" ${busy ? "disabled" : ""}>${busy ? "Processing..." : "Incorrect Rates"}</button>
+          </div>
+        `;
+
+        card.querySelector("[data-btn='ok']").addEventListener("click", () => submitEaDecision(index, "eaRatesOkay"));
+        card.querySelector("[data-btn='bad']").addEventListener("click", () => submitEaDecision(index, "eaIncorrectRates"));
+        ordersGrid.appendChild(card);
+      });
+    }
+
+    async function submitEaDecision(index, action) {
+      const order = allOrders[index];
+      if (!order) {
+        showMessage("Order not found", "error");
+        return;
+      }
+
+      const key = getCardActionKey(order);
+      if (inFlight.has(key)) return;
+
+      let remark = "";
+      if (action === "eaIncorrectRates") {
+        const input = prompt("Enter mandatory remark for Incorrect Rates:");
+        if (input === null) return;
+        remark = String(input).trim();
+        if (!remark) {
+          showMessage("Remark is mandatory for Incorrect Rates", "warning");
+          return;
+        }
+      }
+
+      inFlight.add(key);
+      renderOrders(allOrders);
+
+      try {
+        const payload = {
+          action: action,
+          timestamp: order.timestamp,
+          orderId: order.orderId
+        };
+        if (action === "eaIncorrectRates") payload.remark = remark;
+
+        await fetch(API_URL, {
+          method: "POST",
+          mode: "no-cors",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        showMessage(action === "eaRatesOkay" ? "Marked as Rates Okay" : "Marked as Incorrect Rates", "success");
+        removeOrder(index);
+      } catch (error) {
+        showMessage(`Error: ${error.message}`, "error");
+      } finally {
+        inFlight.delete(key);
+        renderOrders(allOrders);
+      }
+    }
+
+    async function fetchOrders() {
+      loadingSpinner.style.display = "flex";
+      errorMessage.style.display = "none";
+      noOrdersMessage.style.display = "none";
+      ordersGrid.innerHTML = "";
+
+      try {
+        const response = await fetch(`${API_URL}?action=fetchEAOrders`);
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        const result = await response.json();
+
+        if (result.status === "success" && Array.isArray(result.data)) {
+          allOrders = result.data;
+          renderOrders(allOrders);
+        } else {
+          throw new Error(result.message || "Failed to fetch EA orders");
+        }
+
+        lastUpdatedSpan.textContent = `Last updated: ${new Date().toLocaleTimeString()}`;
+      } catch (error) {
+        errorText.textContent = error.message;
+        errorMessage.style.display = "block";
+        allOrders = [];
+      } finally {
+        loadingSpinner.style.display = "none";
+      }
+    }
+
+    fetchOrders();
+    setInterval(fetchOrders, 300 * 1000);
+    document.getElementById("current-year").textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>
