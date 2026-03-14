@@ -70,6 +70,23 @@
     </div>
   </div>
 
+  <div id="invoice-upload-modal" class="modal-overlay fixed inset-0 flex items-center justify-center p-4 z-50 opacity-0 invisible" style="display:none;">
+    <div class="modal-content bg-white rounded-lg shadow-xl p-6 w-full max-w-md relative transform -translate-y-full opacity-0" role="dialog" aria-modal="true">
+      <button id="close-invoice-modal" class="absolute top-3 right-4 text-gray-500 hover:text-gray-700 text-3xl font-semibold">&times;</button>
+      <h3 class="text-xl font-bold text-gray-800 mb-2">Upload Invoice Attachments</h3>
+      <p id="invoice-modal-order-id" class="text-sm text-gray-500 mb-4"></p>
+      <div class="mb-4">
+        <label class="file-upload-label">Attach Invoice File(s):</label>
+        <input type="file" class="file-input" id="invoice-modal-file-input" multiple accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.xlsx,.xls">
+        <div class="file-selected" id="invoice-modal-file-selected">File selected</div>
+      </div>
+      <div class="flex justify-end space-x-2">
+        <button id="invoice-modal-cancel" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition">Cancel</button>
+        <button id="invoice-modal-submit" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition">Submit Invoice</button>
+      </div>
+    </div>
+  </div>
+
   <footer class="bg-gray-800 text-white p-4 text-center text-sm mt-auto">
     <div class="container mx-auto">&copy; <span id="current-year"></span> Dispatch Team Dashboard. All rights reserved.</div>
   </footer>
@@ -84,12 +101,20 @@
     const orderDetailModal = document.getElementById("order-detail-modal");
     const modalBody = document.getElementById("modal-body");
     const closeModalButton = document.getElementById("close-modal");
+    const invoiceUploadModal = document.getElementById("invoice-upload-modal");
+    const closeInvoiceModalButton = document.getElementById("close-invoice-modal");
+    const invoiceModalCancelButton = document.getElementById("invoice-modal-cancel");
+    const invoiceModalSubmitButton = document.getElementById("invoice-modal-submit");
+    const invoiceModalFileInput = document.getElementById("invoice-modal-file-input");
+    const invoiceModalFileSelected = document.getElementById("invoice-modal-file-selected");
+    const invoiceModalOrderId = document.getElementById("invoice-modal-order-id");
     const lastUpdatedSpan = document.getElementById("last-updated");
     const refreshIndicator = document.getElementById("refresh-indicator");
     const refreshSpinner = refreshIndicator.querySelector("svg");
     const refreshText = document.getElementById("refresh-text");
 
     let allOrdersData = [];
+    let invoiceModalOrderIndex = -1;
 
     function formatTimestamp(isoString) {
       if (!isoString) return "N/A";
@@ -134,6 +159,13 @@
       return String(invoiceNumbers || "").trim() !== "";
     }
 
+    function formatSelectedFiles(files) {
+      if (!files || files.length === 0) return "";
+      const names = Array.from(files).map((f) => f.name);
+      if (names.length === 1) return names[0];
+      return `${names.length} files selected: ${names.slice(0, 3).join(", ")}${names.length > 3 ? ", ..." : ""}`;
+    }
+
     function escapeHtml(value) {
       return String(value || "")
         .replace(/&/g, "&amp;")
@@ -156,9 +188,8 @@
       const fileInput = document.getElementById(`file-${index}`);
       const fileSelected = document.getElementById(`file-selected-${index}`);
       if (fileInput.files.length > 0) {
-        const file = fileInput.files[0];
         fileSelected.style.display = "block";
-        fileSelected.textContent = `File selected: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+        fileSelected.textContent = formatSelectedFiles(fileInput.files);
       } else {
         fileSelected.style.display = "none";
       }
@@ -168,15 +199,14 @@
       const fileInput = document.getElementById(`file1-${index}`);
       const fileSelected = document.getElementById(`file-selected1-${index}`);
       if (fileInput.files.length > 0) {
-        const file = fileInput.files[0];
         fileSelected.style.display = "block";
-        fileSelected.textContent = `File selected: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+        fileSelected.textContent = formatSelectedFiles(fileInput.files);
       } else {
         fileSelected.style.display = "none";
       }
     }
 
-    async function markInvoiceCreated(index) {
+    function openInvoiceUploadModal(index) {
       const order = allOrdersData[index];
       if (!order) {
         showMessageBox("Order data not found", "error");
@@ -187,11 +217,43 @@
         return;
       }
 
-      let invoiceNumbers = prompt("Enter Invoice Number(s). This field is mandatory.");
-      if (invoiceNumbers === null) return;
-      invoiceNumbers = String(invoiceNumbers).trim();
-      if (!invoiceNumbers) {
-        showMessageBox("Invoice Number(s) is mandatory", "warning");
+      invoiceModalOrderIndex = index;
+      invoiceModalFileInput.value = "";
+      invoiceModalFileSelected.style.display = "none";
+      invoiceModalOrderId.textContent = `Order ID: ${order.orderId || "N/A"}`;
+
+      invoiceUploadModal.style.display = "flex";
+      setTimeout(() => {
+        invoiceUploadModal.classList.remove("invisible");
+        invoiceUploadModal.classList.add("opacity-100");
+        const content = invoiceUploadModal.querySelector(".modal-content");
+        content.classList.remove("-translate-y-full", "opacity-0");
+        content.classList.add("modal-open");
+      }, 10);
+    }
+
+    function closeInvoiceUploadModal() {
+      invoiceUploadModal.classList.remove("opacity-100");
+      const content = invoiceUploadModal.querySelector(".modal-content");
+      content.classList.add("-translate-y-full", "opacity-0");
+      content.classList.remove("modal-open");
+      setTimeout(() => {
+        invoiceUploadModal.style.display = "none";
+        invoiceUploadModal.classList.add("invisible");
+        invoiceModalOrderIndex = -1;
+      }, 300);
+    }
+
+    async function submitInvoiceCreated() {
+      const index = invoiceModalOrderIndex;
+      const order = allOrdersData[index];
+      if (!order) {
+        showMessageBox("Order data not found", "error");
+        return;
+      }
+
+      if (!invoiceModalFileInput.files || invoiceModalFileInput.files.length === 0) {
+        showMessageBox("At least one invoice attachment is mandatory", "warning");
         return;
       }
 
@@ -201,9 +263,25 @@
         button.textContent = "Saving...";
         button.classList.add("opacity-50", "cursor-not-allowed");
       }
+      invoiceModalSubmitButton.disabled = true;
+      invoiceModalSubmitButton.textContent = "Uploading...";
+      invoiceModalCancelButton.disabled = true;
+      closeInvoiceModalButton.disabled = true;
 
       let saved = false;
       try {
+        const files = Array.from(invoiceModalFileInput.files);
+        const invoiceFileArray = [];
+        for (let i = 0; i < files.length; i++) {
+          const file = files[i];
+          invoiceFileArray.push({
+            name: file.name,
+            type: file.type,
+            size: file.size,
+            base64: await fileToBase64(file)
+          });
+        }
+
         await fetch(API_URL, {
           method: "POST",
           mode: "no-cors",
@@ -212,13 +290,14 @@
             action: "invoiceCreated",
             timestamp: order.timestamp,
             orderId: order.orderId,
-            invoiceNumbers: invoiceNumbers
+            invoiceFiles: invoiceFileArray
           })
         });
 
-        allOrdersData[index].invoiceNumbers = invoiceNumbers;
+        allOrdersData[index].invoiceNumbers = files.map((f) => f.name).join(", ");
         saved = true;
-        showMessageBox("Invoice Number(s) saved successfully", "success");
+        closeInvoiceUploadModal();
+        showMessageBox("Invoice attachment(s) saved successfully", "success");
         renderOrders(allOrdersData);
         if (typeof setReadOnlyMode === "function") setReadOnlyMode();
       } catch (error) {
@@ -229,7 +308,15 @@
           button.textContent = "Invoice Created";
           button.classList.remove("opacity-50", "cursor-not-allowed");
         }
+        invoiceModalSubmitButton.disabled = false;
+        invoiceModalSubmitButton.textContent = "Submit Invoice";
+        invoiceModalCancelButton.disabled = false;
+        closeInvoiceModalButton.disabled = false;
       }
+    }
+
+    function markInvoiceCreated(index) {
+      openInvoiceUploadModal(index);
     }
 
     async function markDone(index) {
@@ -398,7 +485,7 @@
             <p class="text-sm text-gray-500 mb-1"><strong class="font-medium">Expected Dispatch:</strong> <span class="text-blue-500">${formatDispatchDate(order.dispatchDate)}</span></p>
             <p class="text-sm text-gray-500 mb-1"><strong class="font-medium">Order Timestamp:</strong> ${formatTimestamp(order.timestamp)}</p>
             <p class="text-sm text-gray-500 mb-1"><strong class="font-medium">Invoice Status:</strong> <span class="${invoiceStatusClass} font-semibold">${invoiceExists ? "Created" : "Pending"}</span></p>
-            ${invoiceExists ? `<p class="text-sm text-gray-600 mb-1"><strong class="font-medium">Invoice Number(s):</strong> ${escapeHtml(order.invoiceNumbers)}</p>` : ""}
+            ${invoiceExists ? `<p class="text-sm text-gray-600 mb-1"><strong class="font-medium">Invoice Attachment(s):</strong> ${escapeHtml(order.invoiceNumbers)}</p>` : ""}
             ${hasEaResponse ? `<p class="text-sm text-purple-700 mb-1"><strong class="font-medium">EA Response:</strong> ${escapeHtml(order.eaResponse)}</p>` : ""}
             ${order.fileUploadLink ? `<p class="text-sm text-gray-500 mt-2"><a href="${order.fileUploadLink}" target="_blank" class="text-blue-500 hover:underline">Download Order File</a></p>` : ""}
             ${order.additionalOrder ? `<p class="text-sm text-gray-500"><button onclick="event.stopPropagation(); openMultipleDocuments('${String(order.additionalOrder).replace(/'/g, "\\'")}')" class="text-red-500 hover:underline bg-transparent border-none cursor-pointer p-0 m-0">Additional Order</button></p>` : ""}
@@ -418,7 +505,7 @@
                 <div class="mb-2"><label class="block text-sm font-medium mb-1 text-gray-700">Driver Mob:</label><input type="tel" id="driverMob-${index}" pattern="[0-9]{10}" maxlength="10" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter 10-digit mobile number" /></div>
               </div>
               <div class="mb-4"><label class="file-upload-label">Attach LR Receipt:</label><input type="file" class="file-input" id="file-${index}" multiple onchange="handleFileSelect(${index})" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.xlsx,.xls"><div class="file-selected" id="file-selected-${index}">File selected</div></div>
-              <div class="mb-4"><label class="file-upload-label">Attach Invoice:</label><input type="file" class="file-input" id="file1-${index}" multiple onchange="handleFileSelect1(${index})" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.xlsx,.xls"><div class="file-selected" id="file-selected1-${index}">File selected</div></div>
+              <div class="mb-4"><label class="file-upload-label">Attach Invoice (Mark Done):</label><input type="file" class="file-input" id="file1-${index}" multiple onchange="handleFileSelect1(${index})" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.xlsx,.xls"><div class="file-selected" id="file-selected1-${index}">File selected</div></div>
               <div class="grid grid-cols-1 gap-2">
                 <button onclick="markInvoiceCreated(${index})" class="${invoiceBtnClass}" ${invoiceExists ? "disabled" : ""}>${invoiceExists ? "Invoice Created (Done)" : "Invoice Created"}</button>
                 <button onclick="markDone(${index})" class="${markDoneBtnClass}" ${invoiceExists ? "" : "disabled"}>${invoiceExists ? "Mark Done" : "Mark Done (Invoice Pending)"}</button>
@@ -455,7 +542,7 @@
         <p><strong class="font-semibold">Marketing Person:</strong> ${order.marketingPersonName || "N/A"}</p>
         <p><strong class="font-semibold">CRM Name:</strong> ${order.crmName || "N/A"}</p>
         <p><strong class="font-semibold">Location:</strong> ${order.location || "N/A"}</p>
-        <p><strong class="font-semibold">Invoice Number(s):</strong> ${order.invoiceNumbers ? escapeHtml(order.invoiceNumbers) : "N/A"}</p>
+        <p><strong class="font-semibold">Invoice Attachment(s):</strong> ${order.invoiceNumbers ? escapeHtml(order.invoiceNumbers) : "N/A"}</p>
         <p><strong class="font-semibold">EA Response:</strong> ${order.eaResponse ? escapeHtml(order.eaResponse) : "N/A"}</p>
         <p><strong class="font-semibold">Order Timestamp:</strong> ${formatTimestamp(order.timestamp)}</p>
         <p><strong class="font-semibold">Expected Dispatch Date:</strong> <span class="text-blue-600 font-bold">${formatDispatchDate(order.dispatchDate)}</span></p>
@@ -493,11 +580,26 @@
 
     document.addEventListener("keydown", (e) => {
       if (e.key === "Escape" && orderDetailModal.classList.contains("opacity-100")) closeModal();
+      if (e.key === "Escape" && invoiceUploadModal.classList.contains("opacity-100")) closeInvoiceUploadModal();
     });
     orderDetailModal.addEventListener("click", (e) => {
       if (e.target === orderDetailModal) closeModal();
     });
+    invoiceUploadModal.addEventListener("click", (e) => {
+      if (e.target === invoiceUploadModal) closeInvoiceUploadModal();
+    });
     closeModalButton.addEventListener("click", closeModal);
+    closeInvoiceModalButton.addEventListener("click", closeInvoiceUploadModal);
+    invoiceModalCancelButton.addEventListener("click", closeInvoiceUploadModal);
+    invoiceModalSubmitButton.addEventListener("click", submitInvoiceCreated);
+    invoiceModalFileInput.addEventListener("change", () => {
+      if (invoiceModalFileInput.files.length > 0) {
+        invoiceModalFileSelected.style.display = "block";
+        invoiceModalFileSelected.textContent = formatSelectedFiles(invoiceModalFileInput.files);
+      } else {
+        invoiceModalFileSelected.style.display = "none";
+      }
+    });
 
     fetchOrders();
     setInterval(() => {
