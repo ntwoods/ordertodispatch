@@ -47,7 +47,7 @@
   </footer>
 
   <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbxWWIgGY1hug5uU4PZcTbmuzzJyuaaUiW_IZ-3wvLWeItlG3JR-BZ1pLPQJIjXcsUJH/exec";
+    const API_URL = "https://script.google.com/macros/s/AKfycbzuX9IvIK3aEoXA3TfzBvcAWcav_QhnuenbaYahJdeFL52Mu3KwkMpvIsVJZ7ni23M9Gg/exec";
     const ordersGrid = document.getElementById("orders-grid");
     const loadingSpinner = document.getElementById("loading-spinner");
     const errorMessage = document.getElementById("error-message");
@@ -81,6 +81,25 @@
       return `${order.orderId || ""}__${order.timestamp || ""}`;
     }
 
+    function getInvoiceUrls(invoiceField) {
+      return String(invoiceField || "")
+        .split(",")
+        .map((url) => url.trim())
+        .filter((url) => /^https?:\/\//i.test(url));
+    }
+
+    function openInvoiceLinks(invoiceField) {
+      const urls = getInvoiceUrls(invoiceField);
+      if (!urls.length) {
+        showMessage("No valid invoice links found", "warning");
+        return;
+      }
+      if (urls.length > 1 && !confirm(`This will open ${urls.length} invoice links in separate tabs. Continue?`)) {
+        return;
+      }
+      urls.forEach((url, i) => setTimeout(() => window.open(url, "_blank"), i * 100));
+    }
+
     function removeOrder(index) {
       allOrders.splice(index, 1);
       renderOrders(allOrders);
@@ -97,6 +116,7 @@
       orders.forEach((order, index) => {
         const key = getCardActionKey(order);
         const busy = inFlight.has(key);
+        const invoiceUrls = getInvoiceUrls(order.invoiceNumbers);
 
         const card = document.createElement("div");
         card.className = "order-card bg-white rounded-lg shadow-md p-6 flex flex-col justify-between hover:shadow-xl";
@@ -108,7 +128,8 @@
             <p class="text-gray-700"><strong>CRM:</strong> ${escapeHtml(order.crmName || "N/A")}</p>
             <p class="text-gray-700"><strong>Concerned Owner:</strong> ${escapeHtml(order.concernedOwner || "N/A")}</p>
             <p class="text-gray-700"><strong>Party Color (RYG):</strong> ${escapeHtml(order.partyColor || "N/A")}</p>
-            <p class="text-gray-700"><strong>Invoice Number(s):</strong> ${escapeHtml(order.invoiceNumbers || "N/A")}</p>
+            <p class="text-gray-700"><strong>Invoice Attachment(s):</strong> ${invoiceUrls.length ? `${invoiceUrls.length} file(s)` : escapeHtml(order.invoiceNumbers || "N/A")}</p>
+            ${invoiceUrls.length ? `<button data-btn="view-invoices" class="mt-2 text-sm bg-indigo-600 text-white px-3 py-1 rounded hover:bg-indigo-700 transition">View Invoices</button>` : ""}
             <p class="text-gray-500 text-sm mt-1"><strong>Dispatch Date:</strong> ${escapeHtml(order.dispatchDate || "N/A")}</p>
           </div>
           <div class="grid grid-cols-1 gap-2">
@@ -119,6 +140,10 @@
 
         card.querySelector("[data-btn='ok']").addEventListener("click", () => submitEaDecision(index, "eaRatesOkay"));
         card.querySelector("[data-btn='bad']").addEventListener("click", () => submitEaDecision(index, "eaIncorrectRates"));
+        const viewInvoicesBtn = card.querySelector("[data-btn='view-invoices']");
+        if (viewInvoicesBtn) {
+          viewInvoicesBtn.addEventListener("click", () => openInvoiceLinks(order.invoiceNumbers));
+        }
         ordersGrid.appendChild(card);
       });
     }
