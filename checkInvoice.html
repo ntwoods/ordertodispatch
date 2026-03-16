@@ -54,6 +54,10 @@
     const errorText = document.getElementById("error-text");
     const noOrdersMessage = document.getElementById("no-orders-message");
     const lastUpdatedSpan = document.getElementById("last-updated");
+    const CORS_PROXY_BUILDERS = [
+      (url) => `https://corsproxy.io/?${encodeURIComponent(url)}`,
+      (url) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`
+    ];
 
     let allOrders = [];
     const inFlight = new Set();
@@ -75,6 +79,41 @@
       box.innerHTML = `<div class="flex items-center justify-between"><span>${message}</span><button class="ml-4 text-white font-bold" onclick="this.parentElement.parentElement.remove()">&times;</button></div>`;
       document.body.appendChild(box);
       setTimeout(() => box.remove(), 3000);
+    }
+
+    function parseJsonSafe(text) {
+      const raw = String(text || "").trim();
+      const cleaned = raw.replace(/^\)\]\}',?\n/, "");
+      return JSON.parse(cleaned);
+    }
+
+    async function fetchJsonWithCorsFallback(url) {
+      const targets = [url].concat(CORS_PROXY_BUILDERS.map((build) => build(url)));
+      let lastError = null;
+
+      for (let i = 0; i < targets.length; i++) {
+        const endpoint = targets[i];
+        try {
+          const response = await fetch(endpoint, {
+            method: "GET",
+            mode: "cors",
+            cache: "no-store"
+          });
+          if (!response.ok) {
+            throw new Error(`HTTP error ${response.status}`);
+          }
+          const payload = await response.text();
+          const json = parseJsonSafe(payload);
+          if (i > 0) {
+            console.warn("Using CORS fallback endpoint:", endpoint);
+          }
+          return json;
+        } catch (error) {
+          lastError = error;
+        }
+      }
+
+      throw lastError || new Error("Unable to fetch data");
     }
 
     function getCardActionKey(order) {
@@ -207,9 +246,7 @@
       ordersGrid.innerHTML = "";
 
       try {
-        const response = await fetch(`${API_URL}?action=fetchEAOrders`);
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-        const result = await response.json();
+        const result = await fetchJsonWithCorsFallback(`${API_URL}?action=fetchEAOrders`);
 
         if (result.status === "success" && Array.isArray(result.data)) {
           allOrders = result.data;
