@@ -1,233 +1,405 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>EA Portal - Invoice Rate Review</title>
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-  <style>
-    body { font-family: 'Inter', sans-serif; }
-    .order-card { transition: all .25s ease; }
-    .order-card:hover { transform: translateY(-2px); }
-    .animate-spin-fast { animation: spin 1s linear infinite; }
-    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-  </style>
-</head>
-<body class="min-h-screen flex flex-col bg-gray-50">
-  <header class="bg-gradient-to-r from-indigo-700 to-blue-700 text-white p-4 shadow-lg">
-    <div class="container mx-auto flex justify-between items-center">
-      <h1 class="text-3xl font-bold">EA Invoice Rate Review</h1>
-      <span id="last-updated" class="text-sm opacity-80"></span>
-    </div>
-  </header>
+const SHEET_ID = "1WSQMXxEAWVqeSBcEiYPWZ8HAL5d9y0Rdcel6xupbTPI";
+const SHEET_NAME = "OrderCycle";
+const FOLDER_ID = "1QqEvXCLwi1XwKOM9r58VpD9_eQN_ZL1O";
 
-  <main class="container mx-auto p-6 flex-grow">
-    <h2 class="text-2xl font-semibold text-gray-800 mb-6">Pending EA Decisions</h2>
+const COL = {
+  DEALER_NAME: 2,              // B
+  MARKETING_PERSON: 3,         // C
+  LOCATION: 4,                 // D
+  CRM_NAME: 6,                 // F
+  FILE_UPLOAD_LINK: 15,        // O
+  DISPATCH_DATE: 17,           // Q
+  TIMESTAMP: 20,               // T
+  ORDER_STATUS: 21,            // U
+  EXPECTED_DELIVERY: 22,       // V
+  DISPATCH_REMARK: 23,         // W
+  LR_RECEIPT_LINKS: 24,        // X
+  DISPATCH_GATE_COL_Y: 25,     // Y (existing filter dependency)
+  INVOICE_FILE_LINKS: 26,      // Z
+  CONCERNED_OWNER: 28,         // AB
+  ADDITIONAL_ORDER: 29,        // AC
+  VEHICLE_NO: 31,              // AE
+  FREIGHT: 32,                 // AF
+  DRIVER_NAME: 33,             // AG
+  DRIVER_MOBILE: 34,           // AH
+  DEALER_TYPE: 35,             // AI (Red/Yellow/Green)
+  AO: 41,                      // AO (cleared for incorrect rates)
+  FILTER_BLOCK_COL: 49,        // AW (existing "GOLA" exclusion)
+  ORDER_ID: 56,                // BD
+  EA_RESPONSE: 62,             // BJ
+  EA_REMARK_FALLBACK: 63,      // BK (used only if no explicit EA remark header is found)
+  INVOICE_NUMBERS: 64          // BL (Invoice attachment URL(s), comma separated)
+};
 
-    <div id="loading-spinner" class="flex justify-center items-center py-10" style="display:none;">
-      <div class="animate-spin-fast rounded-full h-16 w-16 border-t-4 border-b-4 border-indigo-500"></div>
-      <p class="ml-4 text-xl text-gray-600">Fetching eligible orders...</p>
-    </div>
+function doGet(e) {
+  try {
+    const action = (e && e.parameter && e.parameter.action) ? String(e.parameter.action) : "";
 
-    <div id="error-message" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-6" style="display:none;">
-      <strong class="font-bold">Error:</strong>
-      <span id="error-text" class="ml-2"></span>
-    </div>
-
-    <div id="no-orders-message" class="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded relative mb-6" style="display:none;">
-      No orders are pending EA review.
-    </div>
-
-    <div id="orders-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
-  </main>
-
-  <footer class="bg-gray-800 text-white p-4 text-center text-sm">
-    <div class="container mx-auto">&copy; <span id="current-year"></span> EA Portal</div>
-  </footer>
-
-  <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbzuX9IvIK3aEoXA3TfzBvcAWcav_QhnuenbaYahJdeFL52Mu3KwkMpvIsVJZ7ni23M9Gg/exec";
-    const ordersGrid = document.getElementById("orders-grid");
-    const loadingSpinner = document.getElementById("loading-spinner");
-    const errorMessage = document.getElementById("error-message");
-    const errorText = document.getElementById("error-text");
-    const noOrdersMessage = document.getElementById("no-orders-message");
-    const lastUpdatedSpan = document.getElementById("last-updated");
-
-    let allOrders = [];
-    const inFlight = new Set();
-
-    function escapeHtml(value) {
-      return String(value || "")
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/\"/g, "&quot;")
-        .replace(/'/g, "&#039;");
+    if (action === "fetchEAOrders") {
+      return jsonOutput_(fetchEAOrders_());
     }
 
-    function showMessage(message, type = "info") {
-      const box = document.createElement("div");
-      box.className = "fixed top-4 right-4 p-4 rounded-md shadow-lg text-white z-50";
-      const color = type === "success" ? "bg-green-500" : type === "error" ? "bg-red-500" : type === "warning" ? "bg-yellow-500" : "bg-blue-500";
-      box.classList.add(color);
-      box.innerHTML = `<div class="flex items-center justify-between"><span>${message}</span><button class="ml-4 text-white font-bold" onclick="this.parentElement.parentElement.remove()">&times;</button></div>`;
-      document.body.appendChild(box);
-      setTimeout(() => box.remove(), 3000);
+    return jsonOutput_(fetchDispatchOrders_());
+  } catch (error) {
+    console.error("Error in doGet:", error);
+    return jsonOutput_({
+      status: "error",
+      message: error.toString(),
+      data: []
+    });
+  }
+}
+
+function doPost(e) {
+  try {
+    const data = parsePostData_(e);
+    const action = data.action || "markDone";
+
+    if (action === "markDone") {
+      return jsonOutput_(handleMarkDone_(data));
     }
 
-    function getCardActionKey(order) {
-      return `${order.orderId || ""}__${order.timestamp || ""}`;
+    if (action === "invoiceCreated") {
+      return jsonOutput_(handleInvoiceCreated_(data));
     }
 
-    function getInvoiceUrls(invoiceField) {
-      return String(invoiceField || "")
-        .split(",")
-        .map((url) => url.trim())
-        .filter((url) => /^https?:\/\//i.test(url));
+    if (action === "eaRatesOkay") {
+      return jsonOutput_(handleEaRatesOkay_(data));
     }
 
-    function openInvoiceLinks(invoiceField) {
-      const urls = getInvoiceUrls(invoiceField);
-      if (!urls.length) {
-        showMessage("No valid invoice links found", "warning");
-        return;
+    if (action === "eaIncorrectRates") {
+      return jsonOutput_(handleEaIncorrectRates_(data));
+    }
+
+    return jsonOutput_({
+      status: "error",
+      message: "Unknown action: " + action
+    });
+  } catch (error) {
+    console.error("Error in doPost:", error);
+    return jsonOutput_({
+      status: "error",
+      message: error.toString()
+    });
+  }
+}
+
+function fetchDispatchOrders_() {
+  const sheet = getSheet_();
+  const values = sheet.getDataRange().getValues();
+  const rows = values.slice(1);
+
+  const filteredData = rows
+    .filter(row =>
+      row[COL.ORDER_STATUS - 1] === "Approved" &&
+      (row[COL.INVOICE_FILE_LINKS - 1] === "" || row[COL.LR_RECEIPT_LINKS - 1] === "") &&
+      row[COL.FILTER_BLOCK_COL - 1] !== "GOLA" &&
+      row[COL.DISPATCH_GATE_COL_Y - 1] === ""
+    )
+    .map(row => ({
+      timestamp: safeToISOString_(row[COL.TIMESTAMP - 1]),
+      orderId: valueOrEmpty_(row[COL.ORDER_ID - 1]),
+      dealerName: valueOrEmpty_(row[COL.DEALER_NAME - 1]),
+      marketingPersonName: valueOrEmpty_(row[COL.MARKETING_PERSON - 1]),
+      dispatchDate: valueOrEmpty_(row[COL.DISPATCH_DATE - 1]),
+      location: valueOrEmpty_(row[COL.LOCATION - 1]),
+      fileUploadLink: valueOrEmpty_(row[COL.FILE_UPLOAD_LINK - 1]),
+      additionalOrder: valueOrEmpty_(row[COL.ADDITIONAL_ORDER - 1]),
+      crmName: valueOrEmpty_(row[COL.CRM_NAME - 1]),
+      invoiceNumbers: valueOrEmpty_(row[COL.INVOICE_NUMBERS - 1]),
+      eaResponse: valueOrEmpty_(row[COL.EA_RESPONSE - 1])
+    }));
+
+  return {
+    status: "success",
+    data: filteredData,
+    count: filteredData.length
+  };
+}
+
+function fetchEAOrders_() {
+  const sheet = getSheet_();
+  const values = sheet.getDataRange().getValues();
+  if (values.length < 2) {
+    return { status: "success", data: [], count: 0 };
+  }
+
+  const data = values
+    .slice(1)
+    .filter(row => {
+      const invoiceNumbers = normalizeText_(row[COL.INVOICE_NUMBERS - 1]);
+      if (!invoiceNumbers) return false;
+
+      const eaResponse = normalizeText_(row[COL.EA_RESPONSE - 1]).toLowerCase();
+      return !isFinalEaDecision_(eaResponse);
+    })
+    .map(row => ({
+      timestamp: safeToISOString_(row[COL.TIMESTAMP - 1]),
+      orderId: valueOrEmpty_(row[COL.ORDER_ID - 1]),
+      dealerName: valueOrEmpty_(row[COL.DEALER_NAME - 1]),
+      location: valueOrEmpty_(row[COL.LOCATION - 1]),
+      crmName: valueOrEmpty_(row[COL.CRM_NAME - 1]),
+      concernedOwner: valueOrEmpty_(row[COL.CONCERNED_OWNER - 1]),
+      dealerType: valueOrEmpty_(row[COL.DEALER_TYPE - 1]),
+      invoiceNumbers: valueOrEmpty_(row[COL.INVOICE_NUMBERS - 1]),
+      eaResponse: valueOrEmpty_(row[COL.EA_RESPONSE - 1]),
+      dispatchDate: valueOrEmpty_(row[COL.DISPATCH_DATE - 1])
+    }));
+
+  return {
+    status: "success",
+    data: data,
+    count: data.length
+  };
+}
+
+function handleMarkDone_(data) {
+  const spreadsheet = SpreadsheetApp.openById(SHEET_ID);
+  const sheet = spreadsheet.getSheetByName(SHEET_NAME);
+  if (!sheet) throw new Error('Sheet "OrderCycle" not found');
+
+  const values = sheet.getDataRange().getValues();
+  const rowToUpdate = findRowToUpdate_(values, data);
+  if (rowToUpdate === -1) throw new Error("Matching order not found in the sheet");
+
+  const invoiceNumbers = normalizeText_(values[rowToUpdate - 1][COL.INVOICE_NUMBERS - 1]);
+  if (!invoiceNumbers) {
+    throw new Error("Invoice Created is mandatory before Mark Done");
+  }
+
+  const folder = DriveApp.getFolderById(FOLDER_ID);
+  const now = new Date();
+  const fileUrls = createFilesAndGetUrls_(folder, data.fileArray, "dispatch", now);
+  const fileUrls1 = createFilesAndGetUrls_(folder, data.file1Array, "invoice", now);
+
+  const deliveryDate = data.expectedDeliveryDate ? new Date(data.expectedDeliveryDate) : "";
+  const dispatchRemark = valueOrEmpty_(data.generalRemark);
+  const vehicleNumber = valueOrEmpty_(data.vehicleNo);
+  const freightAmt = valueOrEmpty_(data.freight);
+  const driver = valueOrEmpty_(data.driverName);
+  const driverContact = valueOrEmpty_(data.driverMob);
+  const invoiceTimestamp = new Date();
+
+  sheet.getRange(rowToUpdate, COL.EXPECTED_DELIVERY).setValue(deliveryDate);
+  sheet.getRange(rowToUpdate, COL.DISPATCH_REMARK).setValue(dispatchRemark);
+  sheet.getRange(rowToUpdate, COL.LR_RECEIPT_LINKS).setValue(fileUrls.join(", "));
+  sheet.getRange(rowToUpdate, COL.INVOICE_FILE_LINKS).setValue(fileUrls1.join(", "));
+  sheet.getRange(rowToUpdate, COL.VEHICLE_NO).setValue(vehicleNumber);
+  sheet.getRange(rowToUpdate, COL.FREIGHT).setValue(freightAmt);
+  sheet.getRange(rowToUpdate, COL.DRIVER_NAME).setValue(driver);
+  sheet.getRange(rowToUpdate, COL.DRIVER_MOBILE).setValue(driverContact);
+  sheet.getRange(rowToUpdate, COL.AO).setValue(invoiceTimestamp);
+
+  return {
+    status: "success",
+    message: "Sheet updated successfully",
+    fileUrls: fileUrls,
+    invoiceFileUrls: fileUrls1,
+    rowUpdated: rowToUpdate
+  };
+}
+
+function handleInvoiceCreated_(data) {
+  const sheet = getSheet_();
+  const values = sheet.getDataRange().getValues();
+  const rowToUpdate = findRowToUpdate_(values, data);
+  if (rowToUpdate === -1) throw new Error("Matching order not found in the sheet");
+
+  const invoiceFiles = Array.isArray(data.invoiceFiles)
+    ? data.invoiceFiles
+    : (Array.isArray(data.fileArray) ? data.fileArray : []);
+  const legacyInvoiceNumbers = normalizeText_(data.invoiceNumbers || data.remark || data.invoiceNumber);
+
+  let invoiceValue = "";
+  let invoiceUrls = [];
+  if (invoiceFiles.length > 0) {
+    const folder = DriveApp.getFolderById(FOLDER_ID);
+    const now = new Date();
+    invoiceUrls = createFilesAndGetUrls_(folder, invoiceFiles, "invoice_created", now);
+    invoiceValue = invoiceUrls.join(", ");
+    if (!invoiceValue) {
+      throw new Error("Failed to save invoice attachments");
+    }
+  } else if (legacyInvoiceNumbers) {
+    invoiceValue = legacyInvoiceNumbers;
+  } else {
+    throw new Error("Invoice attachment is required");
+  }
+
+  sheet.getRange(rowToUpdate, COL.INVOICE_NUMBERS).setValue(invoiceValue);
+
+  return {
+    status: "success",
+    message: "Invoice attachment(s) saved successfully",
+    rowUpdated: rowToUpdate,
+    invoiceNumbers: invoiceValue,
+    invoiceUrls: invoiceUrls
+  };
+}
+
+function handleEaRatesOkay_(data) {
+  const sheet = getSheet_();
+  const values = sheet.getDataRange().getValues();
+  const rowToUpdate = findRowToUpdate_(values, data);
+  if (rowToUpdate === -1) throw new Error("Matching order not found in the sheet");
+
+  const eaRemarkCol = resolveEaRemarkColumn_(values[0]);
+  sheet.getRange(rowToUpdate, COL.EA_RESPONSE).setValue("Ok");
+  if (eaRemarkCol) {
+    sheet.getRange(rowToUpdate, eaRemarkCol).setValue("");
+  }
+
+  return {
+    status: "success",
+    message: "EA response updated to Ok",
+    rowUpdated: rowToUpdate
+  };
+}
+
+function handleEaIncorrectRates_(data) {
+  const remark = normalizeText_(data.remark);
+  if (!remark) {
+    throw new Error("Remark is required for Incorrect Rates");
+  }
+
+  const sheet = getSheet_();
+  const values = sheet.getDataRange().getValues();
+  const rowToUpdate = findRowToUpdate_(values, data);
+  if (rowToUpdate === -1) throw new Error("Matching order not found in the sheet");
+
+  const eaRemarkCol = resolveEaRemarkColumn_(values[0]);
+
+  sheet.getRange(rowToUpdate, COL.EA_RESPONSE).setValue("Not-OK");
+  sheet.getRange(rowToUpdate, COL.INVOICE_FILE_LINKS).clearContent(); // Z
+  sheet.getRange(rowToUpdate, COL.INVOICE_NUMBERS).clearContent(); // BL
+  sheet.getRange(rowToUpdate, COL.AO).clearContent(); // AO
+
+  if (eaRemarkCol) {
+    sheet.getRange(rowToUpdate, eaRemarkCol).setValue(remark);
+  }
+
+  return {
+    status: "success",
+    message: "EA response updated to Not-OK and invoice attachments cleared",
+    rowUpdated: rowToUpdate,
+    eaRemarkColumn: eaRemarkCol
+  };
+}
+
+function getSheet_() {
+  const ss = SpreadsheetApp.openById(SHEET_ID);
+  const sheet = ss.getSheetByName(SHEET_NAME);
+  if (!sheet) throw new Error('Sheet "OrderCycle" not found');
+  return sheet;
+}
+
+function parsePostData_(e) {
+  if (!e || !e.postData || !e.postData.contents) {
+    throw new Error("Missing request payload");
+  }
+  return JSON.parse(e.postData.contents);
+}
+
+function jsonOutput_(obj) {
+  return ContentService
+    .createTextOutput(JSON.stringify(obj))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function createFilesAndGetUrls_(folder, files, typePrefix, timestamp) {
+  const urls = [];
+  if (!Array.isArray(files)) return urls;
+
+  for (let i = 0; i < files.length; i++) {
+    const f = files[i];
+    if (!f || !f.base64 || !f.name || !f.type) continue;
+
+    const blob = Utilities.base64Decode(f.base64);
+    const extension = String(f.name).split(".").pop();
+    const name = Utilities.formatDate(timestamp, Session.getScriptTimeZone(), "yyyyMMdd_HHmmss") +
+      "_" + typePrefix + "_" + (i + 1) + "." + extension;
+    const file = folder.createFile(Utilities.newBlob(blob, f.type, name));
+    file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+    urls.push(file.getUrl());
+  }
+
+  return urls;
+}
+
+function findRowToUpdate_(values, data) {
+  const targetOrderId = normalizeText_(data.orderId);
+  const targetTimestamp = data.timestamp ? new Date(data.timestamp) : null;
+  const isTimestampValid = targetTimestamp && !isNaN(targetTimestamp.getTime());
+
+  for (let i = 1; i < values.length; i++) {
+    const row = values[i];
+    const rowOrderId = normalizeText_(row[COL.ORDER_ID - 1]);
+    const rowTimestampRaw = row[COL.TIMESTAMP - 1];
+    const rowTimestamp = rowTimestampRaw ? new Date(rowTimestampRaw) : null;
+    const isRowTimestampValid = rowTimestamp && !isNaN(rowTimestamp.getTime());
+
+    if (targetOrderId && rowOrderId && targetOrderId === rowOrderId) {
+      return i + 1;
+    }
+
+    if (isTimestampValid && isRowTimestampValid) {
+      if (Math.abs(rowTimestamp.getTime() - targetTimestamp.getTime()) < 1000) {
+        return i + 1;
       }
-      if (urls.length > 1 && !confirm(`This will open ${urls.length} invoice links in separate tabs. Continue?`)) {
-        return;
-      }
-      urls.forEach((url, i) => setTimeout(() => window.open(url, "_blank"), i * 100));
     }
+  }
 
-    function removeOrder(index) {
-      allOrders.splice(index, 1);
-      renderOrders(allOrders);
-    }
+  return -1;
+}
 
-    function renderOrders(orders) {
-      ordersGrid.innerHTML = "";
-      if (!orders.length) {
-        noOrdersMessage.style.display = "block";
-        return;
-      }
-      noOrdersMessage.style.display = "none";
+function resolveEaRemarkColumn_(headerRow) {
+  const found = findHeaderColumn_(headerRow, [
+    "ea rate remark",
+    "ea rates remark",
+    "ea remark",
+    "rate remark",
+    "incorrect rates remark",
+    "invoice rate remark"
+  ]);
 
-      orders.forEach((order, index) => {
-        const key = getCardActionKey(order);
-        const busy = inFlight.has(key);
-        const invoiceUrls = getInvoiceUrls(order.invoiceNumbers);
+  return found || COL.EA_REMARK_FALLBACK;
+}
 
-        const card = document.createElement("div");
-        card.className = "order-card bg-white rounded-lg shadow-md p-6 flex flex-col justify-between hover:shadow-xl";
-        card.innerHTML = `
-          <div class="mb-4">
-            <h3 class="text-xl font-semibold text-indigo-700 mb-2">${escapeHtml(order.dealerName || "N/A")}</h3>
-            <p class="text-gray-700"><strong>Order ID:</strong> ${escapeHtml(order.orderId || "N/A")}</p>
-            <p class="text-gray-700"><strong>Location:</strong> ${escapeHtml(order.location || "N/A")}</p>
-            <p class="text-gray-700"><strong>CRM:</strong> ${escapeHtml(order.crmName || "N/A")}</p>
-            <p class="text-gray-700"><strong>Concerned Owner:</strong> ${escapeHtml(order.concernedOwner || "N/A")}</p>
-            <p class="text-gray-700"><strong>Party Color (RYG):</strong> ${escapeHtml(order.partyColor || "N/A")}</p>
-            <p class="text-gray-700"><strong>Invoice Attachment(s):</strong> ${invoiceUrls.length ? `${invoiceUrls.length} file(s)` : escapeHtml(order.invoiceNumbers || "N/A")}</p>
-            ${invoiceUrls.length ? `<button data-btn="view-invoices" class="mt-2 text-sm bg-indigo-600 text-white px-3 py-1 rounded hover:bg-indigo-700 transition">View Invoices</button>` : ""}
-            <p class="text-gray-500 text-sm mt-1"><strong>Dispatch Date:</strong> ${escapeHtml(order.dispatchDate || "N/A")}</p>
-          </div>
-          <div class="grid grid-cols-1 gap-2">
-            <button data-btn="ok" class="w-full bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition font-medium ${busy ? "opacity-60 cursor-not-allowed" : ""}" ${busy ? "disabled" : ""}>${busy ? "Processing..." : "Rates Okay"}</button>
-            <button data-btn="bad" class="w-full bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition font-medium ${busy ? "opacity-60 cursor-not-allowed" : ""}" ${busy ? "disabled" : ""}>${busy ? "Processing..." : "Incorrect Rates"}</button>
-          </div>
-        `;
+function findHeaderColumn_(headerRow, candidates) {
+  if (!Array.isArray(headerRow) || !Array.isArray(candidates)) return null;
+  const normalizedCandidates = candidates.map(c => normalizeText_(c).toLowerCase());
 
-        card.querySelector("[data-btn='ok']").addEventListener("click", () => submitEaDecision(index, "eaRatesOkay"));
-        card.querySelector("[data-btn='bad']").addEventListener("click", () => submitEaDecision(index, "eaIncorrectRates"));
-        const viewInvoicesBtn = card.querySelector("[data-btn='view-invoices']");
-        if (viewInvoicesBtn) {
-          viewInvoicesBtn.addEventListener("click", () => openInvoiceLinks(order.invoiceNumbers));
-        }
-        ordersGrid.appendChild(card);
-      });
-    }
+  for (let i = 0; i < headerRow.length; i++) {
+    const header = normalizeText_(headerRow[i]).toLowerCase();
+    if (!header) continue;
 
-    async function submitEaDecision(index, action) {
-      const order = allOrders[index];
-      if (!order) {
-        showMessage("Order not found", "error");
-        return;
-      }
-
-      const key = getCardActionKey(order);
-      if (inFlight.has(key)) return;
-
-      let remark = "";
-      if (action === "eaIncorrectRates") {
-        const input = prompt("Enter mandatory remark for Incorrect Rates:");
-        if (input === null) return;
-        remark = String(input).trim();
-        if (!remark) {
-          showMessage("Remark is mandatory for Incorrect Rates", "warning");
-          return;
-        }
-      }
-
-      inFlight.add(key);
-      renderOrders(allOrders);
-
-      try {
-        const payload = {
-          action: action,
-          timestamp: order.timestamp,
-          orderId: order.orderId
-        };
-        if (action === "eaIncorrectRates") payload.remark = remark;
-
-        await fetch(API_URL, {
-          method: "POST",
-          mode: "no-cors",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload)
-        });
-
-        showMessage(action === "eaRatesOkay" ? "Marked as Rates Okay" : "Marked as Incorrect Rates", "success");
-        removeOrder(index);
-      } catch (error) {
-        showMessage(`Error: ${error.message}`, "error");
-      } finally {
-        inFlight.delete(key);
-        renderOrders(allOrders);
+    for (let j = 0; j < normalizedCandidates.length; j++) {
+      if (header === normalizedCandidates[j] || header.indexOf(normalizedCandidates[j]) !== -1) {
+        return i + 1;
       }
     }
+  }
 
-    async function fetchOrders() {
-      loadingSpinner.style.display = "flex";
-      errorMessage.style.display = "none";
-      noOrdersMessage.style.display = "none";
-      ordersGrid.innerHTML = "";
+  return null;
+}
 
-      try {
-        const response = await fetch(`${API_URL}?action=fetchEAOrders`);
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-        const result = await response.json();
+function isFinalEaDecision_(eaResponse) {
+  return eaResponse === "ok" || eaResponse === "not-ok" || eaResponse === "not ok";
+}
 
-        if (result.status === "success" && Array.isArray(result.data)) {
-          allOrders = result.data;
-          renderOrders(allOrders);
-        } else {
-          throw new Error(result.message || "Failed to fetch EA orders");
-        }
+function safeToISOString_(value) {
+  if (!value) return "";
+  const date = new Date(value);
+  if (isNaN(date.getTime())) return String(value);
+  return date.toISOString();
+}
 
-        lastUpdatedSpan.textContent = `Last updated: ${new Date().toLocaleTimeString()}`;
-      } catch (error) {
-        errorText.textContent = error.message;
-        errorMessage.style.display = "block";
-        allOrders = [];
-      } finally {
-        loadingSpinner.style.display = "none";
-      }
-    }
+function normalizeText_(value) {
+  if (value === null || value === undefined) return "";
+  return String(value).trim();
+}
 
-    fetchOrders();
-    setInterval(fetchOrders, 300 * 1000);
-    document.getElementById("current-year").textContent = new Date().getFullYear();
-  </script>
-</body>
-</html>
+function valueOrEmpty_(value) {
+  if (value === null || value === undefined) return "";
+  return value;
+}
