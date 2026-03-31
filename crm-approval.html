@@ -1,0 +1,498 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CRM Approval Portal</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <style>
+      :root {
+        --bg: #f4f8f9;
+        --surface: #ffffff;
+        --line: #d8e3e7;
+        --text: #182b35;
+        --muted: #647987;
+        --brand: #135d6c;
+        --ok: #0f9d58;
+        --warn: #c62828;
+        --shadow: 0 10px 26px rgba(9, 35, 54, 0.1);
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: "IBM Plex Sans", sans-serif;
+        background: radial-gradient(circle at top right, #e0ebf1 0, #f4f8f9 50%, #edf4f6 100%);
+        color: var(--text);
+      }
+      .page { max-width: 1160px; margin: 0 auto; padding: 18px; }
+      .panel { border: 1px solid var(--line); border-radius: 14px; background: var(--surface); box-shadow: var(--shadow); }
+      .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 14px 16px;
+        color: #f0fcff;
+        background: linear-gradient(120deg, #0f4e5c 0, #0e6f80 100%);
+      }
+      .header h1 { margin: 0; font-size: 20px; font-family: "Manrope", sans-serif; }
+      .actions { display: flex; gap: 8px; align-items: center; }
+      .btn {
+        border: 0;
+        border-radius: 10px;
+        padding: 8px 12px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+      .btn-refresh { background: rgba(255,255,255,.22); color: #fff; }
+      .btn-logout { background: #b42318; color: #fff; }
+      .body { padding: 14px; display: grid; gap: 12px; }
+      .order { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+      .order-top {
+        padding: 12px;
+        border-bottom: 1px solid var(--line);
+        background: #fbfeff;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+      }
+      .order-top h3 { margin: 0; font-family: "Manrope", sans-serif; }
+      .meta { color: var(--muted); font-size: 12px; text-align: right; display: grid; gap: 3px; }
+      .segments { padding: 12px; display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+      .segment { border: 1px solid var(--line); border-radius: 10px; padding: 10px; background: #fff; }
+      .segment-head { display: flex; justify-content: space-between; gap: 8px; align-items: center; }
+      .segment-head h4 { margin: 0; font-size: 14px; }
+      .pill { border-radius: 999px; padding: 4px 8px; font-size: 11px; background: #ffe7cd; color: #a45714; font-weight: 700; }
+      .links { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 6px; }
+      .link-chip {
+        text-decoration: none;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        padding: 4px 8px;
+        font-size: 12px;
+      }
+      .segment-actions { margin-top: 10px; display: flex; gap: 8px; }
+      .btn-ok { background: var(--ok); color: #fff; }
+      .btn-return { background: var(--warn); color: #fff; }
+      .tiny { font-size: 12px; color: var(--muted); }
+      .empty { border: 1px dashed #c8d4de; border-radius: 12px; padding: 26px; text-align: center; color: var(--muted); }
+      .login {
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        padding: 20px;
+      }
+      .login-card {
+        width: min(420px, 100%);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        background: var(--surface);
+        box-shadow: var(--shadow);
+        padding: 22px;
+      }
+      .login-card h2 { margin: 0 0 8px; font-family: "Manrope", sans-serif; }
+      .toast {
+        position: fixed;
+        right: 14px;
+        bottom: 14px;
+        border-radius: 10px;
+        padding: 10px 12px;
+        color: #fff;
+        box-shadow: var(--shadow);
+        display: none;
+        z-index: 100;
+      }
+      .toast.show { display: block; }
+      .toast.ok { background: #0e9f6e; }
+      .toast.error { background: #c62828; }
+      .modal {
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 31, 45, 0.45);
+        display: none;
+        place-items: center;
+        z-index: 120;
+      }
+      .modal.show { display: grid; }
+      .modal-card {
+        width: min(450px, 92vw);
+        border-radius: 12px;
+        border: 1px solid var(--line);
+        background: #fff;
+        padding: 16px;
+      }
+      .modal-card h3 { margin: 0 0 8px; font-family: "Manrope", sans-serif; }
+      .modal-card textarea {
+        width: 100%;
+        min-height: 110px;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 8px;
+        font-family: inherit;
+      }
+      .modal-actions { margin-top: 10px; display: flex; justify-content: flex-end; gap: 8px; }
+      @media (max-width: 900px) {
+        .header { flex-direction: column; align-items: stretch; gap: 8px; }
+        .actions { justify-content: flex-end; }
+        .meta { text-align: left; }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app"></div>
+    <div id="toast" class="toast"></div>
+
+    <div id="returnModal" class="modal">
+      <div class="modal-card">
+        <h3>Return Segment</h3>
+        <p class="tiny">Remark is mandatory.</p>
+        <textarea id="remarkInput" placeholder="Enter return remark..."></textarea>
+        <div class="modal-actions">
+          <button id="cancelReturnBtn" class="btn">Cancel</button>
+          <button id="confirmReturnBtn" class="btn btn-return">Submit Return</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const CONFIG = {
+        appsScriptUrl: "__APPS_SCRIPT_WEB_APP_URL__",
+        googleClientId: "__GOOGLE_CLIENT_ID__"
+      };
+
+      const state = {
+        auth: null,
+        orders: [],
+        loading: false,
+        busyMap: {},
+        returnTarget: null
+      };
+
+      const app = document.getElementById("app");
+      const toast = document.getElementById("toast");
+      const returnModal = document.getElementById("returnModal");
+      const remarkInput = document.getElementById("remarkInput");
+      const cancelReturnBtn = document.getElementById("cancelReturnBtn");
+      const confirmReturnBtn = document.getElementById("confirmReturnBtn");
+
+      function showToast(message, type = "error") {
+        toast.textContent = message;
+        toast.className = `toast show ${type}`;
+        setTimeout(() => (toast.className = "toast"), 3200);
+      }
+
+      function decodeJwt(token) {
+        const parts = String(token || "").split(".");
+        if (parts.length < 2) return null;
+        try {
+          return JSON.parse(atob(parts[1].replace(/-/g, "+").replace(/_/g, "/")));
+        } catch {
+          return null;
+        }
+      }
+
+      function busyKey(orderId, segment) {
+        return `${orderId}:${segment.segmentType}:${segment.segmentIndex}`;
+      }
+
+      async function parseJsonResponse(response, context) {
+        const rawText = await response.text();
+        let payload = null;
+
+        try {
+          payload = rawText ? JSON.parse(rawText) : null;
+        } catch {
+          const preview = rawText ? rawText.slice(0, 180).replace(/\s+/g, " ") : "";
+          throw new Error(
+            `${context} returned non-JSON response (status ${response.status}). ` +
+              (preview ? `Preview: ${preview}` : "Response was empty.")
+          );
+        }
+
+        if (!response.ok || !payload?.ok) {
+          throw new Error(payload?.error || `${context} failed (status ${response.status}).`);
+        }
+
+        return payload;
+      }
+
+      async function fetchApprovals() {
+        if (!state.auth) return;
+        state.loading = true;
+        render();
+        try {
+          const response = await fetch(CONFIG.appsScriptUrl, {
+            method: "POST",
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify({
+              action: "FETCH_CRM_APPROVALS",
+              auth: {
+                email: state.auth.email,
+                idToken: state.auth.idToken
+              }
+            })
+          });
+          const payload = await parseJsonResponse(response, "FETCH_CRM_APPROVALS");
+          state.orders = payload.data || [];
+        } catch (error) {
+          showToast(error.message || "Fetch failed.");
+        } finally {
+          state.loading = false;
+          render();
+        }
+      }
+
+      async function postAction(body) {
+        const response = await fetch(CONFIG.appsScriptUrl, {
+          method: "POST",
+          // text/plain keeps this a simple request and avoids CORS preflight issues with Apps Script.
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify(body)
+        });
+        return parseJsonResponse(response, body?.action || "ACTION");
+      }
+
+      async function approveSegment(orderId, segment) {
+        const key = busyKey(orderId, segment);
+        state.busyMap[key] = true;
+        render();
+        try {
+          const body = {
+            action: segment.segmentType === "FINAL" ? "APPROVE_FINAL" : "APPROVE_ADDITIONAL",
+            orderId,
+            auth: state.auth
+          };
+          if (segment.segmentType !== "FINAL") body.additionalUrl = segment.sourceUrl;
+          await postAction(body);
+          showToast("Segment approved.", "ok");
+          await fetchApprovals();
+        } catch (error) {
+          showToast(error.message || "Approve failed.");
+        } finally {
+          delete state.busyMap[key];
+          render();
+        }
+      }
+
+      function openReturnModal(orderId, segment) {
+        state.returnTarget = { orderId, segment };
+        remarkInput.value = "";
+        returnModal.classList.add("show");
+      }
+
+      function closeReturnModal() {
+        state.returnTarget = null;
+        returnModal.classList.remove("show");
+      }
+
+      async function submitReturn() {
+        if (!state.returnTarget) return;
+        const remark = remarkInput.value.trim();
+        if (!remark) {
+          showToast("Return remark is mandatory.");
+          return;
+        }
+
+        const { orderId, segment } = state.returnTarget;
+        const key = busyKey(orderId, segment);
+        state.busyMap[key] = true;
+        closeReturnModal();
+        render();
+
+        try {
+          const body = {
+            action: segment.segmentType === "FINAL" ? "RETURN_FINAL" : "RETURN_ADDITIONAL",
+            orderId,
+            remark,
+            auth: state.auth
+          };
+          if (segment.segmentType !== "FINAL") body.additionalUrl = segment.sourceUrl;
+          await postAction(body);
+          showToast("Segment returned.", "ok");
+          await fetchApprovals();
+        } catch (error) {
+          showToast(error.message || "Return failed.");
+        } finally {
+          delete state.busyMap[key];
+          render();
+        }
+      }
+
+      function handleGoogleCredential(response) {
+        const payload = decodeJwt(response.credential);
+        if (!payload?.email) {
+          showToast("Could not extract email from Google credential.");
+          return;
+        }
+        state.auth = { email: payload.email.toLowerCase(), idToken: response.credential };
+        fetchApprovals();
+      }
+
+      function renderLogin() {
+        app.innerHTML = `
+          <main class="login">
+            <section class="login-card">
+              <h2>CRM Approval Portal</h2>
+              <p class="tiny">Sign in with your NTWoods Google account.</p>
+              <div id="gbtn"></div>
+            </section>
+          </main>
+        `;
+        if (!CONFIG.googleClientId) {
+          showToast("Google Sign-In is not configured.");
+          return;
+        }
+        const initGoogle = () => {
+          if (!window.google?.accounts?.id) {
+            setTimeout(initGoogle, 150);
+            return;
+          }
+          window.google.accounts.id.initialize({
+            client_id: CONFIG.googleClientId,
+            callback: handleGoogleCredential
+          });
+          window.google.accounts.id.renderButton(document.getElementById("gbtn"), {
+            type: "standard",
+            shape: "pill",
+            theme: "filled_blue",
+            text: "signin_with",
+            size: "large"
+          });
+        };
+        initGoogle();
+      }
+
+      function segmentHtml(orderId, segment) {
+        const key = busyKey(orderId, segment);
+        const isBusy = Boolean(state.busyMap[key]);
+        const soLinks = (segment.salesOrderUrls || [])
+          .map((url, idx) => `<a class="link-chip" target="_blank" rel="noreferrer" href="${url}">Sales Order ${idx + 1}</a>`)
+          .join("");
+
+        return `
+          <article class="segment">
+            <div class="segment-head">
+              <h4>${segment.label}</h4>
+              <span class="pill">Pending CRM Approval</span>
+            </div>
+            <div class="links">
+              ${
+                segment.sourceUrl
+                  ? `<a class="link-chip" href="${segment.sourceUrl}" target="_blank" rel="noreferrer">Show Order</a>`
+                  : `<span class="link-chip">No Source</span>`
+              }
+              ${soLinks}
+            </div>
+            <div class="segment-actions">
+              <button class="btn btn-ok" data-action="approve" data-order="${orderId}" data-index="${segment.segmentIndex}" ${isBusy ? "disabled" : ""}>
+                ${isBusy ? "Working..." : "Approve"}
+              </button>
+              <button class="btn btn-return" data-action="return" data-order="${orderId}" data-index="${segment.segmentIndex}" ${isBusy ? "disabled" : ""}>
+                Return
+              </button>
+            </div>
+          </article>
+        `;
+      }
+
+      function orderHtml(order) {
+        return `
+          <article class="order">
+            <header class="order-top">
+              <div>
+                <h3>${order.dealerName || "-"}</h3>
+                <div class="tiny">Order ID: ${order.orderId}</div>
+              </div>
+              <div class="meta">
+                <span><strong>Location:</strong> ${order.location || "-"}</span>
+                <span><strong>CRM:</strong> ${order.crm || "-"}</span>
+                <span><strong>Owner:</strong> ${order.concernedOwner || "-"}</span>
+                <span><strong>Color:</strong> ${order.color || "-"}</span>
+              </div>
+            </header>
+            <section class="segments">${(order.segments || []).map((segment) => segmentHtml(order.orderId, segment)).join("")}</section>
+          </article>
+        `;
+      }
+
+      function bindSegmentActions() {
+        const buttons = document.querySelectorAll("[data-action]");
+        buttons.forEach((button) => {
+          button.onclick = () => {
+            const orderId = button.getAttribute("data-order");
+            const segmentIndex = Number(button.getAttribute("data-index"));
+            const order = state.orders.find((item) => item.orderId === orderId);
+            if (!order) return;
+            const segment = (order.segments || []).find((item) => item.segmentIndex === segmentIndex);
+            if (!segment) return;
+
+            if (button.getAttribute("data-action") === "approve") {
+              approveSegment(orderId, segment);
+              return;
+            }
+            openReturnModal(orderId, segment);
+          };
+        });
+      }
+
+      function renderApp() {
+        app.innerHTML = `
+          <div class="page">
+            <section class="panel">
+              <header class="header">
+                <div>
+                  <h1>CRM Approval Queue</h1>
+                  <div class="tiny">${state.auth.email}</div>
+                </div>
+                <div class="actions">
+                  <button class="btn btn-refresh" id="refreshBtn">${state.loading ? "Refreshing..." : "Refresh"}</button>
+                  <button class="btn btn-logout" id="logoutBtn">Logout</button>
+                </div>
+              </header>
+              <main class="body">
+                ${
+                  state.loading
+                    ? `<div class="empty">Loading approvals...</div>`
+                    : state.orders.length
+                      ? state.orders.map(orderHtml).join("")
+                      : `<div class="empty">No pending segments for approval.</div>`
+                }
+              </main>
+            </section>
+          </div>
+        `;
+
+        document.getElementById("refreshBtn").onclick = fetchApprovals;
+        document.getElementById("logoutBtn").onclick = () => {
+          state.auth = null;
+          state.orders = [];
+          state.busyMap = {};
+          if (window.google?.accounts?.id) window.google.accounts.id.disableAutoSelect();
+          render();
+        };
+
+        bindSegmentActions();
+      }
+
+      function render() {
+        if (!state.auth) {
+          renderLogin();
+          return;
+        }
+        renderApp();
+      }
+
+      cancelReturnBtn.addEventListener("click", closeReturnModal);
+      confirmReturnBtn.addEventListener("click", submitReturn);
+
+      window.addEventListener("load", () => render());
+    </script>
+  </body>
+</html>

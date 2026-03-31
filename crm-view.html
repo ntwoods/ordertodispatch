@@ -1,0 +1,354 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CRM View Portal</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <style>
+      :root {
+        --bg: #f5f8fa;
+        --surface: #ffffff;
+        --line: #d8e1e7;
+        --text: #18232f;
+        --muted: #687b8a;
+        --brand: #005f73;
+        --shadow: 0 10px 26px rgba(7, 33, 54, 0.08);
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        background: radial-gradient(circle at top left, #e4edf3 0, #f5f8fa 52%, #f0f5f7 100%);
+        color: var(--text);
+        font-family: "IBM Plex Sans", sans-serif;
+      }
+      .page { max-width: 1150px; margin: 0 auto; padding: 18px; }
+      .panel {
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        background: var(--surface);
+        box-shadow: var(--shadow);
+      }
+      .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 14px 16px;
+        background: linear-gradient(120deg, #0d5666 0, #0e6e81 100%);
+        color: #f1fbff;
+      }
+      .header h1 { margin: 0; font-size: 21px; font-family: "Manrope", sans-serif; }
+      .actions { display: flex; gap: 8px; align-items: center; }
+      .btn {
+        border: 0;
+        border-radius: 10px;
+        padding: 8px 12px;
+        cursor: pointer;
+        font-weight: 600;
+      }
+      .btn-refresh { background: rgba(255, 255, 255, 0.2); color: #fff; }
+      .btn-logout { background: #ba1b1d; color: #fff; }
+      .body { padding: 14px; display: grid; gap: 12px; }
+      .order {
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        overflow: hidden;
+      }
+      .order-top {
+        padding: 12px;
+        border-bottom: 1px solid var(--line);
+        background: #fbfdff;
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        align-items: center;
+      }
+      .order-top h3 { margin: 0; font-family: "Manrope", sans-serif; }
+      .meta { color: var(--muted); font-size: 13px; display: grid; gap: 3px; text-align: right; }
+      .segments { padding: 12px; display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); }
+      .segment {
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 10px;
+      }
+      .segment-head { display: flex; justify-content: space-between; gap: 8px; }
+      .segment-head h4 { margin: 0; font-size: 14px; }
+      .pill {
+        border-radius: 999px;
+        padding: 4px 8px;
+        font-size: 11px;
+        font-weight: 700;
+      }
+      .pill-pending-upload { background: #dfe8ee; color: #2b4455; }
+      .pill-pending-crm { background: #ffe5cc; color: #aa5a10; }
+      .pill-approved { background: #d7f5e8; color: #05603a; }
+      .pill-returned { background: #ffe2e0; color: #a41f20; }
+      .links { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+      .link-chip {
+        text-decoration: none;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        padding: 4px 8px;
+        font-size: 12px;
+      }
+      .remark {
+        margin-top: 8px;
+        padding: 8px;
+        border-radius: 8px;
+        border: 1px solid #efc0bd;
+        background: #fff2f1;
+        font-size: 12px;
+      }
+      .login {
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        padding: 20px;
+      }
+      .login-card {
+        width: min(420px, 100%);
+        padding: 22px;
+        border-radius: 14px;
+        border: 1px solid var(--line);
+        background: var(--surface);
+        box-shadow: var(--shadow);
+      }
+      .login-card h2 { margin: 0 0 8px; font-family: "Manrope", sans-serif; }
+      .tiny { font-size: 12px; color: var(--muted); }
+      .empty { border: 1px dashed #c8d4de; border-radius: 12px; padding: 26px; text-align: center; color: var(--muted); }
+      .toast {
+        position: fixed;
+        right: 14px;
+        bottom: 14px;
+        border-radius: 10px;
+        padding: 10px 12px;
+        color: #fff;
+        background: #c62828;
+        box-shadow: var(--shadow);
+        display: none;
+      }
+      .toast.show { display: block; }
+    </style>
+  </head>
+  <body>
+    <div id="app"></div>
+    <div id="toast" class="toast"></div>
+    <script>
+      const CONFIG = {
+        appsScriptUrl: "__APPS_SCRIPT_WEB_APP_URL__",
+        googleClientId: "__GOOGLE_CLIENT_ID__"
+      };
+
+      const state = {
+        auth: null,
+        orders: [],
+        loading: false
+      };
+
+      const app = document.getElementById("app");
+      const toast = document.getElementById("toast");
+
+      function showToast(message) {
+        toast.textContent = message;
+        toast.classList.add("show");
+        setTimeout(() => toast.classList.remove("show"), 3000);
+      }
+
+      function decodeJwt(token) {
+        const parts = String(token || "").split(".");
+        if (parts.length < 2) return null;
+        try {
+          const json = atob(parts[1].replace(/-/g, "+").replace(/_/g, "/"));
+          return JSON.parse(json);
+        } catch (e) {
+          return null;
+        }
+      }
+
+      function stateClass(segmentState) {
+        if (segmentState === "APPROVED_BY_CRM") return "pill-approved";
+        if (segmentState === "PENDING_CRM_APPROVAL") return "pill-pending-crm";
+        if (segmentState === "RETURNED_BY_CRM") return "pill-returned";
+        return "pill-pending-upload";
+      }
+
+      function stateLabel(segmentState) {
+        if (segmentState === "APPROVED_BY_CRM") return "Approved";
+        if (segmentState === "PENDING_CRM_APPROVAL") return "Pending CRM Approval";
+        if (segmentState === "RETURNED_BY_CRM") return "Returned";
+        return "Pending Upload";
+      }
+
+      async function fetchCrmView() {
+        if (!state.auth) return;
+        state.loading = true;
+        render();
+        try {
+          const response = await fetch(CONFIG.appsScriptUrl, {
+            method: "POST",
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify({
+              action: "FETCH_CRM_VIEW",
+              auth: {
+                email: state.auth.email,
+                idToken: state.auth.idToken
+              }
+            })
+          });
+          const payload = await response.json();
+          if (!payload.ok) throw new Error(payload.error || "Failed to fetch CRM view.");
+          state.orders = payload.data || [];
+        } catch (error) {
+          showToast(error.message || "Fetch failed.");
+        } finally {
+          state.loading = false;
+          render();
+        }
+      }
+
+      function handleGoogleCredential(response) {
+        const payload = decodeJwt(response.credential);
+        if (!payload || !payload.email) {
+          showToast("Could not extract email from Google credential.");
+          return;
+        }
+        state.auth = { email: payload.email.toLowerCase(), idToken: response.credential };
+        fetchCrmView();
+      }
+
+      function renderLogin() {
+        app.innerHTML = `
+          <main class="login">
+            <section class="login-card">
+              <h2>CRM View Portal</h2>
+              <p class="tiny">Sign in with your NTWoods Google account.</p>
+              <div id="gbtn"></div>
+            </section>
+          </main>
+        `;
+        if (!CONFIG.googleClientId) {
+          showToast("Google Sign-In is not configured.");
+          return;
+        }
+        const initGoogle = () => {
+          if (!window.google?.accounts?.id) {
+            setTimeout(initGoogle, 150);
+            return;
+          }
+          window.google.accounts.id.initialize({
+            client_id: CONFIG.googleClientId,
+            callback: handleGoogleCredential
+          });
+          window.google.accounts.id.renderButton(document.getElementById("gbtn"), {
+            type: "standard",
+            shape: "pill",
+            theme: "filled_blue",
+            text: "signin_with",
+            size: "large"
+          });
+        };
+        initGoogle();
+      }
+
+      function segmentHtml(segment) {
+        const soLinks = (segment.salesOrderUrls || [])
+          .map((url, idx) => `<a class="link-chip" target="_blank" rel="noreferrer" href="${url}">Sales Order ${idx + 1}</a>`)
+          .join("");
+
+        return `
+          <div class="segment">
+            <div class="segment-head">
+              <h4>${segment.label}</h4>
+              <span class="pill ${stateClass(segment.state)}">${stateLabel(segment.state)}</span>
+            </div>
+            <div class="links">
+              ${
+                segment.sourceUrl
+                  ? `<a class="link-chip" target="_blank" rel="noreferrer" href="${segment.sourceUrl}">Show Order</a>`
+                  : `<span class="link-chip">No Source</span>`
+              }
+              ${soLinks}
+            </div>
+            ${
+              segment.returnRemark
+                ? `<div class="remark"><strong>Return Remark:</strong><div>${segment.returnRemark}</div></div>`
+                : ""
+            }
+          </div>
+        `;
+      }
+
+      function orderHtml(order) {
+        return `
+          <article class="order">
+            <header class="order-top">
+              <div>
+                <h3>${order.dealerName || "-"}</h3>
+                <div class="tiny">Order ID: ${order.orderId}</div>
+              </div>
+              <div class="meta">
+                <span><strong>Location:</strong> ${order.location || "-"}</span>
+                <span><strong>CRM:</strong> ${order.crm || "-"}</span>
+                <span><strong>Owner:</strong> ${order.concernedOwner || "-"}</span>
+                <span><strong>Color:</strong> ${order.color || "-"}</span>
+              </div>
+            </header>
+            <section class="segments">${(order.segments || []).map(segmentHtml).join("")}</section>
+          </article>
+        `;
+      }
+
+      function renderApp() {
+        app.innerHTML = `
+          <div class="page">
+            <section class="panel">
+              <header class="header">
+                <div>
+                  <h1>CRM View Only</h1>
+                  <div class="tiny">${state.auth.email}</div>
+                </div>
+                <div class="actions">
+                  <button class="btn btn-refresh" id="refreshBtn">${state.loading ? "Refreshing..." : "Refresh"}</button>
+                  <button class="btn btn-logout" id="logoutBtn">Logout</button>
+                </div>
+              </header>
+              <main class="body">
+                ${
+                  state.loading
+                    ? `<div class="empty">Loading...</div>`
+                    : state.orders.length
+                      ? state.orders.map(orderHtml).join("")
+                      : `<div class="empty">No orders available for your CRM scope.</div>`
+                }
+              </main>
+            </section>
+          </div>
+        `;
+
+        document.getElementById("refreshBtn").onclick = fetchCrmView;
+        document.getElementById("logoutBtn").onclick = () => {
+          state.auth = null;
+          state.orders = [];
+          if (window.google?.accounts?.id) window.google.accounts.id.disableAutoSelect();
+          render();
+        };
+      }
+
+      function render() {
+        if (!state.auth) {
+          renderLogin();
+          return;
+        }
+        renderApp();
+      }
+
+      window.addEventListener("load", () => render());
+    </script>
+  </body>
+</html>
