@@ -334,7 +334,7 @@
       const typeClass = (type === 'red' || type === 'yellow' || type === 'green') ? type : '';
       const topLineClass = typeClass ? typeClass : '';
 
-      const deadline = calculateDeadline(toDateSafe_(order.crmAssignedOnISO || order.crmAssignedOn));
+      const deadline = calculateDeadline(toDateSafe_(order.timestamp));
       const countdownId = `countdown-${index}`;
 
       card.className = 'card';
@@ -359,11 +359,11 @@
           <div class="mt-3 grid grid-cols-1 gap-2">
             <div class="flex items-center justify-between text-sm">
               <span class="text-gray-600 font-semibold">Order Received</span>
-              <span class="mono font-bold text-gray-900">${escapeHtml_(order.orderReceivedOn || '')}</span>
+              <span class="mono font-bold text-gray-900">${escapeHtml_(order.receivedAt || '')}</span>
             </div>
             <div class="flex items-center justify-between text-sm">
               <span class="text-gray-600 font-semibold">CRM Assigned</span>
-              <span class="mono font-bold text-gray-900">${escapeHtml_(order.crmAssignedOn || '')}</span>
+              <span class="mono font-bold text-gray-900">${escapeHtml_(order.timestamp || '')}</span>
             </div>
           </div>
 
