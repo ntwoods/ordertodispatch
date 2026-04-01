@@ -241,8 +241,18 @@
     /* ===== State ===== */
     let ordersData = [];
     let countdownIntervals = [];
-    let currentStockOrderId = null, currentStockStatus = null, currentStockIndex = null;
-    let pendingProceed = { orderId: null, index: null };
+    let currentStockTimestamp = null, currentStockStatus = null, currentStockIndex = null;
+    let pendingProceed = { timestamp: null, index: null };
+    const DATE_TIME_FORMATTER = new Intl.DateTimeFormat('en-GB', {
+      timeZone: 'Asia/Kolkata',
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false
+    });
 
     document.addEventListener('DOMContentLoaded', () => fetchOrders());
 
@@ -359,11 +369,11 @@
           <div class="mt-3 grid grid-cols-1 gap-2">
             <div class="flex items-center justify-between text-sm">
               <span class="text-gray-600 font-semibold">Order Received</span>
-              <span class="mono font-bold text-gray-900">${escapeHtml_(order.receivedAt || '')}</span>
+              <span class="mono font-bold text-gray-900">${escapeHtml_(formatDateTime_(order.receivedAt))}</span>
             </div>
             <div class="flex items-center justify-between text-sm">
               <span class="text-gray-600 font-semibold">CRM Assigned</span>
-              <span class="mono font-bold text-gray-900">${escapeHtml_(order.timestamp || '')}</span>
+              <span class="mono font-bold text-gray-900">${escapeHtml_(formatDateTime_(order.timestamp))}</span>
             </div>
           </div>
 
@@ -437,10 +447,10 @@
                   <span class="text-sm font-bold text-gray-800">Stock Status</span>
                 </div>
                 <div class="flex space-x-2">
-                  <button onclick="promptStockStatus('${escapeAttr_(order.orderId || '')}', ${index}, 'approved')" class="p-1 rounded-full stock-approved-${index} bg-gray-200 hover:bg-green-100">
+                  <button onclick="promptStockStatus('${escapeAttr_(order.timestamp || '')}', ${index}, 'approved')" class="p-1 rounded-full stock-approved-${index} bg-gray-200 hover:bg-green-100">
                     <svg class="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
                   </button>
-                  <button onclick="promptStockStatus('${escapeAttr_(order.orderId || '')}', ${index}, 'rejected')" class="p-1 rounded-full stock-rejected-${index} bg-gray-200 hover:bg-red-100">
+                  <button onclick="promptStockStatus('${escapeAttr_(order.timestamp || '')}', ${index}, 'rejected')" class="p-1 rounded-full stock-rejected-${index} bg-gray-200 hover:bg-red-100">
                     <svg class="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
                   </button>
                 </div>
@@ -455,7 +465,7 @@
             </div>
 
             <div class="mt-4">
-              <button id="approve-btn-${index}" onclick="openProceedDialog('${escapeAttr_(order.orderId || '')}', ${index})"
+              <button id="approve-btn-${index}" onclick="openProceedDialog('${escapeAttr_(order.timestamp || '')}', ${index})"
                       class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2.5 px-4 rounded-xl font-extrabold tracking-wide">
                 Proceed
               </button>
@@ -523,8 +533,8 @@
     }
 
     /* ===== Proceed (Bill To Ship To?) ===== */
-    function openProceedDialog(orderId, index) {
-      pendingProceed.orderId = orderId;
+    function openProceedDialog(timestamp, index) {
+      pendingProceed.timestamp = timestamp;
       pendingProceed.index = index;
 
       const input = document.getElementById(`proceedRemark-${index}`);
@@ -534,18 +544,26 @@
         input?.focus();
         return;
       }
+      if (!isValidTimestamp_(timestamp)) {
+        alert('CRM Assigned timestamp missing/invalid hai. Proceed possible nahi hai.');
+        return;
+      }
       document.getElementById('proceedModal').classList.remove('hidden');
     }
 
     function closeProceedModal() {
       document.getElementById('proceedModal').classList.add('hidden');
-      pendingProceed = { orderId: null, index: null };
+      pendingProceed = { timestamp: null, index: null };
     }
 
     async function approveOrderPending(billToShipTo) {
       try {
-        const { orderId, index } = pendingProceed || {};
-        if (!orderId && orderId !== 0) return;
+        const { timestamp, index } = pendingProceed || {};
+        if (!isValidTimestamp_(timestamp)) {
+          alert('CRM Assigned timestamp missing/invalid hai. Approve process stop kiya gaya.');
+          closeProceedModal();
+          return;
+        }
 
         const input = document.getElementById(`proceedRemark-${index}`);
         const remark = (input?.value || '').trim();
@@ -557,27 +575,31 @@
         const btn = document.getElementById(`approve-btn-${index}`);
         btn?.classList.add('btn-loading');
 
-        await fetch(API_URL, {
-          method: 'POST',
-          mode: 'no-cors',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            action: 'approveOrder',
-            orderId,
-            proceedRemark: remark,
-            billToShipTo
-          })
+        const result = await postAction_({
+          action: 'approveOrder',
+          timestamp,
+          proceedRemark: remark,
+          billToShipTo
         });
+        btn?.classList.remove('btn-loading');
 
-        setTimeout(() => {
-          btn?.classList.remove('btn-loading');
-          showSuccessNotification(`Approved (BillToShipTo: ${billToShipTo})`);
-          closeProceedModal();
-          fetchOrders();
-        }, 900);
+        if (!result.ok) {
+          alert(result.message || 'Approve failed.');
+          return;
+        }
+
+        showSuccessNotification(
+          result.unverified
+            ? `Approve request submitted (BillToShipTo: ${billToShipTo})`
+            : `Approved (BillToShipTo: ${billToShipTo})`
+        );
+        closeProceedModal();
+        fetchOrders();
 
       } catch (e) {
         console.error(e);
+        const btn = document.getElementById(`approve-btn-${pendingProceed.index}`);
+        btn?.classList.remove('btn-loading');
         closeProceedModal();
       }
     }
@@ -593,28 +615,41 @@
 
       [a,r].forEach(b => { b.classList.remove('bg-green-500','bg-red-500'); b.classList.add('bg-gray-200'); });
 
-      const orderId = ordersData[index]?.orderId;
+      const timestamp = ordersData[index]?.timestamp;
+      if (!isValidTimestamp_(timestamp)) {
+        target.classList.remove('status-loading');
+        target.disabled = false;
+        alert('CRM Assigned timestamp missing/invalid hai. Credit status update nahi ho sakta.');
+        return;
+      }
 
       try{
-        await fetch(API_URL,{
-          method:'POST',
-          mode:'no-cors',
-          headers:{'Content-Type':'application/json'},
-          body: JSON.stringify({
-            action:'updateCreditStatus',
-            orderId,
-            creditStatus: status==='approved'?'Yes':'No'
-          })
+        const result = await postAction_({
+          action:'updateCreditStatus',
+          timestamp,
+          creditStatus: status==='approved'?'Yes':'No'
         });
-
-        setTimeout(() => {
-          if(status==='approved'){ a.classList.replace('bg-gray-200','bg-green-500'); }
-          else { r.classList.replace('bg-gray-200','bg-red-500'); }
-
+        if (!result.ok) {
           target.classList.remove('status-loading');
           target.disabled = false;
-          showSuccessNotification(`Credit ${status==='approved'?'approved':'rejected'}!`);
-        }, 650);
+          alert(result.message || 'Credit status update failed.');
+          return;
+        }
+
+        if (result.unverified) {
+          target.classList.remove('status-loading');
+          target.disabled = false;
+          showSuccessNotification('Credit update request submitted.');
+          fetchOrders();
+          return;
+        }
+
+        if(status==='approved'){ a.classList.replace('bg-gray-200','bg-green-500'); }
+        else { r.classList.replace('bg-gray-200','bg-red-500'); }
+
+        target.classList.remove('status-loading');
+        target.disabled = false;
+        showSuccessNotification(`Credit ${status==='approved'?'approved':'rejected'}!`);
 
       } catch(e){
         console.error(e);
@@ -623,8 +658,12 @@
       }
     }
 
-    function promptStockStatus(orderId, index, status){
-      currentStockOrderId = orderId;
+    function promptStockStatus(timestamp, index, status){
+      if (!isValidTimestamp_(timestamp)) {
+        alert('CRM Assigned timestamp missing/invalid hai. Stock status update nahi ho sakta.');
+        return;
+      }
+      currentStockTimestamp = timestamp;
       currentStockStatus = status;
       currentStockIndex = index;
 
@@ -636,7 +675,7 @@
       document.getElementById('stockModal').classList.add('hidden');
       document.getElementById('stockRemark').value = '';
 
-      currentStockOrderId = null;
+      currentStockTimestamp = null;
       currentStockStatus = null;
       currentStockIndex = null;
     }
@@ -651,28 +690,40 @@
       const a = document.querySelector(`.stock-approved-${currentStockIndex}`);
       const r = document.querySelector(`.stock-rejected-${currentStockIndex}`);
 
+      if (!isValidTimestamp_(currentStockTimestamp)) {
+        btn.classList.remove('btn-loading');
+        alert('CRM Assigned timestamp missing/invalid hai. Stock status update nahi ho sakta.');
+        return;
+      }
+
       try{
-        await fetch(API_URL,{
-          method:'POST',
-          mode:'no-cors',
-          headers:{'Content-Type':'application/json'},
-          body: JSON.stringify({
-            action:'updateStockStatus',
-            orderId: currentStockOrderId,
-            stockStatus: currentStockStatus==='approved'?'Yes':'No',
-            stockRemark: remark
-          })
+        const result = await postAction_({
+          action:'updateStockStatus',
+          timestamp: currentStockTimestamp,
+          stockStatus: currentStockStatus==='approved'?'Yes':'No',
+          stockRemark: remark
         });
-
-        setTimeout(() => {
-          [a,r].forEach(b => { b.classList.remove('bg-green-500','bg-red-500'); b.classList.add('bg-gray-200'); });
-          if(currentStockStatus==='approved'){ a.classList.replace('bg-gray-200','bg-green-500'); }
-          else { r.classList.replace('bg-gray-200','bg-red-500'); }
-
+        if (!result.ok) {
           btn.classList.remove('btn-loading');
-          showSuccessNotification(`Stock ${currentStockStatus==='approved'?'approved':'rejected'}!`);
+          alert(result.message || 'Stock status update failed.');
+          return;
+        }
+
+        if (result.unverified) {
+          btn.classList.remove('btn-loading');
+          showSuccessNotification('Stock update request submitted.');
           closeStockModal();
-        }, 650);
+          fetchOrders();
+          return;
+        }
+
+        [a,r].forEach(b => { b.classList.remove('bg-green-500','bg-red-500'); b.classList.add('bg-gray-200'); });
+        if(currentStockStatus==='approved'){ a.classList.replace('bg-gray-200','bg-green-500'); }
+        else { r.classList.replace('bg-gray-200','bg-red-500'); }
+
+        btn.classList.remove('btn-loading');
+        showSuccessNotification(`Stock ${currentStockStatus==='approved'?'approved':'rejected'}!`);
+        closeStockModal();
 
       } catch(e){
         console.error(e);
@@ -693,6 +744,53 @@
       if (!v) return null;
       const d = new Date(v);
       return isNaN(d.getTime()) ? null : d;
+    }
+
+    function isValidTimestamp_(v){
+      return !!toDateSafe_(v);
+    }
+
+    function formatDateTime_(v){
+      const d = toDateSafe_(v);
+      if (!d) return '';
+      return DATE_TIME_FORMATTER.format(d).replace(',', '');
+    }
+
+    async function parseJsonSafe_(res){
+      const text = await res.text();
+      if (!text) return null;
+      try { return JSON.parse(text); } catch(_) { return null; }
+    }
+
+    async function postAction_(payload){
+      try{
+        const res = await fetch(API_URL, {
+          method: 'POST',
+          mode: 'cors',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const json = await parseJsonSafe_(res);
+        if (!res.ok) {
+          return { ok: false, message: json?.message || `Request failed (${res.status})` };
+        }
+        if (json && json.status && json.status !== 'success') {
+          return { ok: false, message: json.message || 'Request failed.' };
+        }
+        return { ok: true, data: json };
+      } catch (corsError){
+        try {
+          await fetch(API_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          return { ok: true, unverified: true };
+        } catch (fallbackError){
+          return { ok: false, message: fallbackError?.message || corsError?.message || 'Network request failed.' };
+        }
+      }
     }
 
     function escapeHtml_(s){
