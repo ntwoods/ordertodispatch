@@ -734,10 +734,73 @@
 
     /* ===== Helpers ===== */
     function openMultipleDocuments(urlString){
-      const urls = (urlString||'').split(',').map(u=>u.trim()).filter(Boolean);
-      if(!urls.length){ alert('No valid URLs found'); return; }
-      if(urls.length>1 && !confirm(`This will open ${urls.length} documents in separate tabs. Continue?`)) return;
-      urls.forEach((u,i)=> setTimeout(()=>window.open(u,'_blank'), i*100));
+      const urls = extractUrls_(urlString);
+
+      if(!urls.length){
+        alert('No valid URL found. Backend se rawOrderUrl me proper https:// URL nahi aa raha hai.');
+        console.warn('Invalid rawOrderUrl:', urlString);
+        return;
+      }
+
+      if(urls.length > 1 && !confirm(`This will open ${urls.length} documents in separate tabs. Continue?`)) return;
+
+      urls.forEach(url => {
+        const opened = window.open(url, '_blank', 'noopener,noreferrer');
+
+        // Popup blocker fallback
+        if(!opened){
+          const a = document.createElement('a');
+          a.href = url;
+          a.target = '_blank';
+          a.rel = 'noopener noreferrer';
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+        }
+      });
+    }
+
+    function extractUrls_(value){
+      let text = String(value || '').trim();
+      if(!text) return [];
+
+      // Clean smart quotes copied from sheets/docs
+      text = text
+        .replace(/[\u201C\u201D]/g, '"')
+        .replace(/[\u2018\u2019]/g, "'");
+
+      // Supports JSON array from backend: ["url1", "url2"]
+      if(text.startsWith('[')){
+        try{
+          const arr = JSON.parse(text);
+          if(Array.isArray(arr)) return arr.map(normalizeUrl_).filter(Boolean);
+        }catch(e){
+          console.warn('URL JSON parse failed:', e);
+        }
+      }
+
+      // Supports comma, semicolon, pipe and newline separated URLs.
+      // Important: comma split is guarded so commas inside non-url text are not blindly treated as URLs.
+      return text
+        .split(/\s*(?:\r?\n|;|\||,(?=\s*(?:https?:\/\/|www\.|drive\.google\.com|docs\.google\.com)))\s*/i)
+        .map(normalizeUrl_)
+        .filter(Boolean);
+    }
+
+    function normalizeUrl_(url){
+      let u = String(url || '').trim().replace(/^["']|["']$/g, '');
+      if(!u) return '';
+
+      // Convert plain domain URLs to https:// URLs
+      if(!/^https?:\/\//i.test(u) && /^[\w.-]+\.[a-z]{2,}\//i.test(u)){
+        u = 'https://' + u;
+      }
+
+      if(!/^https?:\/\//i.test(u)){
+        console.warn('Rejected invalid URL:', u);
+        return '';
+      }
+      return u;
     }
 
     function toDateSafe_(v){
