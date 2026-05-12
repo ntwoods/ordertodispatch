@@ -296,12 +296,9 @@
             </div>
 
             <div class="file-chip-wrap">
-              <button onclick="openMultipleDocuments('${escapeJsAttr(order.fileUploadLink || '')}')" class="btn-primary px-4 py-2 rounded-lg text-sm">
-                <i class="fas fa-file-alt mr-2"></i>Raw Order
-              </button>
-              <button onclick="openMultipleDocuments('${escapeJsAttr(order.finalOrderFile || '')}')" class="btn-primary px-4 py-2 rounded-lg text-sm">
-                <i class="fas fa-file-invoice mr-2"></i>Final Order
-              </button>
+              ${renderCsvFileButton('Raw Order', 'fas fa-file-alt', order.fileUploadLink, true)}
+              ${renderCsvFileButton('Final Order', 'fas fa-file-invoice', order.finalOrderFile, true)}
+              ${renderCsvFileButton('Additional File', 'fas fa-paperclip', getAdditionalFileCsv(order), false)}
             </div>
 
             ${renderAdditionalFilesSection(order)}
@@ -343,6 +340,38 @@
         container.appendChild(card);
         startCountdown(deadline, `countdown-${index}`);
       });
+    }
+
+    function getAdditionalFileCsv(order) {
+      if (!order || order.additionalFile == null) return '';
+
+      if (Array.isArray(order.additionalFile)) {
+        return order.additionalFile
+          .map(file => {
+            if (file && typeof file === 'object') return file.url || file.fileUrl || file.link || '';
+            return file;
+          })
+          .map(url => String(url || '').trim())
+          .filter(Boolean)
+          .join(',');
+      }
+
+      return String(order.additionalFile || '').trim();
+    }
+
+    function renderCsvFileButton(label, iconClass, urlString, alwaysRender = false) {
+      const cleanValue = String(urlString || '').trim();
+      if (!alwaysRender && !cleanValue) return '';
+
+      return `
+        <button
+          onclick="openMultipleDocuments('${escapeJsAttr(cleanValue)}')"
+          class="btn-primary px-4 py-2 rounded-lg text-sm"
+          title="${escapeHtml(label)}"
+        >
+          <i class="${escapeHtml(iconClass)} mr-2"></i>${escapeHtml(label)}
+        </button>
+      `;
     }
 
     function renderAdditionalFilesSection(order) {
