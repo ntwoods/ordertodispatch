@@ -163,6 +163,11 @@
             border-bottom:1px dotted var(--blue-300);
         }
         .file-link:hover{ text-decoration:underline; }
+        .additional-order-btn{
+            background:none; border:none; padding:0; cursor:pointer; font:inherit;
+            color:var(--blue-700); font-weight:600; border-bottom:1px dotted var(--blue-300);
+        }
+        .additional-order-btn:hover{ text-decoration:underline; }
 
         /* Buttons (kept class names & JS hooks; styled in blue family) */
         .action-buttons{ display:flex; gap:10px; margin-top:16px; }
@@ -245,10 +250,23 @@
             return (now > deadline) ? 'overdue' : 'pending';
         }
 
+        function getAdditionalFileUrls(additionalFile) {
+            return (additionalFile || '')
+                .split(',')
+                .map(url => url.trim())
+                .filter(Boolean);
+        }
+
+        function openAdditionalFiles(index) {
+            const urls = getAdditionalFileUrls(orders[index]?.additionalFile);
+            urls.forEach(url => window.open(url, '_blank'));
+        }
+
         function createOrderCard(order, index) {
             const deadline = calculateDeadline(order.timestamp);
             const status = getOrderStatus(deadline);
             const orderTime = new Date(order.timestamp);
+            const additionalFileUrls = getAdditionalFileUrls(order.additionalFile);
 
             return `
                 <div class="order-card" data-index="${index}">
@@ -304,6 +322,14 @@
                                     : 'No file uploaded'}
                             </span>
                         </div>
+                        ${additionalFileUrls.length
+                            ? `<div class="detail-row">
+                                <span class="detail-label">Additional Order:</span>
+                                <span class="detail-value">
+                                    <button type="button" class="additional-order-btn" onclick="openAdditionalFiles(${index})">Additional Order</button>
+                                </span>
+                            </div>`
+                            : ''}
                     </div>
 
                     <div class="action-buttons">
