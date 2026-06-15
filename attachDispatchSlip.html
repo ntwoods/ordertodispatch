@@ -276,7 +276,7 @@
     grid.hidden = false; emptyState.hidden = true; errState.hidden = true;
   }
 
-  function startAuto(){ clearInterval(timer); timer = setInterval(fetchOrders, 5*60*1000); }
+  function startAuto(){ clearInterval(timer); timer = setInterval(fetchOrders, 1*60*1000); }
   function stopAuto(){ clearInterval(timer); }
 
   // Initial load
